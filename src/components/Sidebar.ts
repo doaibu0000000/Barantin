@@ -10,14 +10,14 @@ export const Sidebar = () => {
   };
 
   return `
-    <aside class="w-full md:w-[280px] bg-brand-panel border border-white/5 md:rounded-xl p-5 md:p-6 flex flex-col shrink-0 self-stretch shadow-2xl">
+    <aside class="w-full md:w-[280px] bg-brand-panel border border-white/5 md:rounded-xl p-5 md:p-6 flex flex-col shrink-0 shadow-2xl">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-sm font-bold tracking-wide text-white text-center md:text-left w-full">Practical Tools</h2>
         <button id="mobileMenuBtn" class="md:hidden text-white p-2">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
         </button>
       </div>
-      <nav id="sidebarNav" class="hidden md:flex flex-col gap-1.5 flex-1">
+      <nav id="sidebarNav" class="hidden md:flex flex-col gap-1.5">
         ${renderNavItems()}
       </nav>
     </aside>
