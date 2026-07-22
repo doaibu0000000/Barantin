@@ -95,38 +95,37 @@ export const bindDraftToolEvents = () => {
           docNumber.value = cleaned;
         }
       } else {
-        // Logika untuk nomor pendek (misal: "tolong 1615 pak")
-        const hasNonDigit = /\D/.test(rawNumber);
-        if (hasNonDigit) {
-          const digitGroups = rawNumber.match(/\b\d{3,6}\b/g);
-          if (digitGroups) {
-             const candidate = digitGroups.reverse()[0];
-             if (candidate) {
-                const padded = candidate.padStart(6, '0');
-                docNumber.value = `2026-T1.0-3200.2-K.1.1-${padded}`;
-             }
+        // Logika untuk nomor pendek, baik 1 nomor (misal: "1842") maupun banyak nomor dalam teks (misal: "Tolong 1842 dan 1726")
+        // Gunakan debounce agar tidak mengganggu saat sedang mengetik
+        debounceTimer = setTimeout(() => {
+          const currentVal = docNumber.value;
+          const digitGroups = currentVal.match(/\b\d{3,6}\b/g);
+          
+          if (digitGroups && digitGroups.length > 0) {
+            const formatted = digitGroups.map(g => {
+              const padded = g.padStart(6, '0');
+              return `2026-T1.0-3200.2-K.1.1-${padded}`;
+            });
+            docNumber.value = formatted.join('\n');
           }
-        } else {
-          // Hanya angka. Gunakan debounce agar tidak mengganggu saat sedang mengetik
-          debounceTimer = setTimeout(() => {
-            const currentVal = docNumber.value.trim();
-            if (/^\d{3,6}$/.test(currentVal)) {
-              const padded = currentVal.padStart(6, '0');
-              docNumber.value = `2026-T1.0-3200.2-K.1.1-${padded}`;
-            }
-          }, 800);
-        }
+        }, 800);
       }
     });
 
-    // Event change ter-trigger saat user selesai mengetik dan menyembunyikan keyboard/pindah fokus
     docNumber.addEventListener('change', () => {
       clearTimeout(debounceTimer);
-      const rawNumber = docNumber.value.trim();
-      // Cek apakah user HANYA mengetik 3-6 angka saja
-      if (/^\d{3,6}$/.test(rawNumber)) {
-        const padded = rawNumber.padStart(6, '0');
-        docNumber.value = `2026-T1.0-3200.2-K.1.1-${padded}`;
+      const rawNumber = docNumber.value;
+      
+      const regex = /2026-[A-Z0-9\.-]{10,30}-\d{4,6}/gi;
+      if (!regex.test(rawNumber)) {
+        const digitGroups = rawNumber.match(/\b\d{3,6}\b/g);
+        if (digitGroups && digitGroups.length > 0) {
+          const formatted = digitGroups.map(g => {
+            const padded = g.padStart(6, '0');
+            return `2026-T1.0-3200.2-K.1.1-${padded}`;
+          });
+          docNumber.value = formatted.join('\n');
+        }
       }
     });
   }
