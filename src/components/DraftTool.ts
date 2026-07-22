@@ -7,7 +7,6 @@ export const DraftTool = () => {
       </div>
 
       <div id="pdfSection" class="flex flex-col gap-2">
-        <label for="pdfUpload" class="text-sm font-semibold text-white">Upload File PDF</label>
         <div class="relative">
           <input type="file" id="pdfUpload" accept=".pdf" class="hidden" />
           <label for="pdfUpload" class="w-full h-[108px] bg-brand-input hover:bg-brand-input/80 border border-brand-border border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors text-brand-text-muted hover:text-white">
@@ -18,9 +17,7 @@ export const DraftTool = () => {
       </div>
 
       <div id="docSection" class="flex flex-col gap-2 hidden">
-        <label for="docNumber" class="text-sm font-semibold text-white">Nomor Dokumen</label>
         <textarea id="docNumber" placeholder="Contoh: 1615 atau 2026-T1.0-3200.2-K.1.1-001615" class="w-full h-[108px] bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none"></textarea>
-        <p class="text-xs text-brand-text-muted mt-1">Anda bisa memasukkan nomor lengkap atau hanya angka belakangnya (misal: 1615).</p>
       </div>
 
       <button id="processDraftBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md mt-auto">
