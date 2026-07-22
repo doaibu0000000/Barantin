@@ -2,17 +2,27 @@ export const CookieTool = () => {
   return `
     <div class="flex flex-col gap-2">
       <label for="cookieContent" class="text-sm font-semibold text-white">Nomor AJU SSM / PTK</label>
-      <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8"></textarea>
+      <div class="relative">
+        <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8"></textarea>
+        
+        <!-- Loading Overlay -->
+        <div id="cookieLoader" class="absolute inset-0 bg-zinc-900/60 backdrop-blur-[2px] rounded-lg flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 z-10">
+          <div class="flex flex-col items-center gap-3">
+            <div class="w-8 h-8 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-xs font-semibold text-brand-accent tracking-widest animate-pulse">MEMPROSES...</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <button id="processBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
+    <button type="button" id="processBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
       Proses Data
     </button>
 
     <div class="flex flex-col gap-2">
       <textarea id="processingResults" placeholder="Hasil pemrosesan ditampilkan di sini..." class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8" readonly></textarea>
       
-      <button id="copyBtn" class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md flex items-center justify-center gap-2 mt-2 hidden">
+      <button type="button" id="copyBtn" class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md flex items-center justify-center gap-2 mt-2 hidden">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
         <span id="copyText">Salin Text</span>
       </button>
@@ -26,6 +36,21 @@ export const bindCookieToolEvents = () => {
   const processingResults = document.getElementById('processingResults') as HTMLTextAreaElement;
   const copyBtn = document.getElementById('copyBtn') as HTMLButtonElement;
   const copyText = document.getElementById('copyText') as HTMLSpanElement;
+  const cookieLoader = document.getElementById('cookieLoader');
+
+  const showLoader = (duration: number, callback: () => void) => {
+    if (cookieLoader) {
+      cookieLoader.classList.remove('opacity-0', 'pointer-events-none');
+      cookieLoader.classList.add('opacity-100');
+    }
+    setTimeout(() => {
+      callback();
+      if (cookieLoader) {
+        cookieLoader.classList.remove('opacity-100');
+        cookieLoader.classList.add('opacity-0', 'pointer-events-none');
+      }
+    }, duration);
+  };
 
   if (copyBtn) {
     copyBtn.addEventListener('click', async () => {
@@ -65,7 +90,9 @@ export const bindCookieToolEvents = () => {
         const hasGarbage = withoutMatches.trim().length > 0;
         
         if (hasGarbage) {
-          cookieContent.value = cleaned;
+          showLoader(600, () => {
+            cookieContent.value = cleaned;
+          });
         }
       }
     });
