@@ -38,17 +38,23 @@ export const Sidebar = () => {
   `;
 };
 
-export const bindSidebarEvents = () => {
+export const bindSidebarEvents = (onChange?: (menuId: string) => void) => {
   const navItems = document.querySelectorAll('.nav-item');
   navItems.forEach(item => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
+      const menuId = item.getAttribute('data-menu');
+      
       navItems.forEach(nav => {
         nav.classList.remove('active', 'md:bg-brand-accent-bg', 'text-brand-accent', 'font-semibold');
         nav.classList.add('text-brand-text-muted');
       });
       item.classList.remove('text-brand-text-muted');
       item.classList.add('active', 'md:bg-brand-accent-bg', 'text-brand-accent', 'font-semibold');
+
+      if (onChange && menuId) {
+        onChange(menuId);
+      }
     });
   });
 };
