@@ -1,3 +1,5 @@
+import './style.css';
+
 // Wait for DOM to load
 document.addEventListener('DOMContentLoaded', () => {
   const processBtn = document.getElementById('processBtn') as HTMLButtonElement;
