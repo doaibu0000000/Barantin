@@ -1,14 +1,14 @@
-(function(){const s=document.createElement("link").relList;if(s&&s.supports&&s.supports("modulepreload"))return;for(const e of document.querySelectorAll('link[rel="modulepreload"]'))r(e);new MutationObserver(e=>{for(const t of e)if(t.type==="childList")for(const l of t.addedNodes)l.tagName==="LINK"&&l.rel==="modulepreload"&&r(l)}).observe(document,{childList:!0,subtree:!0});function n(e){const t={};return e.integrity&&(t.integrity=e.integrity),e.referrerPolicy&&(t.referrerPolicy=e.referrerPolicy),e.crossOrigin==="use-credentials"?t.credentials="include":e.crossOrigin==="anonymous"?t.credentials="omit":t.credentials="same-origin",t}function r(e){if(e.ep)return;e.ep=!0;const t=n(e);fetch(e.href,t)}})();const i=()=>{const o=["Cookie","Text Editor","Card Key Splitter"];return`
+(function(){const s=document.createElement("link").relList;if(s&&s.supports&&s.supports("modulepreload"))return;for(const e of document.querySelectorAll('link[rel="modulepreload"]'))r(e);new MutationObserver(e=>{for(const t of e)if(t.type==="childList")for(const l of t.addedNodes)l.tagName==="LINK"&&l.rel==="modulepreload"&&r(l)}).observe(document,{childList:!0,subtree:!0});function n(e){const t={};return e.integrity&&(t.integrity=e.integrity),e.referrerPolicy&&(t.referrerPolicy=e.referrerPolicy),e.crossOrigin==="use-credentials"?t.credentials="include":e.crossOrigin==="anonymous"?t.credentials="omit":t.credentials="same-origin",t}function r(e){if(e.ep)return;e.ep=!0;const t=n(e);fetch(e.href,t)}})();const i=()=>{const o=["Cookie","Text Editor","Card Key Splitter","Html Image","Link Html","Merge Files","JSON","Account","Fb Link"];return`
     <aside class="w-full md:w-[280px] bg-brand-panel border border-white/5 md:rounded-xl p-5 md:p-6 flex flex-col shrink-0 shadow-2xl">
       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-sm font-bold tracking-wide text-white text-center md:text-left w-full">Practical Tools</h2>
+        <h2 class="text-xl font-bold tracking-wide text-white text-center md:text-left w-full">Practical Tools</h2>
         <button id="mobileMenuBtn" class="md:hidden text-white p-2">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
         </button>
       </div>
       <nav id="sidebarNav" class="hidden md:flex flex-col gap-1.5">
         ${o.map(n=>`
-      <a href="#" class="nav-item ${n==="Cookie"?"active bg-brand-accent-bg text-brand-accent font-semibold":"text-brand-text-muted hover:bg-white/5 hover:text-white"} px-4 py-2.5 rounded-lg text-sm transition-all" data-menu="${n}">
+      <a href="#" class="nav-item ${n==="Cookie"?"active bg-brand-accent-bg text-brand-accent font-semibold":"text-brand-text-muted hover:bg-white/5 hover:text-white"} px-4 py-3 rounded-lg text-base transition-all" data-menu="${n}">
         ${n}
       </a>
     `).join("")}
