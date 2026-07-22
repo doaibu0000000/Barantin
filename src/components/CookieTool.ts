@@ -1,7 +1,7 @@
 export const CookieTool = () => {
   return `
     <div class="flex flex-col gap-2">
-      <label for="cookieContent" class="text-xs font-semibold text-white">Cookie Content</label>
+      <label for="cookieContent" class="text-xs font-semibold text-white">Nomor AJU SSM / PTK</label>
       <textarea id="cookieContent" placeholder="Input cookie contents..." class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8"></textarea>
     </div>
 
