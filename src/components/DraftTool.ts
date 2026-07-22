@@ -10,7 +10,7 @@ export const DraftTool = () => {
         <label for="pdfUpload" class="text-sm font-semibold text-white">Upload File PDF</label>
         <div class="relative">
           <input type="file" id="pdfUpload" accept=".pdf" class="hidden" />
-          <label for="pdfUpload" class="w-full bg-brand-input hover:bg-brand-input/80 border border-brand-border border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors text-brand-text-muted hover:text-white">
+          <label for="pdfUpload" class="w-full h-[108px] bg-brand-input hover:bg-brand-input/80 border border-brand-border border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors text-brand-text-muted hover:text-white">
             <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
             <span id="pdfFileName" class="text-sm font-medium">Klik untuk memilih file PDF</span>
           </label>
@@ -19,7 +19,7 @@ export const DraftTool = () => {
 
       <div id="docSection" class="flex flex-col gap-2 hidden">
         <label for="docNumber" class="text-sm font-semibold text-white">Nomor Dokumen</label>
-        <input type="text" id="docNumber" placeholder="Contoh: 1615 atau 2026-T1.0-3200.2-K.1.1-001615" class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors" />
+        <textarea id="docNumber" placeholder="Contoh: 1615 atau 2026-T1.0-3200.2-K.1.1-001615" class="w-full h-[108px] bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none"></textarea>
         <p class="text-xs text-brand-text-muted mt-1">Anda bisa memasukkan nomor lengkap atau hanya angka belakangnya (misal: 1615).</p>
       </div>
 
