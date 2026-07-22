@@ -7,7 +7,7 @@ export const DraftTool = () => {
           <button type="button" id="tabDoc" class="px-4 py-2 text-sm font-semibold rounded-md text-brand-text-muted hover:text-white transition-all">No Dokumen</button>
         </div>
         
-        <input type="text" inputmode="numeric" maxlength="6" id="quickDocNumber" placeholder="No KT" class="hidden w-20 bg-brand-input border border-brand-border rounded-lg px-2 py-2 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors text-center" />
+        <input type="text" autocomplete="off" maxlength="6" id="quickDocNumber" placeholder="No KT" class="w-20 bg-brand-input border border-brand-border rounded-lg px-2 py-2 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors text-center" />
       </div>
 
       <div id="pdfSection" class="flex flex-col gap-2">
@@ -84,7 +84,6 @@ export const bindDraftToolEvents = () => {
       
       pdfSection?.classList.remove('hidden');
       docSection?.classList.add('hidden');
-      quickDocNumber?.classList.add('hidden');
     } else {
       tabDoc?.classList.add('bg-brand-accent', 'text-white');
       tabDoc?.classList.remove('text-brand-text-muted', 'hover:text-white');
@@ -93,7 +92,6 @@ export const bindDraftToolEvents = () => {
       
       docSection?.classList.remove('hidden');
       pdfSection?.classList.add('hidden');
-      quickDocNumber?.classList.remove('hidden');
     }
   };
 
@@ -104,6 +102,13 @@ export const bindDraftToolEvents = () => {
   tabDoc?.addEventListener('click', () => switchTab('doc'));
 
   if (quickDocNumber && docNumber) {
+    quickDocNumber.addEventListener('focus', () => {
+      quickDocNumber.placeholder = '';
+    });
+    quickDocNumber.addEventListener('blur', () => {
+      quickDocNumber.placeholder = 'No KT';
+    });
+    
     quickDocNumber.addEventListener('input', () => {
       let rawVal = quickDocNumber.value.replace(/\D/g, '');
       if (rawVal.length > 6) {
