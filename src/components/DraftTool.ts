@@ -17,7 +17,7 @@ export const DraftTool = () => {
       </div>
 
       <div id="docSection" class="flex flex-col gap-2 hidden">
-        <textarea id="docNumber" placeholder="Contoh: 1615 atau 2026-T1.0-3200.2-K.1.1-001615" class="w-full h-[108px] bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none"></textarea>
+        <textarea id="docNumber" placeholder="Masukan no KT" class="w-full h-[108px] bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none"></textarea>
       </div>
 
       <button id="processDraftBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md mt-auto">
