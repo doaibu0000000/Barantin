@@ -1,5 +1,5 @@
 (function(){const s=document.createElement("link").relList;if(s&&s.supports&&s.supports("modulepreload"))return;for(const e of document.querySelectorAll('link[rel="modulepreload"]'))r(e);new MutationObserver(e=>{for(const t of e)if(t.type==="childList")for(const l of t.addedNodes)l.tagName==="LINK"&&l.rel==="modulepreload"&&r(l)}).observe(document,{childList:!0,subtree:!0});function n(e){const t={};return e.integrity&&(t.integrity=e.integrity),e.referrerPolicy&&(t.referrerPolicy=e.referrerPolicy),e.crossOrigin==="use-credentials"?t.credentials="include":e.crossOrigin==="anonymous"?t.credentials="omit":t.credentials="same-origin",t}function r(e){if(e.ep)return;e.ep=!0;const t=n(e);fetch(e.href,t)}})();const i=()=>{const o=["Cookie","Text Editor","Card Key Splitter"];return`
-    <aside class="w-full md:w-[240px] bg-brand-panel border border-white/5 md:rounded-xl p-5 md:p-6 flex flex-col shrink-0 self-stretch shadow-2xl">
+    <aside class="w-full md:w-[280px] bg-brand-panel border border-white/5 md:rounded-xl p-5 md:p-6 flex flex-col shrink-0 self-stretch shadow-2xl">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-sm font-bold tracking-wide text-white text-center md:text-left w-full">Practical Tools</h2>
         <button id="mobileMenuBtn" class="md:hidden text-white p-2">
@@ -46,7 +46,7 @@
 `,l+=`Input Length: ${e.length} characters.
 `,l+=`
 (Cookie parsing logic goes here)`,n.value=l})},u=()=>`
-    <div class="flex flex-col md:flex-row items-stretch gap-6 w-full max-w-6xl mx-auto p-4 md:p-8 min-h-screen">
+    <div class="flex flex-col md:flex-row items-stretch gap-6 w-full max-w-[1600px] mx-auto p-4 md:p-8 min-h-screen">
       ${i()}
       
       <main class="bg-brand-panel border border-white/5 rounded-xl flex-1 p-6 md:p-8 flex flex-col gap-5 shadow-2xl">
