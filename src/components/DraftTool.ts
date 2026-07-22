@@ -2,8 +2,8 @@ export const DraftTool = () => {
   return `
     <div class="flex flex-col gap-4 h-full">
       <div class="flex bg-zinc-800/50 p-1 rounded-lg mb-2">
-        <button id="tabPdf" class="flex-1 py-2 text-sm font-semibold rounded-md bg-brand-accent text-white transition-all">Upload PDF</button>
-        <button id="tabDoc" class="flex-1 py-2 text-sm font-semibold rounded-md text-brand-text-muted hover:text-white transition-all">Nomor Dokumen</button>
+        <button type="button" id="tabPdf" class="flex-1 py-2 text-sm font-semibold rounded-md bg-brand-accent text-white transition-all">Upload PDF</button>
+        <button type="button" id="tabDoc" class="flex-1 py-2 text-sm font-semibold rounded-md text-brand-text-muted hover:text-white transition-all">Nomor Dokumen</button>
       </div>
 
       <div id="pdfSection" class="flex flex-col gap-2">
@@ -20,7 +20,7 @@ export const DraftTool = () => {
         <textarea id="docNumber" placeholder="Masukan no KT" class="w-full h-[140px] bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none"></textarea>
       </div>
 
-      <button id="processDraftBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md mt-auto">
+      <button type="button" id="processDraftBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md mt-auto">
         Proses Data Draft
       </button>
 
