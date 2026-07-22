@@ -25,17 +25,24 @@ export const bindCookieToolEvents = () => {
       const inputCookies = cookieContent.value;
       
       if (!inputCookies.trim()) {
-        processingResults.value = "Silakan masukan terlebih dahulu No SSM / PTK untuk diproses.";
+        processingResults.value = "Silakan masukan terlebih dahulu teks atau No SSM / PTK untuk diproses.";
         processingResults.classList.add('text-red-500');
         return;
       }
 
       processingResults.classList.remove('text-red-500');
-      let result = "Processing...\n\n";
-      result += `Input Length: ${inputCookies.length} characters.\n`;
-      result += "\n(Cookie parsing logic goes here)";
       
-      processingResults.value = result;
+      // Extract 26-character alphanumeric sequences
+      const regex = /[a-zA-Z0-9]{26}/g;
+      const matches = inputCookies.match(regex);
+      
+      if (matches && matches.length > 0) {
+        // User wants the extracted data only, without spaces. 
+        // The regex matches themselves won't have spaces.
+        processingResults.value = matches.join('\n');
+      } else {
+        processingResults.value = "Tidak ditemukan Nomor AJU SSM / PTK (26 karakter) yang valid pada teks.";
+      }
     });
   }
 };
