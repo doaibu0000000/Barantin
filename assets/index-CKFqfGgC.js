@@ -28,7 +28,8 @@
     </div>
   `,w=()=>{const a=document.getElementById("processBtn"),o=document.getElementById("cookieContent"),n=document.getElementById("processingResults");o&&o.addEventListener("input",()=>{const l=o.value,e=/[a-zA-Z0-9]{26}/g,t=l.match(e);if(t&&t.length>0){const i=t.join(`
 `);l.replace(e,"").trim().length>0&&(o.value=i)}}),a&&a.addEventListener("click",()=>{const l=o.value;if(!l.trim()){n.value="Silakan masukan terlebih dahulu teks atau No SSM / PTK untuk diproses.",n.classList.add("text-red-500");return}n.classList.remove("text-red-500");const e=/[a-zA-Z0-9]{26}/g,t=l.match(e);t&&t.length>0?n.value=t.join(`
-`):n.value="Tidak ditemukan Nomor AJU SSM / PTK (26 karakter) yang valid pada teks."})},k=()=>`
+`)+`
+Done`:n.value="Tidak ditemukan Nomor AJU SSM / PTK (26 karakter) yang valid pada teks."})},k=()=>`
     <div class="flex flex-col md:flex-row items-start gap-6 w-full max-w-[1600px] mx-auto p-4 md:p-8 min-h-screen pb-24 md:pb-8">
       ${v()}
       
