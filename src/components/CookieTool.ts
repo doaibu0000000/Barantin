@@ -11,7 +11,7 @@ export const CookieTool = () => {
 
     <div class="flex flex-col gap-2">
       <label for="processingResults" class="text-xs font-semibold text-white">Done</label>
-      <textarea id="processingResults" placeholder="The processing results are shown here..." class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8" readonly></textarea>
+      <textarea id="processingResults" placeholder="Hasil pemrosesan ditampilkan di sini......" class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8" readonly></textarea>
     </div>
   `;
 };
