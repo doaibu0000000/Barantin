@@ -2,7 +2,7 @@ export const DraftTool = () => {
   return `
     <div class="flex flex-col gap-4 h-full">
       <div class="flex w-fit bg-zinc-800/50 p-1 rounded-lg mb-2">
-        <button type="button" id="tabPdf" class="px-4 py-2 text-sm font-semibold rounded-md bg-brand-accent text-white transition-all">Upload PDF</button>
+        <button type="button" id="tabPdf" class="px-4 py-2 text-sm font-semibold rounded-md bg-brand-accent text-white transition-all">PDF</button>
         <button type="button" id="tabDoc" class="px-4 py-2 text-sm font-semibold rounded-md text-brand-text-muted hover:text-white transition-all">No Dokumen</button>
       </div>
 
