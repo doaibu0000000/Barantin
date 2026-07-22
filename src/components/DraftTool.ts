@@ -33,7 +33,7 @@ export const DraftTool = () => {
       </div>
 
       <button type="button" id="processDraftBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md mt-auto">
-        Proses Data Draft
+        Buat Draft
       </button>
 
       <div class="flex flex-col gap-2 mt-4">
