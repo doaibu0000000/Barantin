@@ -3,21 +3,21 @@ export const Sidebar = () => {
   
   const renderNavItems = () => {
     return menus.map(menu => `
-      <a href="#" class="nav-item ${menu === 'Cookie' ? 'active bg-brand-accent-bg text-brand-accent' : 'text-brand-text-muted hover:bg-white/5 hover:text-white'} px-4 py-3 rounded-md text-sm font-medium transition-all" data-menu="${menu}">
+      <a href="#" class="nav-item ${menu === 'Cookie' ? 'active bg-brand-accent-bg text-brand-accent font-semibold' : 'text-brand-text-muted hover:bg-white/5 hover:text-white'} px-4 py-2.5 rounded-lg text-sm transition-all" data-menu="${menu}">
         ${menu}
       </a>
     `).join('');
   };
 
   return `
-    <aside class="w-full md:w-[250px] bg-brand-panel md:rounded-lg p-4 md:p-6 flex flex-col shrink-0 overflow-hidden">
-      <div class="flex justify-between items-center md:mb-6">
-        <h2 class="text-base font-bold text-center md:text-left w-full">Practical Tools</h2>
+    <aside class="w-full md:w-[240px] bg-brand-panel border border-white/5 md:rounded-xl p-5 md:p-6 flex flex-col shrink-0 self-stretch shadow-2xl">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-sm font-bold tracking-wide text-white text-center md:text-left w-full">Practical Tools</h2>
         <button id="mobileMenuBtn" class="md:hidden text-white p-2">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
         </button>
       </div>
-      <nav id="sidebarNav" class="hidden md:flex flex-col gap-1 mt-4 md:mt-0">
+      <nav id="sidebarNav" class="hidden md:flex flex-col gap-1.5 flex-1">
         ${renderNavItems()}
       </nav>
     </aside>
@@ -30,11 +30,11 @@ export const bindSidebarEvents = () => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
       navItems.forEach(nav => {
-        nav.classList.remove('active', 'bg-brand-accent-bg', 'text-brand-accent');
+        nav.classList.remove('active', 'bg-brand-accent-bg', 'text-brand-accent', 'font-semibold');
         nav.classList.add('text-brand-text-muted');
       });
       item.classList.remove('text-brand-text-muted');
-      item.classList.add('active', 'bg-brand-accent-bg', 'text-brand-accent');
+      item.classList.add('active', 'bg-brand-accent-bg', 'text-brand-accent', 'font-semibold');
     });
   });
 
