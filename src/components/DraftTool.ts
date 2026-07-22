@@ -74,7 +74,11 @@ export const bindDraftToolEvents = () => {
   tabDoc?.addEventListener('click', () => switchTab('doc'));
 
   if (docNumber) {
+    let debounceTimer: ReturnType<typeof setTimeout>;
+
     docNumber.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+
       const rawNumber = docNumber.value;
       if (!rawNumber) return;
 
@@ -102,12 +106,22 @@ export const bindDraftToolEvents = () => {
                 docNumber.value = `2026-T1.0-3200.2-K.1.1-${padded}`;
              }
           }
+        } else {
+          // Hanya angka. Gunakan debounce agar tidak mengganggu saat sedang mengetik
+          debounceTimer = setTimeout(() => {
+            const currentVal = docNumber.value.trim();
+            if (/^\d{3,6}$/.test(currentVal)) {
+              const padded = currentVal.padStart(6, '0');
+              docNumber.value = `2026-T1.0-3200.2-K.1.1-${padded}`;
+            }
+          }, 800);
         }
       }
     });
 
     // Event change ter-trigger saat user selesai mengetik dan menyembunyikan keyboard/pindah fokus
     docNumber.addEventListener('change', () => {
+      clearTimeout(debounceTimer);
       const rawNumber = docNumber.value.trim();
       // Cek apakah user HANYA mengetik 3-6 angka saja
       if (/^\d{3,6}$/.test(rawNumber)) {
