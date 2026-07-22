@@ -20,6 +20,25 @@ export const bindCookieToolEvents = () => {
   const processBtn = document.getElementById('processBtn') as HTMLButtonElement;
   const cookieContent = document.getElementById('cookieContent') as HTMLTextAreaElement;
   const processingResults = document.getElementById('processingResults') as HTMLTextAreaElement;
+  if (cookieContent) {
+    cookieContent.addEventListener('input', () => {
+      const val = cookieContent.value;
+      const regex = /[a-zA-Z0-9]{26}/g;
+      const matches = val.match(regex);
+      
+      if (matches && matches.length > 0) {
+        const cleaned = matches.join('\n');
+        const withoutMatches = val.replace(regex, '');
+        // If there is any text other than spaces/newlines, clean the box
+        const hasGarbage = withoutMatches.trim().length > 0;
+        
+        if (hasGarbage) {
+          cookieContent.value = cleaned;
+        }
+      }
+    });
+  }
+
   if (processBtn) {
     processBtn.addEventListener('click', () => {
       const inputCookies = cookieContent.value;
