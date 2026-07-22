@@ -1,5 +1,5 @@
 export const Sidebar = () => {
-  const menus = ['Cookie', 'Text Editor', 'Card Key Splitter', 'Html Image', 'Link Html', 'Merge Files', 'JSON', 'Account', 'Fb Link'];
+  const menus = ['Cookie', 'Text Editor', 'Card Key Splitter'];
   
   const renderNavItems = () => {
     return menus.map(menu => `
