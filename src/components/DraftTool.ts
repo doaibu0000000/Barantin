@@ -68,6 +68,37 @@ export const bindDraftToolEvents = () => {
   tabPdf?.addEventListener('click', () => switchTab('pdf'));
   tabDoc?.addEventListener('click', () => switchTab('doc'));
 
+  if (docNumber) {
+    docNumber.addEventListener('paste', () => {
+      // Tunggu sebentar sampai teks benar-benar masuk ke input dari proses paste
+      setTimeout(() => {
+        let rawNumber = docNumber.value;
+        if (!rawNumber) return;
+        
+        let finalNumber = rawNumber;
+        const noSpaceStr = rawNumber.replace(/\s+/g, '');
+        const fullMatch = noSpaceStr.match(/2026-[A-Z0-9\.-]+-\d{4,6}/i);
+        
+        if (fullMatch) {
+          finalNumber = fullMatch[0].toUpperCase();
+        } else {
+          const digitGroups = rawNumber.match(/\b\d{1,6}\b/g);
+          if (digitGroups) {
+             const candidate = digitGroups.reverse().find(g => g.length >= 3 && g.length <= 6) || digitGroups[0];
+             if (candidate) {
+                const padded = candidate.padStart(6, '0');
+                finalNumber = `2026-T1.0-3200.2-K.1.1-${padded}`;
+             }
+          }
+        }
+        
+        if (finalNumber !== rawNumber) {
+          docNumber.value = finalNumber;
+        }
+      }, 10);
+    });
+  }
+
   if (pdfUpload && pdfFileName) {
     pdfUpload.addEventListener('change', (e) => {
       const target = e.target as HTMLInputElement;
