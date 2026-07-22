@@ -13,7 +13,13 @@
 }
 
 body {
-  @apply bg-brand-bg text-brand-text font-sans min-h-[100dvh];
+  @apply bg-brand-bg text-brand-text font-sans min-h-screen;
+}
+
+@media (max-width: 767px) {
+  body {
+    @apply h-screen overflow-hidden fixed inset-0;
+  }
 }
 
 
