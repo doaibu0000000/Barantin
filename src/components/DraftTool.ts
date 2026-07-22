@@ -69,33 +69,35 @@ export const bindDraftToolEvents = () => {
   tabDoc?.addEventListener('click', () => switchTab('doc'));
 
   if (docNumber) {
-    docNumber.addEventListener('paste', () => {
-      // Tunggu sebentar sampai teks benar-benar masuk ke input dari proses paste
-      setTimeout(() => {
-        let rawNumber = docNumber.value;
-        if (!rawNumber) return;
-        
-        let finalNumber = rawNumber;
-        const noSpaceStr = rawNumber.replace(/\s+/g, '');
-        const fullMatch = noSpaceStr.match(/2026-[A-Z0-9\.-]+-\d{4,6}/i);
-        
-        if (fullMatch) {
-          finalNumber = fullMatch[0].toUpperCase();
-        } else {
-          const digitGroups = rawNumber.match(/\b\d{1,6}\b/g);
+    docNumber.addEventListener('input', () => {
+      const rawNumber = docNumber.value;
+      if (!rawNumber) return;
+
+      const noSpaceStr = rawNumber.replace(/\s+/g, '');
+      const fullMatch = noSpaceStr.match(/2026-[A-Z0-9\.-]+-\d{4,6}/i);
+      
+      if (fullMatch) {
+        const extracted = fullMatch[0].toUpperCase();
+        // Jika ada karakter lain (teks, spasi, baris baru), langsung bersihkan
+        if (noSpaceStr.length > extracted.length || /\s/.test(rawNumber)) {
+          docNumber.value = extracted;
+        }
+      } else {
+        // Logika untuk nomor pendek (misal: "tolong 1615 pak")
+        // Hanya bersihkan jika teks mengandung karakter selain angka, 
+        // sehingga jika user mengetik "1615" manual tidak terganggu.
+        const hasNonDigit = /\D/.test(rawNumber);
+        if (hasNonDigit) {
+          const digitGroups = rawNumber.match(/\b\d{3,6}\b/g);
           if (digitGroups) {
-             const candidate = digitGroups.reverse().find(g => g.length >= 3 && g.length <= 6) || digitGroups[0];
+             const candidate = digitGroups.reverse()[0];
              if (candidate) {
                 const padded = candidate.padStart(6, '0');
-                finalNumber = `2026-T1.0-3200.2-K.1.1-${padded}`;
+                docNumber.value = `2026-T1.0-3200.2-K.1.1-${padded}`;
              }
           }
         }
-        
-        if (finalNumber !== rawNumber) {
-          docNumber.value = finalNumber;
-        }
-      }, 10);
+      }
     });
   }
 
