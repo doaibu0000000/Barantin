@@ -7,7 +7,7 @@ export const DraftTool = () => {
           <button type="button" id="tabDoc" class="px-4 py-2 text-sm font-semibold rounded-md text-brand-text-muted hover:text-white transition-all">No Dokumen</button>
         </div>
         
-        <input type="text" inputmode="numeric" id="quickDocNumber" placeholder="No..." class="hidden w-20 bg-brand-input border border-brand-border rounded-lg px-2 py-2 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors text-center" />
+        <input type="text" inputmode="numeric" maxlength="6" id="quickDocNumber" placeholder="No KT" class="hidden w-20 bg-brand-input border border-brand-border rounded-lg px-2 py-2 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors text-center" />
       </div>
 
       <div id="pdfSection" class="flex flex-col gap-2">
@@ -106,6 +106,9 @@ export const bindDraftToolEvents = () => {
   if (quickDocNumber && docNumber) {
     quickDocNumber.addEventListener('input', () => {
       let rawVal = quickDocNumber.value.replace(/\D/g, '');
+      if (rawVal.length > 6) {
+        rawVal = rawVal.slice(0, 6);
+      }
       quickDocNumber.value = rawVal;
       
       if (rawVal.length > 0) {
