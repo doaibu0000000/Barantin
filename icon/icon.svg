@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="barantinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="#121316"/>
+  <rect x="30" y="30" width="452" height="452" rx="90" fill="#18191c" stroke="#2a2d34" stroke-width="10"/>
+  <!-- Shield Emblem / B Symbol -->
+  <path d="M160 140 H280 C324 140 360 166 360 206 C360 234 340 256 314 264 C346 274 368 300 368 334 C368 378 328 406 280 406 H160 V140 Z" fill="url(#barantinGrad)"/>
+  <path d="M216 186 H272 C288 186 302 196 302 212 C302 228 288 238 272 238 H216 V186 Z M216 284 H278 C296 284 310 296 310 314 C310 332 296 344 278 344 H216 V284 Z" fill="#18191c"/>
+  <circle cx="390" cy="120" r="22" fill="url(#glowGrad)"/>
+</svg>
