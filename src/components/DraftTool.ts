@@ -109,6 +109,7 @@ export const bindDraftToolEvents = () => {
       quickDocNumber.placeholder = 'No KT';
     });
     
+    let quickDebounceTimer: ReturnType<typeof setTimeout>;
     quickDocNumber.addEventListener('input', () => {
       let rawVal = quickDocNumber.value.replace(/\D/g, '');
       if (rawVal.length > 6) {
@@ -116,9 +117,15 @@ export const bindDraftToolEvents = () => {
       }
       quickDocNumber.value = rawVal;
       
+      clearTimeout(quickDebounceTimer);
+      
       if (rawVal.length > 0) {
-        const padded = rawVal.padStart(6, '0');
-        docNumber.value = `2026-T1.0-3200.2-K.1.1-${padded}`;
+        quickDebounceTimer = setTimeout(() => {
+          const padded = rawVal.padStart(6, '0');
+          showLoader(600, () => {
+            docNumber.value = `2026-T1.0-3200.2-K.1.1-${padded}`;
+          });
+        }, 400); // 400ms debounce
       } else {
         docNumber.value = '';
       }
