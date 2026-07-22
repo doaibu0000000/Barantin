@@ -32,7 +32,7 @@ export const DraftTool = () => {
 };
 
 export const bindDraftToolEvents = () => {
-  let activeTab = 'pdf'; // 'pdf' or 'doc'
+  let activeTab = localStorage.getItem('draftActiveTab') || 'pdf'; // Default to pdf
   const tabPdf = document.getElementById('tabPdf');
   const tabDoc = document.getElementById('tabDoc');
   const pdfSection = document.getElementById('pdfSection');
@@ -46,6 +46,8 @@ export const bindDraftToolEvents = () => {
 
   const switchTab = (tab: string) => {
     activeTab = tab;
+    localStorage.setItem('draftActiveTab', tab);
+    
     if (tab === 'pdf') {
       tabPdf?.classList.add('bg-brand-accent', 'text-white');
       tabPdf?.classList.remove('text-brand-text-muted', 'hover:text-white');
@@ -64,6 +66,9 @@ export const bindDraftToolEvents = () => {
       pdfSection?.classList.add('hidden');
     }
   };
+
+  // Set inisial UI berdasarkan tab terakhir yang aktif
+  switchTab(activeTab);
 
   tabPdf?.addEventListener('click', () => switchTab('pdf'));
   tabDoc?.addEventListener('click', () => switchTab('doc'));
