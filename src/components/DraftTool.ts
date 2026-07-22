@@ -69,17 +69,17 @@ export const bindDraftToolEvents = () => {
       // Jika input hanya berisi angka (contoh: 1615), format menjadi lengkap
       if (/^\d+$/.test(rawNumber)) {
         const padded = rawNumber.padStart(6, '0');
-        finalNumber = \`2026-T1.0-3200.2-K.1.1-\${padded}\`;
+        finalNumber = `2026-T1.0-3200.2-K.1.1-${padded}`;
       }
 
-      let resultText = \`Nomor Dokumen : \${finalNumber}\`;
+      let resultText = `Nomor Dokumen : ${finalNumber}`;
       if (file) {
-        resultText += \`\\nFile PDF      : \${file.name}\`;
+        resultText += `\nFile PDF      : ${file.name}`;
       } else {
-        resultText += \`\\nFile PDF      : (Tidak ada file yang dipilih)\`;
+        resultText += `\nFile PDF      : (Tidak ada file yang dipilih)`;
       }
 
-      draftResults.value = resultText + '\\n\\nDone';
+      draftResults.value = resultText + '\n\nDone';
     });
   }
 };
