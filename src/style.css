@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-bg: #1a1b1e;
-  --color-brand-panel: #141517;
+  --color-brand-bg: #202125;
+  --color-brand-panel: #121212;
   --color-brand-accent: #3b82f6;
   --color-brand-accent-hover: #2563eb;
   --color-brand-accent-bg: #1e283d;
-  --color-brand-input: #383838;
+  --color-brand-input: #3b3b3b;
   --color-brand-border: #4a4a4a;
   --color-brand-text: #ffffff;
   --color-brand-text-muted: #909296;
