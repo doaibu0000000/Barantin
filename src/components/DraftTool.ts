@@ -110,12 +110,16 @@ export const bindDraftToolEvents = () => {
     });
     
     let quickDebounceTimer: ReturnType<typeof setTimeout>;
+    let lastRawVal = '';
     quickDocNumber.addEventListener('input', () => {
       let rawVal = quickDocNumber.value.replace(/\D/g, '');
       if (rawVal.length > 6) {
         rawVal = rawVal.slice(0, 6);
       }
       quickDocNumber.value = rawVal;
+      
+      if (rawVal === lastRawVal) return;
+      lastRawVal = rawVal;
       
       clearTimeout(quickDebounceTimer);
       
