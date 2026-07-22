@@ -100,6 +100,16 @@ export const bindDraftToolEvents = () => {
         }
       }
     });
+
+    // Event change ter-trigger saat user selesai mengetik dan menyembunyikan keyboard/pindah fokus
+    docNumber.addEventListener('change', () => {
+      const rawNumber = docNumber.value.trim();
+      // Cek apakah user HANYA mengetik 3-6 angka saja
+      if (/^\d{3,6}$/.test(rawNumber)) {
+        const padded = rawNumber.padStart(6, '0');
+        docNumber.value = `2026-T1.0-3200.2-K.1.1-${padded}`;
+      }
+    });
   }
 
   if (pdfUpload && pdfFileName) {
