@@ -13,7 +13,7 @@
 }
 
 body {
-  @apply bg-brand-bg text-brand-text min-h-screen font-sans;
+  @apply bg-brand-bg text-brand-text font-sans;
 }
 
 
