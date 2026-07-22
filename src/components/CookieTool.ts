@@ -26,9 +26,11 @@ export const bindCookieToolEvents = () => {
       
       if (!inputCookies.trim()) {
         processingResults.value = "Silakan masukkan No SSM / PTK untuk diproses.";
+        processingResults.classList.add('text-red-500');
         return;
       }
 
+      processingResults.classList.remove('text-red-500');
       let result = "Processing...\n\n";
       result += `Input Length: ${inputCookies.length} characters.\n`;
       result += "\n(Cookie parsing logic goes here)";
