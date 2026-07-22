@@ -1,9 +1,9 @@
 export const Sidebar = () => {
-  const menus = ['Cookie', 'Text Editor', 'Card Key Splitter'];
+  const menus = ['Surtu 2', 'Draft', 'Revisi'];
   
   const renderNavItems = () => {
     return menus.map(menu => `
-      <a href="#" class="nav-item ${menu === 'Cookie' ? 'active bg-brand-accent-bg text-brand-accent font-semibold' : 'text-brand-text-muted hover:bg-white/5 hover:text-white'} px-4 py-3 rounded-lg text-base transition-all" data-menu="${menu}">
+      <a href="#" class="nav-item ${menu === 'Surtu 2' ? 'active bg-brand-accent-bg text-brand-accent font-semibold' : 'text-brand-text-muted hover:bg-white/5 hover:text-white'} px-4 py-3 rounded-lg text-base transition-all" data-menu="${menu}">
         ${menu}
       </a>
     `).join('');
@@ -12,7 +12,7 @@ export const Sidebar = () => {
   return `
     <aside class="w-full md:w-[280px] bg-brand-panel border border-white/5 md:rounded-xl p-5 md:p-6 flex flex-col shrink-0 shadow-2xl">
       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-bold tracking-wide text-white text-center md:text-left w-full">Practical Tools</h2>
+        <h2 class="text-xl font-bold tracking-wide text-white text-center md:text-left w-full">Barantin Tools</h2>
         <button id="mobileMenuBtn" class="md:hidden text-white p-2">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
         </button>
