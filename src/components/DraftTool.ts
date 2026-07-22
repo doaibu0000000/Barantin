@@ -73,19 +73,20 @@ export const bindDraftToolEvents = () => {
       const rawNumber = docNumber.value;
       if (!rawNumber) return;
 
-      const noSpaceStr = rawNumber.replace(/\s+/g, '');
-      const fullMatch = noSpaceStr.match(/2026-[A-Z0-9\.-]+-\d{4,6}/i);
+      const regex = /2026-[A-Z0-9\.-]{10,30}-\d{4,6}/gi;
+      const matches = rawNumber.match(regex);
       
-      if (fullMatch) {
-        const extracted = fullMatch[0].toUpperCase();
-        // Jika ada karakter lain (teks, spasi, baris baru), langsung bersihkan
-        if (noSpaceStr.length > extracted.length || /\s/.test(rawNumber)) {
-          docNumber.value = extracted;
+      if (matches && matches.length > 0) {
+        const cleaned = matches.map(m => m.toUpperCase()).join('\n');
+        const withoutMatches = rawNumber.replace(regex, '');
+        // Bersihkan jika ada teks lain selain nomor dokumen yang diekstrak (termasuk spasi)
+        const hasGarbage = withoutMatches.trim().length > 0;
+        
+        if (hasGarbage) {
+          docNumber.value = cleaned;
         }
       } else {
         // Logika untuk nomor pendek (misal: "tolong 1615 pak")
-        // Hanya bersihkan jika teks mengandung karakter selain angka, 
-        // sehingga jika user mengetik "1615" manual tidak terganggu.
         const hasNonDigit = /\D/.test(rawNumber);
         if (hasNonDigit) {
           const digitGroups = rawNumber.match(/\b\d{3,6}\b/g);
@@ -140,12 +141,12 @@ export const bindDraftToolEvents = () => {
         
         let finalNumber = rawNumber;
         
-        // 1. Coba ekstrak nomor dokumen lengkap dari teks (mengabaikan spasi/enter)
-        const noSpaceStr = rawNumber.replace(/\s+/g, '');
-        const fullMatch = noSpaceStr.match(/2026-[A-Z0-9\.-]+-\d{4,6}/i);
+        // 1. Ekstrak satu atau banyak nomor dokumen lengkap
+        const regex = /2026-[A-Z0-9\.-]{10,30}-\d{4,6}/gi;
+        const matches = rawNumber.match(regex);
         
-        if (fullMatch) {
-          finalNumber = fullMatch[0].toUpperCase();
+        if (matches && matches.length > 0) {
+          finalNumber = matches.map(m => m.toUpperCase()).join('\n');
         } else {
           // 2. Jika tidak ada format lengkap, cari angka 3-6 digit (contoh: 1615)
           const digitGroups = rawNumber.match(/\b\d{1,6}\b/g);
@@ -158,9 +159,9 @@ export const bindDraftToolEvents = () => {
           }
         }
         
-        // Tampilkan hanya nomor yang bersih di kotak input itu sendiri
+        // Tampilkan nomor yang bersih di kotak input itu sendiri
         docNumber.value = finalNumber;
-        resultText = `Nomor Dokumen: ${finalNumber}`;
+        resultText = `Nomor Dokumen:\n${finalNumber}`;
       }
 
       draftResults.value = resultText + '\n\nDone';
