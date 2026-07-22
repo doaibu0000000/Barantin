@@ -1,7 +1,7 @@
 export const DraftTool = () => {
   return `
     <div class="flex flex-col gap-4 h-full">
-      <div class="flex bg-zinc-800/50 p-1 rounded-lg">
+      <div class="flex bg-zinc-800/50 p-1 rounded-lg mb-2">
         <button id="tabPdf" class="flex-1 py-2 text-sm font-semibold rounded-md bg-brand-accent text-white transition-all">Upload PDF</button>
         <button id="tabDoc" class="flex-1 py-2 text-sm font-semibold rounded-md text-brand-text-muted hover:text-white transition-all">Nomor Dokumen</button>
       </div>
@@ -9,7 +9,7 @@ export const DraftTool = () => {
       <div id="pdfSection" class="flex flex-col gap-2">
         <div class="relative">
           <input type="file" id="pdfUpload" accept=".pdf" class="hidden" />
-          <label for="pdfUpload" class="w-full h-[108px] bg-brand-input hover:bg-brand-input/80 border border-brand-border border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors text-brand-text-muted hover:text-white">
+          <label for="pdfUpload" class="w-full h-[140px] bg-brand-input hover:bg-brand-input/80 border border-brand-border border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors text-brand-text-muted hover:text-white">
             <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
             <span id="pdfFileName" class="text-sm font-medium">Klik untuk memilih file PDF</span>
           </label>
@@ -17,7 +17,7 @@ export const DraftTool = () => {
       </div>
 
       <div id="docSection" class="flex flex-col gap-2 hidden">
-        <textarea id="docNumber" placeholder="Masukan no KT" class="w-full h-[108px] bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none"></textarea>
+        <textarea id="docNumber" placeholder="Masukan no KT" class="w-full h-[140px] bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none"></textarea>
       </div>
 
       <button id="processDraftBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md mt-auto">
