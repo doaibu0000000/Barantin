@@ -12,9 +12,9 @@ export default defineConfig(({ command }) => ({
       manifest: {
         name: 'Barantin',
         short_name: 'Barantin',
-        description: 'Practical Tools Application',
-        theme_color: '#1a1b1e',
-        background_color: '#1a1b1e',
+        description: 'Barantin Practical Tools Application',
+        theme_color: '#202125',
+        background_color: '#202125',
         display: 'standalone',
         icons: [
           {
@@ -22,6 +22,16 @@ export default defineConfig(({ command }) => ({
             sizes: 'any',
             type: 'image/svg+xml',
             purpose: 'any maskable'
+          },
+          {
+            src: 'icon/icon.svg',
+            sizes: '192x192',
+            type: 'image/svg+xml'
+          },
+          {
+            src: 'icon/icon.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml'
           }
         ]
       }
