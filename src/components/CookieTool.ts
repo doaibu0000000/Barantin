@@ -58,7 +58,7 @@ export const bindCookieToolEvents = () => {
       if (matches && matches.length > 0) {
         // User wants the extracted data only, without spaces. 
         // The regex matches themselves won't have spaces.
-        processingResults.value = matches.join('\n');
+        processingResults.value = matches.join('\n') + '\nDone';
       } else {
         processingResults.value = "Tidak ditemukan Nomor AJU SSM / PTK (26 karakter) yang valid pada teks.";
       }
