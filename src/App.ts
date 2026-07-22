@@ -1,6 +1,7 @@
 import { Sidebar, bindSidebarEvents } from './components/Sidebar';
 import { CookieTool, bindCookieToolEvents } from './components/CookieTool';
 import { DraftTool, bindDraftToolEvents } from './components/DraftTool';
+import { RevisiTool, bindRevisiToolEvents } from './components/RevisiTool';
 
 export const App = () => {
   const activeMenu = localStorage.getItem('activeMenu') || 'Surtu 2';
@@ -8,6 +9,8 @@ export const App = () => {
   
   if (activeMenu === 'Draft') {
     initialContent = DraftTool();
+  } else if (activeMenu === 'Revisi') {
+    initialContent = RevisiTool();
   } else if (activeMenu === 'Surtu 2') {
     initialContent = CookieTool();
   } else {
@@ -36,6 +39,9 @@ export const bindAppEvents = () => {
     if (menuId === 'Draft') {
       mainContent.innerHTML = DraftTool();
       bindDraftToolEvents();
+    } else if (menuId === 'Revisi') {
+      mainContent.innerHTML = RevisiTool();
+      bindRevisiToolEvents();
     } else if (menuId === 'Surtu 2') {
       mainContent.innerHTML = CookieTool();
       bindCookieToolEvents();
@@ -47,6 +53,8 @@ export const bindAppEvents = () => {
   // Default bindings on load based on active menu
   if (activeMenu === 'Draft') {
     bindDraftToolEvents();
+  } else if (activeMenu === 'Revisi') {
+    bindRevisiToolEvents();
   } else if (activeMenu === 'Surtu 2') {
     bindCookieToolEvents();
   }
