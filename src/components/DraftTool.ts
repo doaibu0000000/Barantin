@@ -24,6 +24,9 @@ export const DraftTool = () => {
         Proses Data Draft
       </button>
 
+      <div class="flex flex-col gap-2 mt-4">
+        <textarea id="draftResults" placeholder="Hasil pemrosesan ditampilkan di sini..." class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors h-32" readonly></textarea>
+      </div>
     </div>
   `;
 };
@@ -39,6 +42,7 @@ export const bindDraftToolEvents = () => {
   const pdfFileName = document.getElementById('pdfFileName') as HTMLSpanElement;
   const docNumber = document.getElementById('docNumber') as HTMLInputElement;
   const processDraftBtn = document.getElementById('processDraftBtn') as HTMLButtonElement;
+  const draftResults = document.getElementById('draftResults') as HTMLTextAreaElement;
 
   const switchTab = (tab: string) => {
     activeTab = tab;
@@ -81,27 +85,25 @@ export const bindDraftToolEvents = () => {
 
   if (processDraftBtn) {
     processDraftBtn.addEventListener('click', () => {
+      let resultText = '';
+      
       if (activeTab === 'pdf') {
         const file = pdfUpload?.files?.[0];
         if (!file) {
-          alert("Silakan pilih file PDF terlebih dahulu.");
+          draftResults.value = "Silakan pilih file PDF terlebih dahulu.";
+          draftResults.classList.add('text-red-500');
           return;
         }
-        
-        const originalText = processDraftBtn.textContent || "Proses Data Draft";
-        processDraftBtn.textContent = "Berhasil Diproses!";
-        processDraftBtn.classList.add('!bg-green-600');
-        setTimeout(() => {
-          processDraftBtn.textContent = originalText;
-          processDraftBtn.classList.remove('!bg-green-600');
-        }, 2000);
-        
+        draftResults.classList.remove('text-red-500');
+        resultText = `File PDF yang dipilih: ${file.name}`;
       } else {
         let rawNumber = docNumber.value.trim();
         if (!rawNumber) {
-          alert("Silakan masukkan Nomor Dokumen terlebih dahulu.");
+          draftResults.value = "Silakan masukkan Nomor Dokumen terlebih dahulu.";
+          draftResults.classList.add('text-red-500');
           return;
         }
+        draftResults.classList.remove('text-red-500');
         
         let finalNumber = rawNumber;
         
@@ -125,15 +127,10 @@ export const bindDraftToolEvents = () => {
         
         // Tampilkan hanya nomor yang bersih di kotak input itu sendiri
         docNumber.value = finalNumber;
-        
-        const originalText = processDraftBtn.textContent || "Proses Data Draft";
-        processDraftBtn.textContent = "Berhasil Diproses!";
-        processDraftBtn.classList.add('!bg-green-600');
-        setTimeout(() => {
-          processDraftBtn.textContent = originalText;
-          processDraftBtn.classList.remove('!bg-green-600');
-        }, 2000);
+        resultText = `Nomor Dokumen: ${finalNumber}`;
       }
+
+      draftResults.value = resultText + '\n\nDone';
     });
   }
 };
