@@ -1,9 +1,13 @@
 export const DraftTool = () => {
   return `
     <div class="flex flex-col gap-4 h-full">
-      <div class="flex w-fit bg-zinc-800/50 p-1 rounded-lg mb-2">
-        <button type="button" id="tabPdf" class="px-4 py-2 text-sm font-semibold rounded-md bg-brand-accent text-white transition-all">PDF</button>
-        <button type="button" id="tabDoc" class="px-4 py-2 text-sm font-semibold rounded-md text-brand-text-muted hover:text-white transition-all">No Dokumen</button>
+      <div class="flex flex-row items-center gap-3 mb-2">
+        <div class="flex w-fit bg-zinc-800/50 p-1 rounded-lg">
+          <button type="button" id="tabPdf" class="px-4 py-2 text-sm font-semibold rounded-md bg-brand-accent text-white transition-all">PDF</button>
+          <button type="button" id="tabDoc" class="px-4 py-2 text-sm font-semibold rounded-md text-brand-text-muted hover:text-white transition-all">No Dokumen</button>
+        </div>
+        
+        <input type="text" inputmode="numeric" id="quickDocNumber" placeholder="No..." class="hidden w-20 bg-brand-input border border-brand-border rounded-lg px-2 py-2 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors text-center" />
       </div>
 
       <div id="pdfSection" class="flex flex-col gap-2">
@@ -46,6 +50,7 @@ export const bindDraftToolEvents = () => {
   const pdfSection = document.getElementById('pdfSection');
   const docSection = document.getElementById('docSection');
   const docLoader = document.getElementById('docLoader');
+  const quickDocNumber = document.getElementById('quickDocNumber') as HTMLInputElement;
 
   const pdfUpload = document.getElementById('pdfUpload') as HTMLInputElement;
   const pdfFileName = document.getElementById('pdfFileName') as HTMLSpanElement;
@@ -79,6 +84,7 @@ export const bindDraftToolEvents = () => {
       
       pdfSection?.classList.remove('hidden');
       docSection?.classList.add('hidden');
+      quickDocNumber?.classList.add('hidden');
     } else {
       tabDoc?.classList.add('bg-brand-accent', 'text-white');
       tabDoc?.classList.remove('text-brand-text-muted', 'hover:text-white');
@@ -87,6 +93,7 @@ export const bindDraftToolEvents = () => {
       
       docSection?.classList.remove('hidden');
       pdfSection?.classList.add('hidden');
+      quickDocNumber?.classList.remove('hidden');
     }
   };
 
@@ -95,6 +102,20 @@ export const bindDraftToolEvents = () => {
 
   tabPdf?.addEventListener('click', () => switchTab('pdf'));
   tabDoc?.addEventListener('click', () => switchTab('doc'));
+
+  if (quickDocNumber && docNumber) {
+    quickDocNumber.addEventListener('input', () => {
+      let rawVal = quickDocNumber.value.replace(/\D/g, '');
+      quickDocNumber.value = rawVal;
+      
+      if (rawVal.length > 0) {
+        const padded = rawVal.padStart(6, '0');
+        docNumber.value = `2026-T1.0-3200.2-K.1.1-${padded}`;
+      } else {
+        docNumber.value = '';
+      }
+    });
+  }
 
   if (docNumber) {
     let debounceTimer: ReturnType<typeof setTimeout>;
