@@ -25,7 +25,7 @@ export const bindCookieToolEvents = () => {
       const inputCookies = cookieContent.value;
       
       if (!inputCookies.trim()) {
-        processingResults.value = "Silakan masukkan No SSM / PTK untuk diproses.";
+        processingResults.value = "Silakan masukan terlebih dahulu No SSM / PTK untuk diproses.";
         processingResults.classList.add('text-red-500');
         return;
       }
