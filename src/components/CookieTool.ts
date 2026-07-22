@@ -1,17 +1,17 @@
 export const CookieTool = () => {
   return `
-    <div class="flex flex-col gap-1">
-      <label for="cookieContent" class="text-[11px] font-semibold text-white">Nomor AJU SSM / PTK</label>
-      <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-brand-text placeholder-zinc-500 font-mono text-xs resize-none outline-none focus:border-brand-accent transition-colors" rows="6"></textarea>
+    <div class="flex flex-col gap-2">
+      <label for="cookieContent" class="text-xs font-semibold text-white">Nomor AJU SSM / PTK</label>
+      <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8"></textarea>
     </div>
 
-    <button id="processBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-2 text-xs font-semibold cursor-pointer transition-colors shadow-md">
+    <button id="processBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
       Proses Data
     </button>
 
-    <div class="flex flex-col gap-1">
-      <label for="processingResults" class="text-[11px] font-semibold text-white">Done</label>
-      <textarea id="processingResults" placeholder="Hasil pemrosesan ditampilkan di sini..." class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-brand-text placeholder-zinc-500 font-mono text-xs resize-none outline-none focus:border-brand-accent transition-colors" rows="6" readonly></textarea>
+    <div class="flex flex-col gap-2">
+      <label for="processingResults" class="text-xs font-semibold text-white">Done</label>
+      <textarea id="processingResults" placeholder="Hasil pemrosesan ditampilkan di sini..." class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8" readonly></textarea>
     </div>
   `;
 };

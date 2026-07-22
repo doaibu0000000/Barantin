@@ -19,7 +19,7 @@ export const Sidebar = () => {
   
   const renderNavItems = () => {
     return menus.map(menu => `
-      <a href="#" class="nav-item flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-xl md:rounded-lg text-[10px] md:text-sm transition-all ${menu.id === 'Surtu 2' ? 'active text-brand-accent md:bg-brand-accent-bg font-semibold' : 'text-brand-text-muted hover:text-white md:hover:bg-white/5'}" data-menu="${menu.id}">
+      <a href="#" class="nav-item flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-3 px-2 md:px-4 py-2 md:py-3 rounded-xl md:rounded-lg text-[11px] md:text-base transition-all ${menu.id === 'Surtu 2' ? 'active text-brand-accent md:bg-brand-accent-bg font-semibold' : 'text-brand-text-muted hover:text-white md:hover:bg-white/5'}" data-menu="${menu.id}">
         ${menu.icon}
         <span>${menu.label}</span>
       </a>
@@ -27,9 +27,9 @@ export const Sidebar = () => {
   };
 
   return `
-    <aside class="fixed bottom-0 left-0 w-full md:relative md:w-[220px] bg-brand-panel border-t md:border border-white/5 md:rounded-xl p-1 md:p-3 flex flex-row md:flex-col shrink-0 shadow-2xl z-50">
-      <div class="hidden md:flex justify-between items-center mb-3">
-        <h2 class="text-lg font-bold tracking-wide text-white text-left w-full">Barantin Tools</h2>
+    <aside class="fixed bottom-0 left-0 w-full md:relative md:w-[280px] bg-brand-panel border-t md:border border-white/5 md:rounded-xl p-2 md:p-6 flex flex-row md:flex-col shrink-0 shadow-2xl z-50">
+      <div class="hidden md:flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold tracking-wide text-white text-left w-full">Barantin Tools</h2>
       </div>
       <nav id="sidebarNav" class="flex flex-row md:flex-col justify-around md:justify-start w-full md:gap-1.5">
         ${renderNavItems()}
