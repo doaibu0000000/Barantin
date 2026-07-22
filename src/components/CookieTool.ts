@@ -25,7 +25,7 @@ export const bindCookieToolEvents = () => {
       const inputCookies = cookieContent.value;
       
       if (!inputCookies.trim()) {
-        processingResults.value = "Please enter some cookies to process.";
+        processingResults.value = "Silakan masukkan No SSM / PTK untuk diproses.";
         return;
       }
 
