@@ -16,8 +16,16 @@ export const DraftTool = () => {
         </div>
       </div>
 
-      <div id="docSection" class="flex flex-col gap-2 hidden">
+      <div id="docSection" class="flex flex-col gap-2 hidden relative">
         <textarea id="docNumber" placeholder="Masukan no KT" class="w-full h-[140px] bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none"></textarea>
+        
+        <!-- Loading Overlay -->
+        <div id="docLoader" class="absolute inset-0 bg-zinc-900/60 backdrop-blur-[2px] rounded-lg flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 z-10">
+          <div class="flex flex-col items-center gap-3">
+            <div class="w-8 h-8 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-xs font-semibold text-brand-accent tracking-widest animate-pulse">MEMPROSES...</span>
+          </div>
+        </div>
       </div>
 
       <button type="button" id="processDraftBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md mt-auto">
@@ -37,12 +45,27 @@ export const bindDraftToolEvents = () => {
   const tabDoc = document.getElementById('tabDoc');
   const pdfSection = document.getElementById('pdfSection');
   const docSection = document.getElementById('docSection');
+  const docLoader = document.getElementById('docLoader');
 
   const pdfUpload = document.getElementById('pdfUpload') as HTMLInputElement;
   const pdfFileName = document.getElementById('pdfFileName') as HTMLSpanElement;
   const docNumber = document.getElementById('docNumber') as HTMLInputElement;
   const processDraftBtn = document.getElementById('processDraftBtn') as HTMLButtonElement;
   const draftResults = document.getElementById('draftResults') as HTMLTextAreaElement;
+
+  const showLoader = (duration: number, callback: () => void) => {
+    if (docLoader) {
+      docLoader.classList.remove('opacity-0', 'pointer-events-none');
+      docLoader.classList.add('opacity-100');
+    }
+    setTimeout(() => {
+      callback();
+      if (docLoader) {
+        docLoader.classList.remove('opacity-100');
+        docLoader.classList.add('opacity-0', 'pointer-events-none');
+      }
+    }, duration);
+  };
 
   const switchTab = (tab: string) => {
     activeTab = tab;
@@ -92,7 +115,9 @@ export const bindDraftToolEvents = () => {
         const hasGarbage = withoutMatches.trim().length > 0;
         
         if (hasGarbage) {
-          docNumber.value = cleaned;
+          showLoader(600, () => {
+            docNumber.value = cleaned;
+          });
         }
       } else {
         // Logika untuk nomor pendek, baik 1 nomor (misal: "1842") maupun banyak nomor dalam teks (misal: "Tolong 1842 dan 1726")
@@ -106,7 +131,9 @@ export const bindDraftToolEvents = () => {
               const padded = g.padStart(6, '0');
               return `2026-T1.0-3200.2-K.1.1-${padded}`;
             });
-            docNumber.value = formatted.join('\n');
+            showLoader(600, () => {
+              docNumber.value = formatted.join('\n');
+            });
           }
         }, 800);
       }
@@ -124,7 +151,9 @@ export const bindDraftToolEvents = () => {
             const padded = g.padStart(6, '0');
             return `2026-T1.0-3200.2-K.1.1-${padded}`;
           });
-          docNumber.value = formatted.join('\n');
+          showLoader(600, () => {
+            docNumber.value = formatted.join('\n');
+          });
         }
       }
     });
