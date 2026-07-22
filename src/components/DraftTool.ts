@@ -98,7 +98,7 @@ export const bindDraftToolEvents = () => {
           return;
         }
         draftResults.classList.remove('text-red-500');
-        resultText = \`File PDF yang dipilih: \${file.name}\`;
+        resultText = `File PDF yang dipilih: ${file.name}`;
       } else {
         let rawNumber = docNumber.value.trim();
         if (!rawNumber) {
@@ -111,12 +111,12 @@ export const bindDraftToolEvents = () => {
         let finalNumber = rawNumber;
         if (/^\d+$/.test(rawNumber)) {
           const padded = rawNumber.padStart(6, '0');
-          finalNumber = \`2026-T1.0-3200.2-K.1.1-\${padded}\`;
+          finalNumber = `2026-T1.0-3200.2-K.1.1-${padded}`;
         }
-        resultText = \`Nomor Dokumen: \${finalNumber}\`;
+        resultText = `Nomor Dokumen: ${finalNumber}`;
       }
 
-      draftResults.value = resultText + '\\n\\nDone';
+      draftResults.value = resultText + '\n\nDone';
     });
   }
 };
