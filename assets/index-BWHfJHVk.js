@@ -1,4 +1,4 @@
-(function(){const s=document.createElement("link").relList;if(s&&s.supports&&s.supports("modulepreload"))return;for(const e of document.querySelectorAll('link[rel="modulepreload"]'))r(e);new MutationObserver(e=>{for(const t of e)if(t.type==="childList")for(const i of t.addedNodes)i.tagName==="LINK"&&i.rel==="modulepreload"&&r(i)}).observe(document,{childList:!0,subtree:!0});function o(e){const t={};return e.integrity&&(t.integrity=e.integrity),e.referrerPolicy&&(t.referrerPolicy=e.referrerPolicy),e.crossOrigin==="use-credentials"?t.credentials="include":e.crossOrigin==="anonymous"?t.credentials="omit":t.credentials="same-origin",t}function r(e){if(e.ep)return;e.ep=!0;const t=o(e);fetch(e.href,t)}})();const a=()=>{const n=["Cookie","Text Editor","Card Key Splitter","Html Image","Link Html","Merge Files","JSON","Account","Fb Link"];return`
+(function(){const s=document.createElement("link").relList;if(s&&s.supports&&s.supports("modulepreload"))return;for(const e of document.querySelectorAll('link[rel="modulepreload"]'))r(e);new MutationObserver(e=>{for(const t of e)if(t.type==="childList")for(const d of t.addedNodes)d.tagName==="LINK"&&d.rel==="modulepreload"&&r(d)}).observe(document,{childList:!0,subtree:!0});function o(e){const t={};return e.integrity&&(t.integrity=e.integrity),e.referrerPolicy&&(t.referrerPolicy=e.referrerPolicy),e.crossOrigin==="use-credentials"?t.credentials="include":e.crossOrigin==="anonymous"?t.credentials="omit":t.credentials="same-origin",t}function r(e){if(e.ep)return;e.ep=!0;const t=o(e);fetch(e.href,t)}})();const i=()=>{const n=["Cookie","Text Editor","Card Key Splitter"];return`
     <aside class="w-full md:w-[250px] bg-brand-panel md:rounded-lg p-4 md:p-6 flex flex-col shrink-0 overflow-hidden">
       <div class="flex justify-between items-center md:mb-6">
         <h2 class="text-base font-bold text-center md:text-left w-full">Practical Tools</h2>
@@ -14,7 +14,7 @@
     `).join("")}
       </nav>
     </aside>
-  `},d=()=>{const n=document.querySelectorAll(".nav-item");n.forEach(r=>{r.addEventListener("click",e=>{e.preventDefault(),n.forEach(t=>{t.classList.remove("active","bg-brand-accent-bg","text-brand-accent"),t.classList.add("text-brand-text-muted")}),r.classList.remove("text-brand-text-muted"),r.classList.add("active","bg-brand-accent-bg","text-brand-accent")})});const s=document.getElementById("mobileMenuBtn"),o=document.getElementById("sidebarNav");s&&o&&s.addEventListener("click",()=>{o.classList.toggle("hidden"),o.classList.toggle("flex")})},l=()=>`
+  `},a=()=>{const n=document.querySelectorAll(".nav-item");n.forEach(r=>{r.addEventListener("click",e=>{e.preventDefault(),n.forEach(t=>{t.classList.remove("active","bg-brand-accent-bg","text-brand-accent"),t.classList.add("text-brand-text-muted")}),r.classList.remove("text-brand-text-muted"),r.classList.add("active","bg-brand-accent-bg","text-brand-accent")})});const s=document.getElementById("mobileMenuBtn"),o=document.getElementById("sidebarNav");s&&o&&s.addEventListener("click",()=>{o.classList.toggle("hidden"),o.classList.toggle("flex")})},c=()=>`
     <div class="flex flex-col gap-3 mb-2">
       <h1 class="text-xl font-bold">Cookie Handle Tools</h1>
       <div class="flex items-center gap-3">
@@ -39,18 +39,18 @@
       <label for="processingResults" class="text-sm font-medium">Processing Results</label>
       <textarea id="processingResults" class="w-full bg-brand-input border border-brand-border rounded-md p-3 text-brand-text font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8" readonly></textarea>
     </div>
-  `,c=()=>{const n=document.getElementById("processBtn"),s=document.getElementById("cookieContent"),o=document.getElementById("processingResults"),r=document.getElementById("extractUidToggle");n&&n.addEventListener("click",()=>{const e=s.value,t=r.checked;if(!e.trim()){o.value="Please enter some cookies to process.";return}let i=`Processing...
+  `,l=()=>{const n=document.getElementById("processBtn"),s=document.getElementById("cookieContent"),o=document.getElementById("processingResults"),r=document.getElementById("extractUidToggle");n&&n.addEventListener("click",()=>{const e=s.value,t=r.checked;if(!e.trim()){o.value="Please enter some cookies to process.";return}let d=`Processing...
 
-`;i+=`Extract UID Option: ${t?"Enabled":"Disabled"}
+`;d+=`Extract UID Option: ${t?"Enabled":"Disabled"}
 
-`,i+=`Input Length: ${e.length} characters.
-`,i+=`
-(Cookie parsing logic goes here)`,o.value=i})},u=()=>`
+`,d+=`Input Length: ${e.length} characters.
+`,d+=`
+(Cookie parsing logic goes here)`,o.value=d})},u=()=>`
     <div class="flex flex-col md:flex-row gap-6 w-full max-w-6xl mx-auto p-4 md:p-10 min-h-screen">
-      ${a()}
+      ${i()}
       
       <main class="bg-brand-panel rounded-lg flex-1 p-6 md:p-8 flex flex-col gap-6">
-        ${l()}
+        ${c()}
       </main>
     </div>
-  `,m=()=>{d(),c()};"serviceWorker"in navigator&&window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js",{scope:"/"}).then(n=>{console.log("SW registered: ",n)}).catch(n=>{console.log("SW registration failed: ",n)})});document.addEventListener("DOMContentLoaded",()=>{const n=document.getElementById("app");n&&(n.innerHTML=u(),m())});
+  `,m=()=>{a(),l()};"serviceWorker"in navigator&&window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js",{scope:"/"}).then(n=>{console.log("SW registered: ",n)}).catch(n=>{console.log("SW registration failed: ",n)})});document.addEventListener("DOMContentLoaded",()=>{const n=document.getElementById("app");n&&(n.innerHTML=u(),m())});
