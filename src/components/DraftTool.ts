@@ -7,7 +7,7 @@ export const DraftTool = () => {
           <button type="button" id="tabDoc" class="px-4 py-2 text-sm font-semibold rounded-md text-brand-text-muted hover:text-white transition-all">No Dokumen</button>
         </div>
         
-        <input type="text" autocomplete="off" maxlength="6" id="quickDocNumber" placeholder="No KT" class="w-20 bg-brand-input border border-brand-border rounded-lg px-2 py-2 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors text-center" />
+        <textarea rows="1" maxlength="6" id="quickDocNumber" placeholder="No KT" class="w-20 h-[38px] bg-brand-input border border-brand-border rounded-lg px-2 py-2 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors text-center resize-none overflow-hidden whitespace-nowrap leading-tight"></textarea>
       </div>
 
       <div id="pdfSection" class="flex flex-col gap-2">
@@ -50,11 +50,11 @@ export const bindDraftToolEvents = () => {
   const pdfSection = document.getElementById('pdfSection');
   const docSection = document.getElementById('docSection');
   const docLoader = document.getElementById('docLoader');
-  const quickDocNumber = document.getElementById('quickDocNumber') as HTMLInputElement;
+  const quickDocNumber = document.getElementById('quickDocNumber') as HTMLTextAreaElement;
 
   const pdfUpload = document.getElementById('pdfUpload') as HTMLInputElement;
   const pdfFileName = document.getElementById('pdfFileName') as HTMLSpanElement;
-  const docNumber = document.getElementById('docNumber') as HTMLInputElement;
+  const docNumber = document.getElementById('docNumber') as HTMLTextAreaElement;
   const processDraftBtn = document.getElementById('processDraftBtn') as HTMLButtonElement;
   const draftResults = document.getElementById('draftResults') as HTMLTextAreaElement;
 
