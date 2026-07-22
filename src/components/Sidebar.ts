@@ -1,4 +1,4 @@
-export const Sidebar = () => {
+export const Sidebar = (activeMenu: string = 'Surtu 2') => {
   const menus = [
     { 
       id: 'Surtu 2', 
@@ -19,7 +19,7 @@ export const Sidebar = () => {
   
   const renderNavItems = () => {
     return menus.map(menu => `
-      <a href="#" class="nav-item flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-3 px-2 md:px-4 py-2 md:py-3 rounded-xl md:rounded-lg text-[11px] md:text-base transition-all ${menu.id === 'Surtu 2' ? 'active text-brand-accent md:bg-brand-accent-bg font-semibold' : 'text-brand-text-muted hover:text-white md:hover:bg-white/5'}" data-menu="${menu.id}">
+      <a href="#" class="nav-item flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-3 px-2 md:px-4 py-2 md:py-3 rounded-xl md:rounded-lg text-[11px] md:text-base transition-all ${menu.id === activeMenu ? 'active text-brand-accent md:bg-brand-accent-bg font-semibold' : 'text-brand-text-muted hover:text-white md:hover:bg-white/5'}" data-menu="${menu.id}">
         ${menu.icon}
         <span>${menu.label}</span>
       </a>
