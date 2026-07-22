@@ -6,7 +6,7 @@ export const CookieTool = () => {
     </div>
 
     <button id="processBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
-      Processing Cookies
+      Proses Data
     </button>
 
     <div class="flex flex-col gap-2">
