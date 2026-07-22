@@ -106,9 +106,23 @@ export const bindDraftToolEvents = () => {
         draftResults.classList.remove('text-red-500');
         
         let finalNumber = rawNumber;
-        if (/^\d+$/.test(rawNumber)) {
-          const padded = rawNumber.padStart(6, '0');
-          finalNumber = `2026-T1.0-3200.2-K.1.1-${padded}`;
+        
+        // 1. Coba ekstrak nomor dokumen lengkap dari teks (mengabaikan spasi/enter)
+        const noSpaceStr = rawNumber.replace(/\s+/g, '');
+        const fullMatch = noSpaceStr.match(/2026-[A-Z0-9\.-]+-\d{4,6}/i);
+        
+        if (fullMatch) {
+          finalNumber = fullMatch[0].toUpperCase();
+        } else {
+          // 2. Jika tidak ada format lengkap, cari angka 3-6 digit (contoh: 1615)
+          const digitGroups = rawNumber.match(/\b\d{1,6}\b/g);
+          if (digitGroups) {
+             const candidate = digitGroups.reverse().find(g => g.length >= 3 && g.length <= 6) || digitGroups[0];
+             if (candidate) {
+                const padded = candidate.padStart(6, '0');
+                finalNumber = `2026-T1.0-3200.2-K.1.1-${padded}`;
+             }
+          }
         }
         resultText = `Nomor Dokumen: ${finalNumber}`;
       }
