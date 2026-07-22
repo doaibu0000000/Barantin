@@ -10,7 +10,6 @@ export const CookieTool = () => {
     </button>
 
     <div class="flex flex-col gap-2">
-      <label for="processingResults" class="text-sm font-semibold text-white">Done</label>
       <textarea id="processingResults" placeholder="Hasil pemrosesan ditampilkan di sini..." class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8" readonly></textarea>
       
       <button id="copyBtn" class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md flex items-center justify-center gap-2 mt-2 hidden">
