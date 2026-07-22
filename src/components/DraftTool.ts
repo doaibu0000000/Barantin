@@ -1,7 +1,12 @@
 export const DraftTool = () => {
   return `
     <div class="flex flex-col gap-4 h-full">
-      <div class="flex flex-col gap-2">
+      <div class="flex bg-zinc-800/50 p-1 rounded-lg">
+        <button id="tabPdf" class="flex-1 py-2 text-sm font-semibold rounded-md bg-brand-accent text-white transition-all">Upload PDF</button>
+        <button id="tabDoc" class="flex-1 py-2 text-sm font-semibold rounded-md text-brand-text-muted hover:text-white transition-all">Nomor Dokumen</button>
+      </div>
+
+      <div id="pdfSection" class="flex flex-col gap-2">
         <label for="pdfUpload" class="text-sm font-semibold text-white">Upload File PDF</label>
         <div class="relative">
           <input type="file" id="pdfUpload" accept=".pdf" class="hidden" />
@@ -12,7 +17,7 @@ export const DraftTool = () => {
         </div>
       </div>
 
-      <div class="flex flex-col gap-2">
+      <div id="docSection" class="flex flex-col gap-2 hidden">
         <label for="docNumber" class="text-sm font-semibold text-white">Nomor Dokumen</label>
         <input type="text" id="docNumber" placeholder="Contoh: 1615 atau 2026-T1.0-3200.2-K.1.1-001615" class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors" />
         <p class="text-xs text-brand-text-muted mt-1">Anda bisa memasukkan nomor lengkap atau hanya angka belakangnya (misal: 1615).</p>
@@ -30,11 +35,41 @@ export const DraftTool = () => {
 };
 
 export const bindDraftToolEvents = () => {
+  let activeTab = 'pdf'; // 'pdf' or 'doc'
+  const tabPdf = document.getElementById('tabPdf');
+  const tabDoc = document.getElementById('tabDoc');
+  const pdfSection = document.getElementById('pdfSection');
+  const docSection = document.getElementById('docSection');
+
   const pdfUpload = document.getElementById('pdfUpload') as HTMLInputElement;
   const pdfFileName = document.getElementById('pdfFileName') as HTMLSpanElement;
   const docNumber = document.getElementById('docNumber') as HTMLInputElement;
   const processDraftBtn = document.getElementById('processDraftBtn') as HTMLButtonElement;
   const draftResults = document.getElementById('draftResults') as HTMLTextAreaElement;
+
+  const switchTab = (tab: string) => {
+    activeTab = tab;
+    if (tab === 'pdf') {
+      tabPdf?.classList.add('bg-brand-accent', 'text-white');
+      tabPdf?.classList.remove('text-brand-text-muted', 'hover:text-white');
+      tabDoc?.classList.remove('bg-brand-accent', 'text-white');
+      tabDoc?.classList.add('text-brand-text-muted', 'hover:text-white');
+      
+      pdfSection?.classList.remove('hidden');
+      docSection?.classList.add('hidden');
+    } else {
+      tabDoc?.classList.add('bg-brand-accent', 'text-white');
+      tabDoc?.classList.remove('text-brand-text-muted', 'hover:text-white');
+      tabPdf?.classList.remove('bg-brand-accent', 'text-white');
+      tabPdf?.classList.add('text-brand-text-muted', 'hover:text-white');
+      
+      docSection?.classList.remove('hidden');
+      pdfSection?.classList.add('hidden');
+    }
+  };
+
+  tabPdf?.addEventListener('click', () => switchTab('pdf'));
+  tabDoc?.addEventListener('click', () => switchTab('doc'));
 
   if (pdfUpload && pdfFileName) {
     pdfUpload.addEventListener('change', (e) => {
@@ -53,33 +88,35 @@ export const bindDraftToolEvents = () => {
 
   if (processDraftBtn) {
     processDraftBtn.addEventListener('click', () => {
-      const file = pdfUpload?.files?.[0];
-      let rawNumber = docNumber.value.trim();
-
-      if (!rawNumber) {
-        draftResults.value = "Silakan masukkan Nomor Dokumen terlebih dahulu.";
-        draftResults.classList.add('text-red-500');
-        return;
-      }
-
-      draftResults.classList.remove('text-red-500');
+      let resultText = '';
       
-      let finalNumber = rawNumber;
-      
-      // Jika input hanya berisi angka (contoh: 1615), format menjadi lengkap
-      if (/^\d+$/.test(rawNumber)) {
-        const padded = rawNumber.padStart(6, '0');
-        finalNumber = `2026-T1.0-3200.2-K.1.1-${padded}`;
-      }
-
-      let resultText = `Nomor Dokumen : ${finalNumber}`;
-      if (file) {
-        resultText += `\nFile PDF      : ${file.name}`;
+      if (activeTab === 'pdf') {
+        const file = pdfUpload?.files?.[0];
+        if (!file) {
+          draftResults.value = "Silakan pilih file PDF terlebih dahulu.";
+          draftResults.classList.add('text-red-500');
+          return;
+        }
+        draftResults.classList.remove('text-red-500');
+        resultText = \`File PDF yang dipilih: \${file.name}\`;
       } else {
-        resultText += `\nFile PDF      : (Tidak ada file yang dipilih)`;
+        let rawNumber = docNumber.value.trim();
+        if (!rawNumber) {
+          draftResults.value = "Silakan masukkan Nomor Dokumen terlebih dahulu.";
+          draftResults.classList.add('text-red-500');
+          return;
+        }
+        draftResults.classList.remove('text-red-500');
+        
+        let finalNumber = rawNumber;
+        if (/^\d+$/.test(rawNumber)) {
+          const padded = rawNumber.padStart(6, '0');
+          finalNumber = \`2026-T1.0-3200.2-K.1.1-\${padded}\`;
+        }
+        resultText = \`Nomor Dokumen: \${finalNumber}\`;
       }
 
-      draftResults.value = resultText + '\n\nDone';
+      draftResults.value = resultText + '\\n\\nDone';
     });
   }
 };
