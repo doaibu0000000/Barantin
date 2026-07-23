@@ -12,38 +12,40 @@ export const Login = () => {
           <p class="text-brand-text-muted text-sm text-center">Silakan masukkan kredensial Anda untuk melanjutkan</p>
         </div>
 
-        <form id="loginForm" class="flex flex-col gap-5">
+        <div id="loginFormContainer" class="flex flex-col gap-5">
           <div class="flex flex-col gap-2">
-            <label class="text-sm font-medium text-white/80" for="username">Username</label>
-            <input 
-              type="text" 
+            <label class="text-sm font-medium text-white/80">Username</label>
+            <textarea 
+              rows="1"
               id="username" 
-              class="w-full bg-brand-input border border-brand-border rounded-lg px-4 py-3 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors"
+              class="w-full h-[46px] bg-brand-input border border-brand-border rounded-lg px-4 py-3 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none overflow-hidden whitespace-nowrap leading-tight"
               placeholder="Masukkan username"
               required
-            />
+            ></textarea>
           </div>
           
           <div class="flex flex-col gap-2">
-            <label class="text-sm font-medium text-white/80" for="password">Password</label>
-            <input 
-              type="password" 
+            <label class="text-sm font-medium text-white/80">Password</label>
+            <textarea 
+              rows="1"
               id="password" 
-              class="w-full bg-brand-input border border-brand-border rounded-lg px-4 py-3 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors"
+              style="-webkit-text-security: disc;"
+              class="w-full h-[46px] bg-brand-input border border-brand-border rounded-lg px-4 py-3 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none overflow-hidden whitespace-nowrap leading-tight"
               placeholder="Masukkan password"
               required
-            />
+            ></textarea>
           </div>
           
           <div id="loginError" class="text-red-500 text-sm hidden">Username atau password salah</div>
 
           <button 
-            type="submit" 
+            type="button" 
+            id="loginSubmitBtn"
             class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors mt-2 shadow-lg"
           >
             Masuk
           </button>
-        </form>
+        </div>
         
       </div>
     </div>
@@ -51,23 +53,37 @@ export const Login = () => {
 };
 
 export const bindLoginEvents = (onSuccess: () => void) => {
-  const loginForm = document.getElementById('loginForm') as HTMLFormElement;
+  const loginSubmitBtn = document.getElementById('loginSubmitBtn') as HTMLButtonElement;
   const loginError = document.getElementById('loginError');
 
-  if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
+  const attemptLogin = () => {
       
-      const usernameInput = document.getElementById('username') as HTMLInputElement;
-      const passwordInput = document.getElementById('password') as HTMLInputElement;
+      const usernameInput = document.getElementById('username') as HTMLTextAreaElement;
+      const passwordInput = document.getElementById('password') as HTMLTextAreaElement;
       
       // Default dummy validation (username: admin, password: password)
-      if (usernameInput.value === 'admin' && passwordInput.value === 'admin') {
+      if (usernameInput.value.trim() === 'admin' && passwordInput.value.trim() === 'admin') {
         if (loginError) loginError.classList.add('hidden');
         onSuccess();
       } else {
         if (loginError) loginError.classList.remove('hidden');
         passwordInput.value = '';
+      }
+  };
+
+  if (loginSubmitBtn) {
+    loginSubmitBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      attemptLogin();
+    });
+  }
+
+  const passwordInputEl = document.getElementById('password');
+  if (passwordInputEl) {
+    passwordInputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        attemptLogin();
       }
     });
   }
