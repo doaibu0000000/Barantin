@@ -499,8 +499,8 @@ export const bindCookieToolEvents = () => {
             no_dok_permohonan: ptkNoDok,
             ptk_analisis_id: "",
             nomor: "",
-            tanggal: tanggalSurtug,
-            perihal: "Pemeriksaan Administratif dan Kesesuaian",
+            tanggal: tanggalSurtug, // defaults to 08:00
+            perihal: "Pelaksanaan Tindakan Karantina",
             penanda_tangan_id: 2085, // CAHYONO
             diterbitkan_di: "BANDUNG",
             user_id: userId,
@@ -720,8 +720,8 @@ export const bindCookieToolEvents = () => {
             no_dok_permohonan: ptkNoDok,
             ptk_analisis_id: "",
             nomor: "",
-            tanggal: `${yyyy}-${mm}-${dd}T08:00`,
-            perihal: "Pemeriksaan Kesehatan",
+            tanggal: `${yyyy}-${mm}-${dd}T09:00`,
+            perihal: "Pelaksanaan Tindakan Karantina",
             penanda_tangan_id: 2085, // CAHYONO
             diterbitkan_di: "BANDUNG",
             user_id: userId,
