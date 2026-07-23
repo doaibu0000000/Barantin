@@ -50,7 +50,7 @@ export const CookieTool = () => {
         <div class="p-5 flex flex-col gap-4">
           <div>
             <label class="block text-xs font-semibold text-zinc-400 mb-1">Nomor Dokumen PTK</label>
-            <input type="text" id="ssmPtkNo" class="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-zinc-300 text-sm outline-none" readonly>
+            <input type="text" id="ssmPtkNo" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-white text-sm outline-none focus:border-brand-accent">
           </div>
           <div>
             <label class="block text-xs font-semibold text-zinc-400 mb-1">Tanggal Verifikasi</label>
@@ -146,7 +146,7 @@ export const bindCookieToolEvents = () => {
   if (cookieContent) {
     cookieContent.addEventListener('input', () => {
       const val = cookieContent.value;
-      const regex = /[a-zA-Z0-9]{26}/g;
+      const regex = /([a-zA-Z0-9]{26}|202[0-9]-[A-Z0-9.-]+)/g;
       const matches = val.match(regex);
       
       if (matches && matches.length > 0) {
@@ -177,7 +177,7 @@ export const bindCookieToolEvents = () => {
 
       processingResults.classList.remove('text-red-500');
       
-      const regex = /[a-zA-Z0-9]{26}/g;
+      const regex = /([a-zA-Z0-9]{26}|202[0-9]-[A-Z0-9.-]+)/g;
       const matches = inputCookies.match(regex);
       
       if (matches && matches.length > 0) {
