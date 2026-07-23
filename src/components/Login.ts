@@ -38,13 +38,27 @@ export const Login = () => {
               </button>
             </div>
           </div>
+
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-3">
+              <div class="h-[46px] flex items-center bg-white rounded-lg px-2 border border-brand-border">
+                <img id="captchaImage" src="" class="h-full max-w-[120px] object-contain" alt="captcha" />
+                <button type="button" id="refreshCaptchaBtn" class="ml-2 text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer" title="Refresh Captcha">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </button>
+              </div>
+              <div class="flex-1 h-[46px] bg-brand-input border border-brand-border rounded-lg focus-within:border-brand-accent transition-colors flex items-center overflow-hidden">
+                <input type="text" id="captchaInput" class="w-full h-full bg-transparent px-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none" placeholder="Kode Captcha" required />
+              </div>
+            </div>
+          </div>
           
-          <div id="loginError" class="text-red-500 text-sm hidden">Username atau password salah</div>
+          <div id="loginError" class="text-red-500 text-sm hidden"></div>
 
           <button 
             type="button" 
             id="loginSubmitBtn"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors mt-2 shadow-lg"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors mt-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Masuk
           </button>
@@ -58,40 +72,152 @@ export const Login = () => {
 export const bindLoginEvents = (onSuccess: () => void) => {
   const loginSubmitBtn = document.getElementById('loginSubmitBtn') as HTMLButtonElement;
   const loginError = document.getElementById('loginError');
-
   const usernameInput = document.getElementById('username') as HTMLTextAreaElement;
-  const passwordInput = document.getElementById('password') as HTMLTextAreaElement;
+  const passwordInputEl = document.getElementById('password') as HTMLTextAreaElement;
+  const captchaInputEl = document.getElementById('captchaInput') as HTMLInputElement;
+  const captchaImageEl = document.getElementById('captchaImage') as HTMLImageElement;
+  const refreshCaptchaBtn = document.getElementById('refreshCaptchaBtn');
 
-  // Auto-fill from localStorage
+  // Load saved credentials
   const savedUsername = localStorage.getItem('savedUsername');
   const savedPassword = localStorage.getItem('savedPassword');
-  
   if (savedUsername && usernameInput) usernameInput.value = savedUsername;
-  if (savedPassword && passwordInput) passwordInput.value = savedPassword;
+  if (savedPassword && passwordInputEl) passwordInputEl.value = savedPassword;
 
-  const attemptLogin = () => {
-      const username = usernameInput.value.trim();
-      const password = passwordInput.value.trim();
+  // CAPTCHA Logic
+  let currentCaptchaToken = '';
+  
+  const loadCaptcha = async () => {
+    try {
+      const res = await fetch('https://api.karantinaindonesia.go.id/barantin-sys-v2/captcha?app=APP001');
+      if (!res.ok) throw new Error('Failed to fetch captcha');
+      const data = await res.json();
+      if (data.status && data.image) {
+        captchaImageEl?.setAttribute('src', data.image);
+        currentCaptchaToken = data.token;
+      }
+    } catch (e) {
+      console.error('Error loading captcha:', e);
+    }
+  };
 
-      // Encoded credentials (Base64) to prevent plain-text exposure
-      if (btoa(username) === 'ZGVkZW5rdXJuaWE=' && btoa(password) === 'RGVrYTE5Nzg=') {
-        if (loginError) loginError.classList.add('hidden');
-        
-        // Save to localStorage for next time
-        localStorage.setItem('savedUsername', username);
-        localStorage.setItem('savedPassword', password);
-        
-        onSuccess();
+  loadCaptcha();
+  if (refreshCaptchaBtn) {
+    refreshCaptchaBtn.addEventListener('click', loadCaptcha);
+  }
+
+  // Network & Location Logic
+  let userIp = '103.152.232.25'; // Fallback to user's known IP
+  
+  fetch('https://api.ipify.org/?format=json')
+    .then(r => r.json())
+    .then(data => userIp = data.ip)
+    .catch(e => console.error('Error fetching IP:', e));
+
+  const getLocation = (): Promise<any> => {
+    return new Promise((resolve) => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({
+            timestamp: pos.timestamp,
+            coords: {
+              accuracy: pos.coords.accuracy,
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              altitude: pos.coords.altitude,
+              altitudeAccuracy: pos.coords.altitudeAccuracy,
+              heading: pos.coords.heading,
+              speed: pos.coords.speed
+            }
+          }),
+          () => resolve({ // Fallback to safe known location if denied
+            timestamp: Date.now(),
+            coords: { accuracy: 212, latitude: -6.577271, longitude: 107.783081, altitude: null, altitudeAccuracy: null, heading: null, speed: null }
+          }),
+          { timeout: 5000 }
+        );
       } else {
+        resolve({
+          timestamp: Date.now(),
+          coords: { accuracy: 212, latitude: -6.577271, longitude: 107.783081, altitude: null, altitudeAccuracy: null, heading: null, speed: null }
+        });
+      }
+    });
+  };
+
+  // Login Execution
+  const attemptLogin = async () => {
+      const username = usernameInput.value.trim();
+      const password = passwordInputEl.value.trim();
+      const captcha = captchaInputEl.value.trim();
+
+      if (!username || !password || !captcha) {
         if (loginError) {
           loginError.classList.remove('hidden');
-          if (btoa(username) !== 'ZGVkZW5rdXJuaWE=') {
-            loginError.textContent = 'Username salah';
-          } else {
-            loginError.textContent = 'Password salah';
-          }
+          loginError.textContent = 'Harap isi semua kolom';
         }
-        passwordInput.value = '';
+        return;
+      }
+
+      if (loginSubmitBtn) {
+        loginSubmitBtn.disabled = true;
+        loginSubmitBtn.textContent = 'Memproses...';
+      }
+      
+      if (loginError) loginError.classList.add('hidden');
+
+      try {
+        const location = await getLocation();
+        
+        const response = await fetch('https://api.karantinaindonesia.go.id/barantin-sys-v2/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username,
+            password,
+            app: 'APP001',
+            ipaddress: userIp,
+            captcha,
+            captchaToken: currentCaptchaToken,
+            location
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.status) {
+          // Success!
+          localStorage.setItem('savedUsername', username);
+          localStorage.setItem('savedPassword', password);
+          
+          if (data.data) {
+            localStorage.setItem('accessToken', data.data.accessToken);
+            localStorage.setItem('userData', JSON.stringify(data.data));
+          }
+          
+          onSuccess();
+        } else {
+          // API denied login
+          if (loginError) {
+            loginError.classList.remove('hidden');
+            loginError.textContent = data.message || 'Login gagal';
+          }
+          passwordInputEl.value = '';
+          captchaInputEl.value = '';
+          loadCaptcha(); // Refresh captcha on failure
+        }
+      } catch (e) {
+        if (loginError) {
+          loginError.classList.remove('hidden');
+          loginError.textContent = 'Terjadi kesalahan jaringan atau server tidak dapat dihubungi.';
+        }
+      } finally {
+        if (loginSubmitBtn) {
+          loginSubmitBtn.disabled = false;
+          loginSubmitBtn.textContent = 'Masuk';
+        }
       }
   };
 
@@ -102,19 +228,18 @@ export const bindLoginEvents = (onSuccess: () => void) => {
     });
   }
 
-  const passwordInputEl = document.getElementById('password') as HTMLTextAreaElement;
-  if (passwordInputEl) {
-    passwordInputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        attemptLogin();
-      }
-    });
-  }
+  // Handle Enter key for inputs
+  const handleEnter = (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      attemptLogin();
+    }
+  };
+
+  if (passwordInputEl) passwordInputEl.addEventListener('keydown', handleEnter);
+  if (captchaInputEl) captchaInputEl.addEventListener('keydown', handleEnter);
 
   // Prevent spaces in Username and Password
-  const usernameInputEl = document.getElementById('username') as HTMLTextAreaElement;
-  
   const preventSpace = (e: Event) => {
     const target = e.target as HTMLTextAreaElement;
     if (target.value.includes(' ')) {
@@ -122,13 +247,10 @@ export const bindLoginEvents = (onSuccess: () => void) => {
     }
   };
   
-  if (usernameInputEl) {
-    usernameInputEl.addEventListener('input', preventSpace);
-  }
-  if (passwordInputEl) {
-    passwordInputEl.addEventListener('input', preventSpace);
-  }
+  if (usernameInput) usernameInput.addEventListener('input', preventSpace);
+  if (passwordInputEl) passwordInputEl.addEventListener('input', preventSpace);
 
+  // Toggle Password Visibility
   const togglePasswordBtn = document.getElementById('togglePasswordBtn');
   if (togglePasswordBtn && passwordInputEl) {
     togglePasswordBtn.addEventListener('click', () => {
