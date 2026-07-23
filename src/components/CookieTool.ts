@@ -351,11 +351,16 @@ export const bindCookieToolEvents = () => {
             openK37aFormBtn.classList.remove('hidden');
             if (ssmPtkNo) ssmPtkNo.value = currentSsmPtk || currentSsmPtkId;
             const submitBtn = document.getElementById('submitSsmBtn');
-            if (submitBtn) submitBtn.dataset.ptkId = currentSsmPtkId;
+            const isUnprocessed = !data.ptk_id;
+            if (submitBtn) {
+              submitBtn.dataset.ptkId = currentSsmPtkId;
+              submitBtn.dataset.isUnprocessed = isUnprocessed ? 'true' : 'false';
+            }
             const submitK37aBtn = document.getElementById('submitK37aBtn');
             if (submitK37aBtn) {
               submitK37aBtn.dataset.ptkId = currentSsmPtkId;
               submitK37aBtn.dataset.noReg = currentSsmPtk || currentSsmPtkId;
+              submitK37aBtn.dataset.isUnprocessed = isUnprocessed ? 'true' : 'false';
             }
           } else {
             openSsmFormBtn.classList.add('hidden');
@@ -447,6 +452,17 @@ export const bindCookieToolEvents = () => {
       if (!ptkId || !token) {
         if (resultDiv) {
           resultDiv.textContent = 'Gagal: Token atau Data PTK tidak ditemukan. Pastikan Cookie lengkap.';
+          resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-red-500/20 text-red-300 border border-red-500/30';
+          resultDiv.classList.remove('hidden');
+        }
+        return;
+      }
+      
+      // Prevent creating Surat Tugas if PTK has not been processed
+      const isUnprocessed = submitSsmBtn.dataset.isUnprocessed === 'true';
+      if (isUnprocessed) {
+        if (resultDiv) {
+          resultDiv.textContent = 'Gagal: PTK Belum Diproses! Silakan klik tombol "Proses PTK" di web resmi terlebih dahulu, lalu cari ulang Nomor AJU di sini.';
           resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-red-500/20 text-red-300 border border-red-500/30';
           resultDiv.classList.remove('hidden');
         }
@@ -621,6 +637,16 @@ export const bindCookieToolEvents = () => {
       if (!ptkId || !token || !noReg) {
         if (resultDiv) {
           resultDiv.textContent = 'Gagal: Token atau Data PTK tidak ditemukan.';
+          resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-red-500/20 text-red-300 border border-red-500/30';
+          resultDiv.classList.remove('hidden');
+        }
+        return;
+      }
+      
+      const isUnprocessed = submitK37aBtn.dataset.isUnprocessed === 'true';
+      if (isUnprocessed) {
+        if (resultDiv) {
+          resultDiv.textContent = 'Gagal: PTK Belum Diproses! Silakan klik tombol "Proses PTK" di web resmi terlebih dahulu, lalu cari ulang Nomor AJU di sini.';
           resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-red-500/20 text-red-300 border border-red-500/30';
           resultDiv.classList.remove('hidden');
         }
