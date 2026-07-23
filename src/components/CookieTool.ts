@@ -55,21 +55,29 @@ export const CookieTool = () => {
           <div>
             <label class="block text-xs font-semibold text-zinc-400 mb-1">Respon</label>
             <select id="ssmRespon" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-white text-sm outline-none focus:border-brand-accent">
-              <option value="GA - PROSES VERIFIKASI">GA - PROSES VERIFIKASI</option>
+              <option value="GA - PROSES VERIFIKASI" selected>GA - PROSES VERIFIKASI</option>
+              <option value="GA - PENOLAKAN PERMOHONAN / PEMBERITAHUAN">GA - PENOLAKAN PERMOHONAN / PEMBERITAHUAN</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-semibold text-zinc-400 mb-1">Pos Layanan</label>
             <select id="ssmPos" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-white text-sm outline-none focus:border-brand-accent">
-              <option value="3200.2">3200.2 | DRY PORT CIKARANG</option>
+              <option value="3200.0">3200.0 | -</option>
+              <option value="3200.1">3200.1 | KANTOR POS MPC BANDUNG</option>
+              <option value="3200.2" selected>3200.2 | DRY PORT CIKARANG</option>
+              <option value="3200.3">3200.3 | KANTOR POS BOGOR</option>
+              <option value="3200.4">3200.4 | PELABUHAN LAUT MARUNDA</option>
+              <option value="3200.5">3200.5 | TPK GEDE BAGE</option>
+              <option value="3200.6">3200.6 | BANDARA HUSEIN SASTRANEGARA</option>
+              <option value="3200.7">3200.7 | KANTOR POS TASIKMALAYA</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-semibold text-zinc-400 mb-1">Petugas</label>
             <select id="ssmPetugas" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-white text-sm outline-none focus:border-brand-accent">
+              <option value="196702031992031001" selected>SUHERMAN - 196702031992031001</option>
               <option value="197812302006041002">DEDEN KURNIA - 197812302006041002</option>
               <option value="198105152011011014">PUPUNG PURNAWAN - 198105152011011014</option>
-              <option value="196702031992031001">SUHERMAN - 196702031992031001</option>
             </select>
           </div>
           
