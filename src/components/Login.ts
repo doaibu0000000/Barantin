@@ -52,14 +52,25 @@ export const bindLoginEvents = (onSuccess: () => void) => {
   const loginSubmitBtn = document.getElementById('loginSubmitBtn') as HTMLButtonElement;
   const loginError = document.getElementById('loginError');
 
+  const usernameInput = document.getElementById('username') as HTMLTextAreaElement;
+  const passwordInput = document.getElementById('password') as HTMLTextAreaElement;
+
+  // Auto-fill from localStorage
+  const savedUsername = localStorage.getItem('savedUsername');
+  const savedPassword = localStorage.getItem('savedPassword');
+  
+  if (savedUsername && usernameInput) usernameInput.value = savedUsername;
+  if (savedPassword && passwordInput) passwordInput.value = savedPassword;
+
   const attemptLogin = () => {
-      
-      const usernameInput = document.getElementById('username') as HTMLTextAreaElement;
-      const passwordInput = document.getElementById('password') as HTMLTextAreaElement;
-      
       // Default dummy validation (username: admin, password: password)
       if (usernameInput.value.trim() === 'admin' && passwordInput.value.trim() === 'admin') {
         if (loginError) loginError.classList.add('hidden');
+        
+        // Save to localStorage for next time
+        localStorage.setItem('savedUsername', usernameInput.value.trim());
+        localStorage.setItem('savedPassword', passwordInput.value.trim());
+        
         onSuccess();
       } else {
         if (loginError) loginError.classList.remove('hidden');
@@ -86,6 +97,7 @@ export const bindLoginEvents = (onSuccess: () => void) => {
 
   // Prevent spaces in Username and Password
   const usernameInputEl = document.getElementById('username') as HTMLTextAreaElement;
+  
   const preventSpace = (e: Event) => {
     const target = e.target as HTMLTextAreaElement;
     if (target.value.includes(' ')) {
