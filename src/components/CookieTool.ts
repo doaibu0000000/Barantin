@@ -476,6 +476,16 @@ export const bindCookieToolEvents = () => {
 
         const surtugHeaderId = crypto.randomUUID();
 
+        // 0. Fetch actual PTK doc number (K.1.1)
+        if (resultDiv) resultDiv.textContent = 'Mengambil data PTK...';
+        const ptkRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk/${ptkId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const ptkData = await ptkRes.json();
+        const ptkNoDok = ptkData?.data?.ptk?.no_dok_permohonan || noReg;
+
+        if (resultDiv) resultDiv.textContent = 'Membuat Surat Tugas (Administratif)...';
+
         // 1. Create Surtug Header
         const headerRes = await fetch('https://api3.karantinaindonesia.go.id/barantin-sys/surtug', {
           method: 'POST',
@@ -486,7 +496,7 @@ export const bindCookieToolEvents = () => {
           body: JSON.stringify({
             id: surtugHeaderId,
             ptk_id: ptkId,
-            no_dok_permohonan: noReg,
+            no_dok_permohonan: ptkNoDok,
             ptk_analisis_id: "",
             nomor: "",
             tanggal: tanggalSurtug,
@@ -690,6 +700,13 @@ export const bindCookieToolEvents = () => {
         // 5. Create Surtug for Pemeriksaan Kesehatan
         if (resultDiv) resultDiv.textContent = 'Membuat Surat Tugas (Pemeriksaan Kesehatan)...';
         
+        // Fetch real PTK no_dok_permohonan (K.1.1)
+        const ptkRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk/${ptkId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const ptkData = await ptkRes.json();
+        const ptkNoDok = ptkData?.data?.ptk?.no_dok_permohonan || noReg;
+
         const surtugHeaderId = crypto.randomUUID();
         const sec = String(now.getSeconds()).padStart(2, '0');
         const createdAt = `${yyyy}-${mm}-${dd} ${hh}:${min}:${sec}`;
@@ -700,7 +717,7 @@ export const bindCookieToolEvents = () => {
           body: JSON.stringify({
             id: surtugHeaderId,
             ptk_id: ptkId,
-            no_dok_permohonan: noReg,
+            no_dok_permohonan: ptkNoDok,
             ptk_analisis_id: "",
             nomor: "",
             tanggal: `${yyyy}-${mm}-${dd}T08:00`,
