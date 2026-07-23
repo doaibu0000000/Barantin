@@ -475,8 +475,8 @@ export const bindCookieToolEvents = () => {
         const createdAt = `${yyyy}-${mm}-${dd} ${hh}:${min}:${sec}`;
 
         const surtugConfigs = [
-          { perihal: "Pemeriksaan Administrasi dan Kesesuaian Dokumen", penugasan_id: "1" },
-          { perihal: "Pelaksanaan Tindakan Karantina", penugasan_id: "2" }
+          { perihal: "Pemeriksaan Administratif dan Kesesuaian", penugasan_id: "1" },
+          { perihal: "Pemeriksaan Kesehatan", penugasan_id: "2" }
         ];
 
         let createdSurtugs: string[] = [];
