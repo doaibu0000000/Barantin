@@ -222,6 +222,20 @@ export const bindCookieToolEvents = () => {
           }
         };
 
+        // Promise wrapper for getting token
+        const getToken = (): Promise<string> => {
+          return new Promise((resolve) => {
+            if (typeof chrome !== 'undefined' && chrome.cookies) {
+              chrome.cookies.getAll({ domain: 'apps.karantinaindonesia.go.id' }, (cookies) => {
+                const tokenCookie = cookies.find(c => c.name === 'token');
+                resolve(tokenCookie ? tokenCookie.value : '');
+              });
+            } else {
+              resolve('');
+            }
+          });
+        };
+
         // Variables to store current active data
         let currentSsmPtk = '';
         let currentSsmPtkId = '';
@@ -233,13 +247,33 @@ export const bindCookieToolEvents = () => {
           if (!data) data = await fetchAju(aju, 'noReg');
           
           if (data) {
-            // Save the noReg for the form submission
+            // Priority: if it's an SSM record, it has a ptk_id. Otherwise fallback to its own id
+            currentSsmPtkId = data.ptk_id || data.id || '';
             if (data.noReg) currentSsmPtk = data.noReg;
-            if (data.id) currentSsmPtkId = data.id;
+            
+            // Auto fetch K.1.1 Document Number if possible
+            if (currentSsmPtkId) {
+              try {
+                const token = await getToken();
+                if (token) {
+                  const ptkRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk/${currentSsmPtkId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  });
+                  if (ptkRes.ok) {
+                    const ptkData = await ptkRes.json();
+                    if (ptkData?.data?.ptk?.no_dok_permohonan) {
+                      currentSsmPtk = ptkData.data.ptk.no_dok_permohonan;
+                    }
+                  }
+                }
+              } catch (e) {
+                console.error('Failed to fetch PTK details', e);
+              }
+            }
             
             finalOutput += `Status         : DITEMUKAN (${data.jnsAju})\n`;
             finalOutput += `No Aju SSM     : ${data.noAju || '-'}\n`;
-            finalOutput += `No Aju PTK     : ${data.noReg || '-'}\n`;
+            finalOutput += `No Dokumen     : ${currentSsmPtk || data.noReg || '-'}\n`;
             finalOutput += `Perusahaan     : ${data.nmPerusahaan || '-'}\n`;
             finalOutput += `Alat Angkut    : ${data.namaAngkut || '-'}\n`;
             finalOutput += `Tgl Tiba       : ${data.tglTiba || '-'}\n`;
