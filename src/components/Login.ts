@@ -115,32 +115,16 @@ export const bindLoginEvents = (onSuccess: () => void) => {
     .catch(e => console.error('Error fetching IP:', e));
 
   const getLocation = (): Promise<any> => {
-    return new Promise((resolve) => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => resolve({
-            timestamp: pos.timestamp,
-            coords: {
-              accuracy: pos.coords.accuracy,
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
-              altitude: pos.coords.altitude,
-              altitudeAccuracy: pos.coords.altitudeAccuracy,
-              heading: pos.coords.heading,
-              speed: pos.coords.speed
-            }
-          }),
-          () => resolve({ // Fallback to safe known location if denied
-            timestamp: Date.now(),
-            coords: { accuracy: 212, latitude: -6.577271, longitude: 107.783081, altitude: null, altitudeAccuracy: null, heading: null, speed: null }
-          }),
-          { timeout: 5000 }
-        );
-      } else {
-        resolve({
-          timestamp: Date.now(),
-          coords: { accuracy: 212, latitude: -6.577271, longitude: 107.783081, altitude: null, altitudeAccuracy: null, heading: null, speed: null }
-        });
+    return Promise.resolve({
+      timestamp: Date.now(),
+      coords: { 
+        accuracy: 212, 
+        latitude: -6.577271, 
+        longitude: 107.783081, 
+        altitude: null, 
+        altitudeAccuracy: null, 
+        heading: null, 
+        speed: null 
       }
     });
   };
