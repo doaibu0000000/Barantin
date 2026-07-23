@@ -84,10 +84,12 @@ export const CookieTool = () => {
               <option value="198105152011011014">PUPUNG PURNAWAN - 198105152011011014</option>
             </select>
           </div>
-          
-          <button type="button" id="submitSsmBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 mt-2 text-sm font-semibold cursor-pointer transition-colors shadow-lg">
-            Proses PTK
+          <button type="button" id="submitSsmBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 mt-2 text-sm font-semibold cursor-pointer transition-colors shadow-lg flex justify-center items-center gap-2">
+            <span>Buat Surat Tugas (Otomatis)</span>
+            <svg id="surtugSpinner" class="animate-spin h-4 w-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
           </button>
+          
+          <div id="surtugResult" class="hidden mt-3 p-3 rounded-lg text-sm"></div>
         </div>
       </div>
     </div>
@@ -222,6 +224,7 @@ export const bindCookieToolEvents = () => {
 
         // Variables to store current active data
         let currentSsmPtk = '';
+        let currentSsmPtkId = '';
         
         for (const aju of matches) {
           finalOutput += `\n--- MENCARI AJU: ${aju} ---\n`;
@@ -232,6 +235,7 @@ export const bindCookieToolEvents = () => {
           if (data) {
             // Save the noReg for the form submission
             if (data.noReg) currentSsmPtk = data.noReg;
+            if (data.id) currentSsmPtkId = data.id;
             
             finalOutput += `Status         : DITEMUKAN (${data.jnsAju})\n`;
             finalOutput += `No Aju SSM     : ${data.noAju || '-'}\n`;
@@ -262,6 +266,8 @@ export const bindCookieToolEvents = () => {
           if (currentSsmPtk) {
             openSsmFormBtn.classList.remove('hidden');
             if (ssmPtkNo) ssmPtkNo.value = currentSsmPtk;
+            const submitBtn = document.getElementById('submitSsmBtn');
+            if (submitBtn) submitBtn.dataset.ptkId = currentSsmPtkId;
           } else {
             openSsmFormBtn.classList.add('hidden');
           }
@@ -323,9 +329,115 @@ export const bindCookieToolEvents = () => {
   }
 
   if (submitSsmBtn) {
-    submitSsmBtn.addEventListener('click', () => {
-      alert("TBD: Anda perlu menginformasikan apa endpoint API untuk tombol ini melalui chat agar kami bisa melengkapinya.");
-      closeModal();
+    submitSsmBtn.addEventListener('click', async () => {
+      const ptkId = submitSsmBtn.dataset.ptkId;
+      const noReg = (document.getElementById('ssmPtkNo') as HTMLInputElement)?.value;
+      const spinner = document.getElementById('surtugSpinner');
+      const resultDiv = document.getElementById('surtugResult');
+      const token = cookieContent.value.match(/token=([^;]+)/)?.[1] || '';
+      const userId = cookieContent.value.match(/userId=([^;]+)/)?.[1] || '3267'; // Default if not found
+      
+      if (!ptkId || !token) {
+        if (resultDiv) {
+          resultDiv.textContent = 'Gagal: Token atau Data PTK tidak ditemukan. Pastikan Cookie lengkap.';
+          resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-red-500/20 text-red-300 border border-red-500/30';
+          resultDiv.classList.remove('hidden');
+        }
+        return;
+      }
+
+      // Show loading
+      submitSsmBtn.disabled = true;
+      if (spinner) spinner.classList.remove('hidden');
+      if (resultDiv) {
+        resultDiv.classList.remove('hidden');
+        resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-blue-500/20 text-blue-300 border border-blue-500/30';
+        resultDiv.textContent = 'Sedang membuat Surat Tugas...';
+      }
+
+      try {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        const sec = String(now.getSeconds()).padStart(2, '0');
+        
+        const tanggalSurtug = `${yyyy}-${mm}-${dd}T08:00`;
+        const createdAt = `${yyyy}-${mm}-${dd} ${hh}:${min}:${sec}`;
+
+        const surtugHeaderId = crypto.randomUUID();
+
+        // 1. Create Surtug Header
+        const headerRes = await fetch('https://api3.karantinaindonesia.go.id/barantin-sys/surtug', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: surtugHeaderId,
+            ptk_id: ptkId,
+            no_dok_permohonan: noReg,
+            ptk_analisis_id: "",
+            nomor: "",
+            tanggal: tanggalSurtug,
+            perihal: "Pelaksanaan Tindakan Karantina",
+            penanda_tangan_id: 2085, // CAHYONO
+            diterbitkan_di: "BANDUNG",
+            user_id: userId,
+            created_at: createdAt
+          })
+        });
+
+        if (!headerRes.ok) throw new Error('Gagal membuat Surat Tugas Induk');
+        const headerData = await headerRes.json();
+        const surtugNomor = headerData?.data?.nomor || '';
+
+        // 2. Add 3 Officers
+        if (resultDiv) resultDiv.textContent = 'Menambahkan 3 Petugas (Suherman, Deden, Pupung)...';
+        
+        const petugasIds = [4111, 3267, 3051]; 
+        for (const pid of petugasIds) {
+          await fetch('https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              id: crypto.randomUUID(),
+              ptk_id: ptkId,
+              ptk_surtug_header_id: surtugHeaderId,
+              petugas_id: pid,
+              user_id: userId,
+              penugasan: [
+                {
+                  id: crypto.randomUUID(),
+                  penugasan_id: "1",
+                  penugasan_lainnya: ""
+                }
+              ],
+              created_at: createdAt
+            })
+          });
+        }
+
+        // Success
+        if (resultDiv) {
+          resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-green-500/20 text-green-300 border border-green-500/30';
+          resultDiv.innerHTML = `<strong>Berhasil!</strong><br>Surat Tugas berhasil dibuat dengan 3 Petugas.<br>Nomor: <span class="font-mono text-white">${surtugNomor}</span>`;
+        }
+      } catch (err: any) {
+        if (resultDiv) {
+          resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-red-500/20 text-red-300 border border-red-500/30';
+          resultDiv.textContent = err.message || 'Terjadi kesalahan sistem';
+        }
+      } finally {
+        submitSsmBtn.disabled = false;
+        if (spinner) spinner.classList.add('hidden');
+      }
     });
   }
 };
