@@ -344,18 +344,18 @@ export const bindCookieToolEvents = () => {
         
         if (copyBtn) copyBtn.classList.remove('hidden');
         
-        // Show Buka Form SSM & K37a button if we found at least one PTK
+        // Show Buka Form SSM & K37a button if we found at least one PTK or SSM record
         if (openSsmFormBtn && openK37aFormBtn) {
-          if (currentSsmPtk) {
+          if (currentSsmPtkId) {
             openSsmFormBtn.classList.remove('hidden');
             openK37aFormBtn.classList.remove('hidden');
-            if (ssmPtkNo) ssmPtkNo.value = currentSsmPtk;
+            if (ssmPtkNo) ssmPtkNo.value = currentSsmPtk || currentSsmPtkId;
             const submitBtn = document.getElementById('submitSsmBtn');
             if (submitBtn) submitBtn.dataset.ptkId = currentSsmPtkId;
             const submitK37aBtn = document.getElementById('submitK37aBtn');
             if (submitK37aBtn) {
               submitK37aBtn.dataset.ptkId = currentSsmPtkId;
-              submitK37aBtn.dataset.noReg = currentSsmPtk;
+              submitK37aBtn.dataset.noReg = currentSsmPtk || currentSsmPtkId;
             }
           } else {
             openSsmFormBtn.classList.add('hidden');
