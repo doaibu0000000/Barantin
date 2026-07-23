@@ -11,20 +11,6 @@ export const ProfileTool = () => {
 
   return `
     <div class="flex flex-col gap-6 w-full max-w-2xl mx-auto pb-24 md:pb-4">
-      <!-- Header Profile -->
-      <div class="flex items-center gap-6 bg-[#1a1b1e] border border-white/5 rounded-xl p-6 shadow-lg">
-        <div class="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center shadow-lg relative shrink-0">
-          <span class="text-4xl font-bold text-white">A</span>
-          <div class="absolute bottom-1 right-1 w-5 h-5 bg-green-500 rounded-full border-4 border-[#1a1b1e]"></div>
-        </div>
-        <div class="flex flex-col gap-1">
-          <h2 class="text-2xl font-bold text-white">Admin User</h2>
-          <p class="text-brand-text-muted">@admin_barantin</p>
-          <div class="flex items-center gap-2 mt-2">
-            <span class="px-3 py-1 bg-blue-500/10 text-blue-400 text-xs rounded-full font-medium border border-blue-500/20">Active</span>
-          </div>
-        </div>
-      </div>
 
       <!-- Menu List -->
       <div class="flex flex-col bg-[#1a1b1e] border border-white/5 rounded-xl shadow-lg overflow-hidden py-2">
