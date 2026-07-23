@@ -18,7 +18,7 @@ export const Login = () => {
             <input 
               type="text" 
               id="username" 
-              class="w-full bg-[#1a1b1e] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-blue-500 transition-colors"
+              class="w-full bg-brand-input border border-brand-border rounded-lg px-4 py-3 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors"
               placeholder="Masukkan username"
               required
             />
@@ -29,7 +29,7 @@ export const Login = () => {
             <input 
               type="password" 
               id="password" 
-              class="w-full bg-[#1a1b1e] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-blue-500 transition-colors"
+              class="w-full bg-brand-input border border-brand-border rounded-lg px-4 py-3 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors"
               placeholder="Masukkan password"
               required
             />
