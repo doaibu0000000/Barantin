@@ -4,7 +4,7 @@ export const Login = () => {
       <div class="w-full max-w-md bg-brand-panel border border-white/5 rounded-2xl p-8 shadow-2xl flex flex-col gap-6">
         
         <div class="flex flex-col items-center gap-4 mb-4">
-          <img src="/barantin.png" alt="Barantin Logo" class="w-24 h-24 object-contain drop-shadow-xl" />
+          <img src="./barantin.png" alt="Barantin Logo" class="w-24 h-24 object-contain drop-shadow-xl" />
           <h1 class="text-2xl font-bold text-white">Barantin</h1>
         </div>
 
