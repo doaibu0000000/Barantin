@@ -11,27 +11,29 @@ export const Login = () => {
         <div id="loginFormContainer" class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
             <label class="text-sm font-medium text-white/80">Username</label>
-            <textarea 
-              rows="1"
-              id="username" 
-              class="w-full h-[46px] bg-brand-input border border-brand-border rounded-lg px-4 py-[14px] text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none overflow-hidden whitespace-nowrap leading-tight"
-              placeholder="Masukkan username"
-              required
-            ></textarea>
+            <div class="w-full h-[46px] bg-brand-input border border-brand-border rounded-lg focus-within:border-brand-accent transition-colors flex items-center overflow-hidden">
+              <textarea 
+                rows="1"
+                id="username" 
+                class="w-full h-full bg-transparent px-4 py-0 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none resize-none overflow-hidden whitespace-nowrap leading-[44px]"
+                placeholder="Masukkan username"
+                required
+              ></textarea>
+            </div>
           </div>
           
           <div class="flex flex-col gap-2">
             <label class="text-sm font-medium text-white/80">Password</label>
-            <div class="relative w-full">
+            <div class="w-full h-[46px] bg-brand-input border border-brand-border rounded-lg focus-within:border-brand-accent transition-colors flex items-center overflow-hidden">
               <textarea 
                 rows="1"
                 id="password" 
                 style="-webkit-text-security: disc;"
-                class="w-full h-[46px] bg-brand-input border border-brand-border rounded-lg pl-4 pr-10 py-[14px] text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none overflow-hidden whitespace-nowrap leading-tight"
+                class="w-full h-full bg-transparent pl-4 pr-2 py-0 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none resize-none overflow-hidden whitespace-nowrap leading-[44px]"
                 placeholder="Masukkan password"
                 required
               ></textarea>
-              <button type="button" id="togglePasswordBtn" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors cursor-pointer" tabindex="-1">
+              <button type="button" id="togglePasswordBtn" class="flex-shrink-0 pr-3 text-zinc-500 hover:text-white transition-colors cursor-pointer flex items-center justify-center h-full" tabindex="-1">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
               </button>
             </div>
