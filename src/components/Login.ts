@@ -14,7 +14,7 @@ export const Login = () => {
             <textarea 
               rows="1"
               id="username" 
-              class="w-full h-[46px] bg-brand-input border border-brand-border rounded-lg px-4 py-3 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none overflow-hidden whitespace-nowrap leading-tight"
+              class="w-full h-[46px] bg-brand-input border border-brand-border rounded-lg px-4 py-[14px] text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none overflow-hidden whitespace-nowrap leading-tight"
               placeholder="Masukkan username"
               required
             ></textarea>
@@ -27,7 +27,7 @@ export const Login = () => {
                 rows="1"
                 id="password" 
                 style="-webkit-text-security: disc;"
-                class="w-full h-[46px] bg-brand-input border border-brand-border rounded-lg pl-4 pr-10 py-3 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none overflow-hidden whitespace-nowrap leading-tight"
+                class="w-full h-[46px] bg-brand-input border border-brand-border rounded-lg pl-4 pr-10 py-[14px] text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none overflow-hidden whitespace-nowrap leading-tight"
                 placeholder="Masukkan password"
                 required
               ></textarea>
