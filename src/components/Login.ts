@@ -63,17 +63,27 @@ export const bindLoginEvents = (onSuccess: () => void) => {
   if (savedPassword && passwordInput) passwordInput.value = savedPassword;
 
   const attemptLogin = () => {
-      // Default dummy validation (username: admin, password: password)
-      if (usernameInput.value.trim() === 'admin' && passwordInput.value.trim() === 'admin') {
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      // Default dummy validation (username: admin, password: admin)
+      if (username === 'admin' && password === 'admin') {
         if (loginError) loginError.classList.add('hidden');
         
         // Save to localStorage for next time
-        localStorage.setItem('savedUsername', usernameInput.value.trim());
-        localStorage.setItem('savedPassword', passwordInput.value.trim());
+        localStorage.setItem('savedUsername', username);
+        localStorage.setItem('savedPassword', password);
         
         onSuccess();
       } else {
-        if (loginError) loginError.classList.remove('hidden');
+        if (loginError) {
+          loginError.classList.remove('hidden');
+          if (username !== 'admin') {
+            loginError.textContent = 'Username salah';
+          } else {
+            loginError.textContent = 'Password salah';
+          }
+        }
         passwordInput.value = '';
       }
   };
