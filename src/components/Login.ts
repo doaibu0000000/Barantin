@@ -8,8 +8,7 @@ export const Login = () => {
             <span class="text-4xl font-bold text-white">B</span>
             <div class="absolute top-2 right-2 w-3 h-3 bg-blue-300 rounded-full"></div>
           </div>
-          <h1 class="text-2xl font-bold text-white">Login ke Barantin</h1>
-          <p class="text-brand-text-muted text-sm text-center">Silakan masukkan kredensial Anda untuk melanjutkan</p>
+          <h1 class="text-2xl font-bold text-white">Barantin</h1>
         </div>
 
         <div id="loginFormContainer" class="flex flex-col gap-5">
@@ -78,7 +77,7 @@ export const bindLoginEvents = (onSuccess: () => void) => {
     });
   }
 
-  const passwordInputEl = document.getElementById('password');
+  const passwordInputEl = document.getElementById('password') as HTMLTextAreaElement;
   if (passwordInputEl) {
     passwordInputEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -86,5 +85,21 @@ export const bindLoginEvents = (onSuccess: () => void) => {
         attemptLogin();
       }
     });
+  }
+
+  // Prevent spaces in Username and Password
+  const usernameInputEl = document.getElementById('username') as HTMLTextAreaElement;
+  const preventSpace = (e: Event) => {
+    const target = e.target as HTMLTextAreaElement;
+    if (target.value.includes(' ')) {
+      target.value = target.value.replace(/\s/g, '');
+    }
+  };
+  
+  if (usernameInputEl) {
+    usernameInputEl.addEventListener('input', preventSpace);
+  }
+  if (passwordInputEl) {
+    passwordInputEl.addEventListener('input', preventSpace);
   }
 };
