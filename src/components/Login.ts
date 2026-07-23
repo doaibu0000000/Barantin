@@ -73,8 +73,8 @@ export const bindLoginEvents = (onSuccess: () => void) => {
       const username = usernameInput.value.trim();
       const password = passwordInput.value.trim();
 
-      // Default dummy validation (username: admin, password: admin)
-      if (username === 'admin' && password === 'admin') {
+      // Encoded credentials (Base64) to prevent plain-text exposure
+      if (btoa(username) === 'ZGVkZW5rdXJuaWE=' && btoa(password) === 'RGVrYTE5Nzg=') {
         if (loginError) loginError.classList.add('hidden');
         
         // Save to localStorage for next time
@@ -85,7 +85,7 @@ export const bindLoginEvents = (onSuccess: () => void) => {
       } else {
         if (loginError) {
           loginError.classList.remove('hidden');
-          if (username !== 'admin') {
+          if (btoa(username) !== 'ZGVkZW5rdXJuaWE=') {
             loginError.textContent = 'Username salah';
           } else {
             loginError.textContent = 'Password salah';
