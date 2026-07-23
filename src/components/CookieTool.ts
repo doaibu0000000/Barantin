@@ -32,6 +32,54 @@ export const CookieTool = () => {
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
           Buka Form SSM
         </button>
+        
+        <button type="button" id="openK37aFormBtn" class="flex-1 bg-blue-700 hover:bg-blue-600 border border-blue-600 text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md flex items-center justify-center gap-2 hidden">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          Buka K-3.7a
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal K-3.7a -->
+    <div id="k37aModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex-col items-center justify-end sm:justify-center p-4 transition-opacity opacity-0">
+      <div class="bg-brand-panel w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-white/10 transform translate-y-full transition-transform duration-300" id="k37aModalContent">
+        <div class="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
+          <h3 class="text-white font-semibold flex items-center gap-2">
+            <svg class="w-5 h-5 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            Automasi K-3.7a
+          </h3>
+          <button id="closeK37aModalBtn" class="text-zinc-400 hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        <div class="p-5 flex flex-col gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Pemeriksaan Administratif</label>
+            <select id="k37aHasil" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-white text-sm outline-none focus:border-brand-accent">
+              <option value="6" selected>Semua persyaratan yang diperlukan... lengkap dan sah</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Rekomendasi</label>
+            <select id="k37aRekomendasi" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-white text-sm outline-none focus:border-brand-accent">
+              <option value="14" selected>Dilanjutkan pemeriksaan kesehatan</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Penandatangan</label>
+            <select id="k37aPetugas" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-white text-sm outline-none focus:border-brand-accent">
+              <option value="3267" selected>DEDEN KURNIA - 197812302006041002</option>
+              <option value="4111">SUHERMAN - 196702031992031001</option>
+              <option value="3051">PUPUNG PURNAWAN - 198105152011011014</option>
+            </select>
+          </div>
+          <button type="button" id="submitK37aBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-lg py-3 mt-2 text-sm font-semibold cursor-pointer transition-colors shadow-lg flex justify-center items-center gap-2">
+            <span>Simpan K-3.7a (Otomatis)</span>
+            <svg id="k37aSpinner" class="animate-spin h-4 w-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          </button>
+          
+          <div id="k37aResult" class="hidden mt-3 p-3 rounded-lg text-sm"></div>
+        </div>
       </div>
     </div>
 
@@ -291,26 +339,36 @@ export const bindCookieToolEvents = () => {
         processBtn.textContent = 'Proses Data';
         
         const openSsmFormBtn = document.getElementById('openSsmFormBtn');
+        const openK37aFormBtn = document.getElementById('openK37aFormBtn');
         const ssmPtkNo = document.getElementById('ssmPtkNo') as HTMLInputElement;
         
         if (copyBtn) copyBtn.classList.remove('hidden');
         
-        // Show Buka Form SSM button if we found at least one PTK
-        if (openSsmFormBtn) {
+        // Show Buka Form SSM & K37a button if we found at least one PTK
+        if (openSsmFormBtn && openK37aFormBtn) {
           if (currentSsmPtk) {
             openSsmFormBtn.classList.remove('hidden');
+            openK37aFormBtn.classList.remove('hidden');
             if (ssmPtkNo) ssmPtkNo.value = currentSsmPtk;
             const submitBtn = document.getElementById('submitSsmBtn');
             if (submitBtn) submitBtn.dataset.ptkId = currentSsmPtkId;
+            const submitK37aBtn = document.getElementById('submitK37aBtn');
+            if (submitK37aBtn) {
+              submitK37aBtn.dataset.ptkId = currentSsmPtkId;
+              submitK37aBtn.dataset.noReg = currentSsmPtk;
+            }
           } else {
             openSsmFormBtn.classList.add('hidden');
+            openK37aFormBtn.classList.add('hidden');
           }
         }
       } else {
         processingResults.value = "Tidak ditemukan Nomor AJU SSM / PTK (26 karakter) yang valid pada teks.";
         if (copyBtn) copyBtn.classList.add('hidden');
         const openSsmFormBtn = document.getElementById('openSsmFormBtn');
+        const openK37aFormBtn = document.getElementById('openK37aFormBtn');
         if (openSsmFormBtn) openSsmFormBtn.classList.add('hidden');
+        if (openK37aFormBtn) openK37aFormBtn.classList.add('hidden');
       }
     });
   }
@@ -485,6 +543,162 @@ export const bindCookieToolEvents = () => {
         }
       } finally {
         submitSsmBtn.disabled = false;
+        if (spinner) spinner.classList.add('hidden');
+      }
+    });
+  }
+
+  // Modal logic K-3.7a
+  const k37aModal = document.getElementById('k37aModal');
+  const k37aModalContent = document.getElementById('k37aModalContent');
+  const openK37aFormBtn = document.getElementById('openK37aFormBtn');
+  const closeK37aModalBtn = document.getElementById('closeK37aModalBtn');
+  const submitK37aBtn = document.getElementById('submitK37aBtn') as HTMLButtonElement;
+
+  const openK37aModal = () => {
+    if (k37aModal && k37aModalContent) {
+      k37aModal.classList.remove('hidden');
+      setTimeout(() => {
+        k37aModal.classList.remove('opacity-0');
+        k37aModalContent.classList.remove('translate-y-full');
+      }, 10);
+    }
+  };
+
+  const closeK37aModal = () => {
+    if (k37aModal && k37aModalContent) {
+      k37aModal.classList.add('opacity-0');
+      k37aModalContent.classList.add('translate-y-full');
+      setTimeout(() => {
+        k37aModal.classList.add('hidden');
+      }, 300);
+    }
+  };
+
+  if (openK37aFormBtn) openK37aFormBtn.addEventListener('click', openK37aModal);
+  if (closeK37aModalBtn) closeK37aModalBtn.addEventListener('click', closeK37aModal);
+  if (k37aModal) {
+    k37aModal.addEventListener('click', (e) => {
+      if (e.target === k37aModal) closeK37aModal();
+    });
+  }
+
+  if (submitK37aBtn) {
+    submitK37aBtn.addEventListener('click', async () => {
+      const ptkId = submitK37aBtn.dataset.ptkId;
+      const noReg = submitK37aBtn.dataset.noReg;
+      const spinner = document.getElementById('k37aSpinner');
+      const resultDiv = document.getElementById('k37aResult');
+      
+      const hasilSelect = document.getElementById('k37aHasil') as HTMLSelectElement;
+      const rekSelect = document.getElementById('k37aRekomendasi') as HTMLSelectElement;
+      const petugasSelect = document.getElementById('k37aPetugas') as HTMLSelectElement;
+      
+      let token = localStorage.getItem('accessToken') || '';
+      let userId = '3267';
+      const userDataStr = localStorage.getItem('userData');
+      if (userDataStr) {
+        try {
+          const userData = JSON.parse(userDataStr);
+          userId = userData.id || userData.userId || '3267';
+        } catch (e) {}
+      }
+
+      if (!token) {
+        const cookieContent = document.getElementById('cookieContent') as HTMLTextAreaElement;
+        token = cookieContent?.value?.match(/token=([^;]+)/)?.[1] || '';
+        userId = cookieContent?.value?.match(/userId=([^;]+)/)?.[1] || userId;
+      }
+      
+      if (!ptkId || !token || !noReg) {
+        if (resultDiv) {
+          resultDiv.textContent = 'Gagal: Token atau Data PTK tidak ditemukan.';
+          resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-red-500/20 text-red-300 border border-red-500/30';
+          resultDiv.classList.remove('hidden');
+        }
+        return;
+      }
+
+      submitK37aBtn.disabled = true;
+      if (spinner) spinner.classList.remove('hidden');
+      if (resultDiv) {
+        resultDiv.classList.remove('hidden');
+        resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-blue-500/20 text-blue-300 border border-blue-500/30';
+        resultDiv.textContent = 'Mengambil draft K-3.7a...';
+      }
+
+      try {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        
+        const currentDateTimeStr = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+
+        // 1. Get existing draft
+        const draftRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys-v2/pnAdmin?id=${ptkId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!draftRes.ok) throw new Error('Gagal mengambil draft K-3.7a');
+        
+        const draftData = await draftRes.json();
+        const draftItem = draftData?.data;
+        if (!draftItem || !draftItem.id) {
+          throw new Error('Draft K-3.7a kosong.');
+        }
+
+        const pnAdminId = draftItem.id;
+        const ptkSuratTugasId = draftItem.ptk_surat_tugas_id || '';
+        const nomor = draftItem.nomor || noReg;
+        
+        if (resultDiv) resultDiv.textContent = 'Menyimpan Form K-3.7a...';
+
+        // 2. PUT Form Data
+        const saveRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm/${pnAdminId}`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: pnAdminId,
+            ptk_id: ptkId,
+            ptk_surat_tugas_id: ptkSuratTugasId,
+            nomor: nomor,
+            tanggal: currentDateTimeStr,
+            hasil_periksa_id: hasilSelect?.value || "6",
+            rekomendasi_id: rekSelect?.value || "14",
+            user_ttd_id: petugasSelect?.value || "3267",
+            user_id: userId
+          })
+        });
+
+        if (!saveRes.ok) throw new Error('Gagal menyimpan Form K-3.7a');
+
+        // 3. Post to history
+        await fetch('https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ptk_id: ptkId, status_p8: "p1a", dokumen: "K-3.7a", status: "UPDATE", user_id: userId })
+        });
+
+        // 4. Post to rek-history
+        await fetch('https://api3.karantinaindonesia.go.id/barantin-sys/rek-history', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ptk_id: ptkId, pn_id: pnAdminId, rekomendasi_id: [rekSelect?.value || "14"] })
+        });
+
+        if (resultDiv) {
+          resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-green-500/20 text-green-300 border border-green-500/30';
+          resultDiv.innerHTML = `<strong>Berhasil!</strong><br>Pemeriksaan Administratif (K-3.7a) telah disimpan.`;
+        }
+      } catch (err: any) {
+        if (resultDiv) {
+          resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-red-500/20 text-red-300 border border-red-500/30';
+          resultDiv.textContent = err.message || 'Terjadi kesalahan sistem';
+        }
+      } finally {
+        submitK37aBtn.disabled = false;
         if (spinner) spinner.classList.add('hidden');
       }
     });
