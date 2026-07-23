@@ -53,6 +53,10 @@ export const CookieTool = () => {
             <input type="text" id="ssmPtkNo" class="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-zinc-300 text-sm outline-none" readonly>
           </div>
           <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Tanggal Verifikasi</label>
+            <input type="text" id="ssmTanggal" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-white text-sm outline-none focus:border-brand-accent">
+          </div>
+          <div>
             <label class="block text-xs font-semibold text-zinc-400 mb-1">Respon</label>
             <select id="ssmRespon" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-white text-sm outline-none focus:border-brand-accent">
               <option value="GA - PROSES VERIFIKASI" selected>GA - PROSES VERIFIKASI</option>
@@ -280,6 +284,17 @@ export const bindCookieToolEvents = () => {
 
   const openModal = () => {
     if (ssmModal && ssmModalContent) {
+      const ssmTanggal = document.getElementById('ssmTanggal') as HTMLInputElement;
+      if (ssmTanggal) {
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const yyyy = now.getFullYear();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        ssmTanggal.value = `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+      }
+
       ssmModal.classList.remove('hidden');
       // small delay to allow display block to apply before animation
       setTimeout(() => {
