@@ -99,7 +99,7 @@ export const bindCookieToolEvents = () => {
   }
 
   if (processBtn) {
-    processBtn.addEventListener('click', () => {
+    processBtn.addEventListener('click', async () => {
       const inputCookies = cookieContent.value;
       
       if (!inputCookies.trim()) {
@@ -111,14 +111,82 @@ export const bindCookieToolEvents = () => {
 
       processingResults.classList.remove('text-red-500');
       
-      // Extract 26-character alphanumeric sequences
       const regex = /[a-zA-Z0-9]{26}/g;
       const matches = inputCookies.match(regex);
       
       if (matches && matches.length > 0) {
-        // User wants the extracted data only, without spaces. 
-        // The regex matches themselves won't have spaces.
-        processingResults.value = matches.join('\n') + '\nDone';
+        processBtn.disabled = true;
+        processBtn.textContent = 'Mencari Data...';
+        processingResults.value = "Sedang mengambil data dari server, mohon tunggu...";
+        
+        let finalOutput = '';
+        
+        // Helper function to fetch data
+        const fetchAju = async (noAju: string, jeniscari: string) => {
+          const today = new Date().toISOString().split('T')[0];
+          const payload = {
+            dFrom: "2000-01-01", // Make date range very broad so we always find it
+            dTo: today,
+            stat: "",
+            karantina: "",
+            upt: "",
+            jnsAju: "EKSPOR",
+            jeniscari,
+            noAju
+          };
+          
+          try {
+            const res = await fetch('https://api.karantinaindonesia.go.id/ssm/getAju', {
+              method: 'POST',
+              headers: {
+                'Authorization': 'Basic bXJpZHdhbjpaPnV5JCx+NjR7KF42WDQm',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(payload)
+            });
+            
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (data.status && data.data && data.data.length > 0) {
+              return data.data[0];
+            }
+            return null;
+          } catch (e) {
+            return null;
+          }
+        };
+
+        for (const aju of matches) {
+          finalOutput += `\n--- MENCARI AJU: ${aju} ---\n`;
+          
+          // Try SSM first
+          let data = await fetchAju(aju, 'noAju');
+          
+          // If not found, try PTK
+          if (!data) {
+            data = await fetchAju(aju, 'noReg');
+          }
+          
+          if (data) {
+            finalOutput += `Status         : DITEMUKAN (${data.jnsAju})\n`;
+            finalOutput += `No Aju SSM     : ${data.noAju || '-'}\n`;
+            finalOutput += `No Aju PTK     : ${data.noReg || '-'}\n`;
+            finalOutput += `Perusahaan     : ${data.nmPerusahaan || '-'}\n`;
+            finalOutput += `Alat Angkut    : ${data.namaAngkut || '-'}\n`;
+            finalOutput += `Tgl Tiba       : ${data.tglTiba || '-'}\n`;
+            finalOutput += `Pelabuhan Asal : ${data.portAsal || '-'}\n`;
+            finalOutput += `Pelabuhan Tuju : ${data.portTujuan || '-'}\n`;
+            finalOutput += `Karantina      : ${data.jenis_karantina || '-'}\n`;
+            finalOutput += `UPT            : ${data.upt || '-'}\n`;
+          } else {
+            finalOutput += `Status         : TIDAK DITEMUKAN / GAGAL\n`;
+          }
+        }
+        
+        processingResults.value = finalOutput.trim();
+        processBtn.disabled = false;
+        processBtn.textContent = 'Proses Data';
+        
         if (copyBtn) copyBtn.classList.remove('hidden');
       } else {
         processingResults.value = "Tidak ditemukan Nomor AJU SSM / PTK (26 karakter) yang valid pada teks.";
