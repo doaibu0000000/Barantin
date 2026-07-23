@@ -334,8 +334,23 @@ export const bindCookieToolEvents = () => {
       const noReg = (document.getElementById('ssmPtkNo') as HTMLInputElement)?.value;
       const spinner = document.getElementById('surtugSpinner');
       const resultDiv = document.getElementById('surtugResult');
-      const token = cookieContent.value.match(/token=([^;]+)/)?.[1] || '';
-      const userId = cookieContent.value.match(/userId=([^;]+)/)?.[1] || '3267'; // Default if not found
+      
+      let token = localStorage.getItem('accessToken') || '';
+      let userId = '3267';
+      const userDataStr = localStorage.getItem('userData');
+      if (userDataStr) {
+        try {
+          const userData = JSON.parse(userDataStr);
+          userId = userData.id || userData.userId || '3267';
+        } catch (e) {}
+      }
+
+      if (!token) {
+        // Fallback if they somehow pasted it in the textarea
+        const cookieContent = document.getElementById('cookieContent') as HTMLTextAreaElement;
+        token = cookieContent?.value?.match(/token=([^;]+)/)?.[1] || '';
+        userId = cookieContent?.value?.match(/userId=([^;]+)/)?.[1] || userId;
+      }
       
       if (!ptkId || !token) {
         if (resultDiv) {
