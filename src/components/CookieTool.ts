@@ -19,13 +19,63 @@ export const CookieTool = () => {
       Proses Data
     </button>
 
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-2 relative">
       <textarea id="processingResults" placeholder="Hasil pemrosesan ditampilkan di sini..." class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8" readonly></textarea>
       
-      <button type="button" id="copyBtn" class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md flex items-center justify-center gap-2 mt-2 hidden">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-        <span id="copyText">Salin Text</span>
-      </button>
+      <div class="flex gap-2 mt-2">
+        <button type="button" id="copyBtn" class="flex-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md flex items-center justify-center gap-2 hidden">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+          <span id="copyText">Salin Text</span>
+        </button>
+        
+        <button type="button" id="openSsmFormBtn" class="flex-1 bg-green-700 hover:bg-green-600 border border-green-600 text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md flex items-center justify-center gap-2 hidden">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          Buka Form SSM
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Respon SSM -->
+    <div id="ssmModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex-col items-center justify-end sm:justify-center p-4 transition-opacity opacity-0">
+      <div class="bg-brand-panel w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-white/10 transform translate-y-full transition-transform duration-300" id="ssmModalContent">
+        <div class="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
+          <h3 class="text-white font-semibold flex items-center gap-2">
+            <svg class="w-5 h-5 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            Respon SSM
+          </h3>
+          <button id="closeSsmModalBtn" class="text-zinc-400 hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        <div class="p-5 flex flex-col gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Nomor Dokumen PTK</label>
+            <input type="text" id="ssmPtkNo" class="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-zinc-300 text-sm outline-none" readonly>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Respon</label>
+            <select id="ssmRespon" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-white text-sm outline-none focus:border-brand-accent">
+              <option value="GA - PROSES VERIFIKASI">GA - PROSES VERIFIKASI</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Pos Layanan</label>
+            <select id="ssmPos" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-white text-sm outline-none focus:border-brand-accent">
+              <option value="3200.2">3200.2 | DRY PORT CIKARANG</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Petugas</label>
+            <select id="ssmPetugas" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-white text-sm outline-none focus:border-brand-accent">
+              <option value="197812302006041002">DEDEN KURNIA - 197812302006041002</option>
+            </select>
+          </div>
+          
+          <button type="button" id="submitSsmBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 mt-2 text-sm font-semibold cursor-pointer transition-colors shadow-lg">
+            Proses PTK
+          </button>
+        </div>
+      </div>
     </div>
   `;
 };
@@ -156,18 +206,19 @@ export const bindCookieToolEvents = () => {
           }
         };
 
+        // Variables to store current active data
+        let currentSsmPtk = '';
+        
         for (const aju of matches) {
           finalOutput += `\n--- MENCARI AJU: ${aju} ---\n`;
           
-          // Try SSM first
           let data = await fetchAju(aju, 'noAju');
-          
-          // If not found, try PTK
-          if (!data) {
-            data = await fetchAju(aju, 'noReg');
-          }
+          if (!data) data = await fetchAju(aju, 'noReg');
           
           if (data) {
+            // Save the noReg for the form submission
+            if (data.noReg) currentSsmPtk = data.noReg;
+            
             finalOutput += `Status         : DITEMUKAN (${data.jnsAju})\n`;
             finalOutput += `No Aju SSM     : ${data.noAju || '-'}\n`;
             finalOutput += `No Aju PTK     : ${data.noReg || '-'}\n`;
@@ -187,11 +238,69 @@ export const bindCookieToolEvents = () => {
         processBtn.disabled = false;
         processBtn.textContent = 'Proses Data';
         
+        const openSsmFormBtn = document.getElementById('openSsmFormBtn');
+        const ssmPtkNo = document.getElementById('ssmPtkNo') as HTMLInputElement;
+        
         if (copyBtn) copyBtn.classList.remove('hidden');
+        
+        // Show Buka Form SSM button if we found at least one PTK
+        if (openSsmFormBtn) {
+          if (currentSsmPtk) {
+            openSsmFormBtn.classList.remove('hidden');
+            if (ssmPtkNo) ssmPtkNo.value = currentSsmPtk;
+          } else {
+            openSsmFormBtn.classList.add('hidden');
+          }
+        }
       } else {
         processingResults.value = "Tidak ditemukan Nomor AJU SSM / PTK (26 karakter) yang valid pada teks.";
         if (copyBtn) copyBtn.classList.add('hidden');
+        const openSsmFormBtn = document.getElementById('openSsmFormBtn');
+        if (openSsmFormBtn) openSsmFormBtn.classList.add('hidden');
       }
+    });
+  }
+
+  // Modal logic
+  const ssmModal = document.getElementById('ssmModal');
+  const ssmModalContent = document.getElementById('ssmModalContent');
+  const openSsmFormBtn = document.getElementById('openSsmFormBtn');
+  const closeSsmModalBtn = document.getElementById('closeSsmModalBtn');
+  const submitSsmBtn = document.getElementById('submitSsmBtn') as HTMLButtonElement;
+
+  const openModal = () => {
+    if (ssmModal && ssmModalContent) {
+      ssmModal.classList.remove('hidden');
+      // small delay to allow display block to apply before animation
+      setTimeout(() => {
+        ssmModal.classList.remove('opacity-0');
+        ssmModalContent.classList.remove('translate-y-full');
+      }, 10);
+    }
+  };
+
+  const closeModal = () => {
+    if (ssmModal && ssmModalContent) {
+      ssmModal.classList.add('opacity-0');
+      ssmModalContent.classList.add('translate-y-full');
+      setTimeout(() => {
+        ssmModal.classList.add('hidden');
+      }, 300);
+    }
+  };
+
+  if (openSsmFormBtn) openSsmFormBtn.addEventListener('click', openModal);
+  if (closeSsmModalBtn) closeSsmModalBtn.addEventListener('click', closeModal);
+  if (ssmModal) {
+    ssmModal.addEventListener('click', (e) => {
+      if (e.target === ssmModal) closeModal();
+    });
+  }
+
+  if (submitSsmBtn) {
+    submitSsmBtn.addEventListener('click', () => {
+      alert("TBD: Anda perlu menginformasikan apa endpoint API untuk tombol ini melalui chat agar kami bisa melengkapinya.");
+      closeModal();
     });
   }
 };
