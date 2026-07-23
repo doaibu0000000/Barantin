@@ -68,6 +68,8 @@ export const CookieTool = () => {
             <label class="block text-xs font-semibold text-zinc-400 mb-1">Petugas</label>
             <select id="ssmPetugas" class="w-full bg-brand-input border border-brand-border rounded-lg p-2 text-white text-sm outline-none focus:border-brand-accent">
               <option value="197812302006041002">DEDEN KURNIA - 197812302006041002</option>
+              <option value="198105152011011014">PUPUNG PURNAWAN - 198105152011011014</option>
+              <option value="196702031992031001">SUHERMAN - 196702031992031001</option>
             </select>
           </div>
           
