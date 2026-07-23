@@ -474,67 +474,75 @@ export const bindCookieToolEvents = () => {
         const tanggalSurtug = `${yyyy}-${mm}-${dd}T08:00`;
         const createdAt = `${yyyy}-${mm}-${dd} ${hh}:${min}:${sec}`;
 
-        const surtugHeaderId = crypto.randomUUID();
+        const surtugConfigs = [
+          { perihal: "Pemeriksaan Administrasi dan Kesesuaian Dokumen", penugasan_id: "1" },
+          { perihal: "Pelaksanaan Tindakan Karantina", penugasan_id: "2" }
+        ];
 
-        // 1. Create Surtug Header
-        const headerRes = await fetch('https://api3.karantinaindonesia.go.id/barantin-sys/surtug', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            id: surtugHeaderId,
-            ptk_id: ptkId,
-            no_dok_permohonan: noReg,
-            ptk_analisis_id: "",
-            nomor: "",
-            tanggal: tanggalSurtug,
-            perihal: "Pelaksanaan Tindakan Karantina",
-            penanda_tangan_id: 2085, // CAHYONO
-            diterbitkan_di: "BANDUNG",
-            user_id: userId,
-            created_at: createdAt
-          })
-        });
+        let createdSurtugs: string[] = [];
 
-        if (!headerRes.ok) throw new Error('Gagal membuat Surat Tugas Induk');
-        const headerData = await headerRes.json();
-        const surtugNomor = headerData?.data?.nomor || '';
+        for (let i = 0; i < surtugConfigs.length; i++) {
+          const config = surtugConfigs[i];
+          const surtugHeaderId = crypto.randomUUID();
 
-        // 2. Add 3 Officers
-        if (resultDiv) resultDiv.textContent = 'Menambahkan 3 Petugas (Suherman, Deden, Pupung)...';
-        
-        const petugasIds = [4111, 3267, 3051]; 
-        for (const pid of petugasIds) {
-          await fetch('https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil', {
+          // 1. Create Surtug Header
+          const headerRes = await fetch('https://api3.karantinaindonesia.go.id/barantin-sys/surtug', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              id: crypto.randomUUID(),
+              id: surtugHeaderId,
               ptk_id: ptkId,
-              ptk_surtug_header_id: surtugHeaderId,
-              petugas_id: pid,
+              no_dok_permohonan: noReg,
+              ptk_analisis_id: "",
+              nomor: "",
+              tanggal: tanggalSurtug,
+              perihal: config.perihal,
+              penanda_tangan_id: 2085, // CAHYONO
+              diterbitkan_di: "BANDUNG",
               user_id: userId,
-              penugasan: [
-                {
-                  id: crypto.randomUUID(),
-                  penugasan_id: "1",
-                  penugasan_lainnya: ""
-                }
-              ],
               created_at: createdAt
             })
           });
+
+          if (!headerRes.ok) throw new Error('Gagal membuat Surat Tugas Induk ke-' + (i+1));
+          const headerData = await headerRes.json();
+          if (headerData?.data?.nomor) createdSurtugs.push(headerData.data.nomor);
+
+          // 2. Add 3 Officers
+          const petugasIds = [4111, 3267, 3051]; 
+          for (const pid of petugasIds) {
+            await fetch('https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                id: crypto.randomUUID(),
+                ptk_id: ptkId,
+                ptk_surtug_header_id: surtugHeaderId,
+                petugas_id: pid,
+                user_id: userId,
+                penugasan: [
+                  {
+                    id: crypto.randomUUID(),
+                    penugasan_id: config.penugasan_id,
+                    penugasan_lainnya: ""
+                  }
+                ],
+                created_at: createdAt
+              })
+            });
+          }
         }
 
         // Success
         if (resultDiv) {
           resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-green-500/20 text-green-300 border border-green-500/30';
-          resultDiv.innerHTML = `<strong>Berhasil!</strong><br>Surat Tugas berhasil dibuat dengan 3 Petugas.<br>Nomor: <span class="font-mono text-white">${surtugNomor}</span>`;
+          resultDiv.innerHTML = `<strong>Berhasil!</strong><br>2 Surat Tugas berhasil dibuat.<br>Nomor:<br><span class="font-mono text-white text-xs">${createdSurtugs.join('<br>')}</span>`;
         }
       } catch (err: any) {
         if (resultDiv) {
