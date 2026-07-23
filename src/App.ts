@@ -2,10 +2,13 @@ import { Sidebar, bindSidebarEvents } from './components/Sidebar';
 import { CookieTool, bindCookieToolEvents } from './components/CookieTool';
 import { DraftTool, bindDraftToolEvents } from './components/DraftTool';
 import { RevisiTool, bindRevisiToolEvents } from './components/RevisiTool';
-import { ProfileTool, bindProfileToolEvents } from './components/ProfileTool';
 
 export const App = () => {
-  const activeMenu = localStorage.getItem('activeMenu') || 'Surtu 2';
+  let activeMenu = localStorage.getItem('activeMenu') || 'Surtu 2';
+  if (activeMenu === 'Profile') {
+    activeMenu = 'Surtu 2';
+    localStorage.setItem('activeMenu', 'Surtu 2');
+  }
   let initialContent = '';
   
   if (activeMenu === 'Draft') {
@@ -14,8 +17,6 @@ export const App = () => {
     initialContent = RevisiTool();
   } else if (activeMenu === 'Surtu 2') {
     initialContent = CookieTool();
-  } else if (activeMenu === 'Profile') {
-    initialContent = ProfileTool();
   } else {
     initialContent = `<div class="text-white text-center mt-10">Fitur ${activeMenu} belum tersedia</div>`;
   }
@@ -33,7 +34,10 @@ export const App = () => {
 
 export const bindAppEvents = () => {
   const mainContent = document.getElementById('mainContent');
-  const activeMenu = localStorage.getItem('activeMenu') || 'Surtu 2';
+  let activeMenu = localStorage.getItem('activeMenu') || 'Surtu 2';
+  if (activeMenu === 'Profile') {
+    activeMenu = 'Surtu 2';
+  }
 
   bindSidebarEvents((menuId) => {
     localStorage.setItem('activeMenu', menuId);
@@ -48,9 +52,6 @@ export const bindAppEvents = () => {
     } else if (menuId === 'Surtu 2') {
       mainContent.innerHTML = CookieTool();
       bindCookieToolEvents();
-    } else if (menuId === 'Profile') {
-      mainContent.innerHTML = ProfileTool();
-      bindProfileToolEvents();
     } else {
       mainContent.innerHTML = `<div class="text-white text-center mt-10">Fitur ${menuId} belum tersedia</div>`;
     }
@@ -63,7 +64,5 @@ export const bindAppEvents = () => {
     bindRevisiToolEvents();
   } else if (activeMenu === 'Surtu 2') {
     bindCookieToolEvents();
-  } else if (activeMenu === 'Profile') {
-    bindProfileToolEvents();
   }
 };
