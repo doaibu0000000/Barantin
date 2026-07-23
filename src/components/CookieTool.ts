@@ -682,11 +682,12 @@ export const bindCookieToolEvents = () => {
         });
 
         // 4. Post to rek-history
-        await fetch('https://api3.karantinaindonesia.go.id/barantin-sys/rek-history', {
+        const rekRes = await fetch('https://api.karantinaindonesia.go.id/barantin-sys/rek-history', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ ptk_id: ptkId, pn_id: pnAdminId, rekomendasi_id: [rekSelect?.value || "14"] })
         });
+        if (!rekRes.ok) console.warn('Gagal rek-history', await rekRes.text());
 
         if (resultDiv) {
           resultDiv.className = 'mt-3 p-3 rounded-lg text-sm bg-green-500/20 text-green-300 border border-green-500/30';
