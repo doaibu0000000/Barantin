@@ -10,7 +10,7 @@ export const ProfileTool = () => {
   ];
 
   return `
-    <div class="flex flex-col gap-6 w-full max-w-2xl mx-auto pb-4">
+    <div class="flex flex-col gap-6 w-full max-w-2xl mx-auto pb-24 md:pb-4">
       <!-- Header Profile -->
       <div class="flex items-center gap-6 bg-[#1a1b1e] border border-white/5 rounded-xl p-6 shadow-lg">
         <div class="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center shadow-lg relative shrink-0">
@@ -38,11 +38,11 @@ export const ProfileTool = () => {
         
         <div class="h-px bg-white/10 mx-6 my-2"></div>
         
-        <button id="profileLogoutBtn" class="flex items-center gap-4 w-full px-6 py-4 text-red-400 hover:bg-red-400/10 transition-colors text-left">
-          <div class="text-red-400/80">
+        <button id="exitAccountBtn" class="flex items-center gap-4 w-full px-6 py-4 text-[#ff4d4f] hover:bg-[#ff4d4f]/10 transition-colors text-left font-bold">
+          <div class="text-[#ff4d4f]">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
           </div>
-          <span class="text-base font-medium flex-1">Log out</span>
+          <span class="text-base font-bold flex-1">Keluar Akun</span>
         </button>
       </div>
     </div>
@@ -60,7 +60,7 @@ export const bindProfileToolEvents = () => {
     });
   });
 
-  const logoutBtn = document.getElementById('profileLogoutBtn');
+  const logoutBtn = document.getElementById('exitAccountBtn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', (e) => {
       e.preventDefault();
