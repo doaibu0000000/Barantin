@@ -172,7 +172,10 @@ export const bindLoginEvents = (onSuccess: () => void) => {
     if (captchaInputEl) captchaInputEl.value = '';
 
     try {
-      const res = await fetch('https://api.karantinaindonesia.go.id/barantin-sys-v2/captcha?app=APP001');
+      const res = await fetch('https://api.karantinaindonesia.go.id/barantin-sys-v2/captcha?app=APP001', {
+        headers: { 'Accept': 'application/json, text/plain, */*' },
+        referrerPolicy: 'no-referrer'
+      });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
 
