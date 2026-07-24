@@ -528,20 +528,23 @@ export const bindCookieToolEvents = () => {
                            if (verifyRes.ok || verifyRes.status === 201) {
                               ptkBlock += `Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)\n`;
                               
-                                  try {
+                               // Gunakan ID PTK yang sudah ada di SSM (bukan yang baru dibuat)
+                               // Ini sama persis dengan yang dilakukan website resmi saat klik Buat Nomor Surtug
+                               const surtugPtkId = currentSsmPtkId || finalPtkId;
+                               const ptkNomor = currentSsmPtk || submitData.data?.nomor || data.noReg || data.noAju;
+                               
+                                   try {
                                      const surtugId = uuidv4();
                                      const now = new Date();
                                      const tzOffset = now.getTimezoneOffset() * 60000;
                                      const localISOTime = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 19).replace('T', ' ');
                                      const localDateOnly = localISOTime.split(' ')[0];
                                      
-                                     const ptkNomor = currentSsmPtk || submitData.data?.nomor || data.noReg || data.noAju;
-                                     
                                      // 1. DokumenCek Request (Simulasi klik Buat Surat Tugas Baru)
                                      const dokumencekPayload = {
                                         listRekom: [],
                                         noAju: data.noReg || data.noAju,
-                                        idPtk: finalPtkId,
+                                        idPtk: surtugPtkId,
                                         noDokumen: ptkNomor,
                                         tglDokumen: localISOTime.substring(0, 16),
                                         errorSurtug: "",
@@ -578,9 +581,11 @@ export const bindCookieToolEvents = () => {
                                      }
                                      
                                      // 2. Surtug Request (Simulasi klik Buat Nomor Surtug)
+                                     // KRITIS: ptk_id HARUS pakai ID PTK yang ada di SSM (currentSsmPtkId)
+                                     // bukan ID dari PTK yang baru dibuat (finalPtkId)
                                      const surtugPayload = {
                                         id: surtugId,
-                                        ptk_id: finalPtkId,
+                                        ptk_id: surtugPtkId,
                                         no_dok_permohonan: ptkNomor,
                                         ptk_analisis_id: "",
                                         nomor: "",
@@ -616,7 +621,7 @@ export const bindCookieToolEvents = () => {
                                                  'Content-Type': 'application/json'
                                               },
                                               body: JSON.stringify({
-                                                 ptk_id: ptkPayload.id,
+                                                 ptk_id: surtugPtkId,
                                                  penugasan_id: ""
                                               })
                                            });
