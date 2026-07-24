@@ -1,3 +1,6 @@
+let savedInput = '';
+let savedOutput = '';
+
 export const CookieTool = () => {
   return `
     <div class="flex flex-col gap-2">
@@ -40,6 +43,22 @@ export const bindCookieToolEvents = () => {
   const copyBtn = document.getElementById('copyBtn') as HTMLButtonElement;
   const copyText = document.getElementById('copyText') as HTMLSpanElement;
   const cookieLoader = document.getElementById('cookieLoader');
+
+  if (cookieContent) {
+    cookieContent.value = savedInput;
+    cookieContent.addEventListener('input', () => {
+      savedInput = cookieContent.value;
+    });
+  }
+
+  if (processingResults) {
+    processingResults.value = savedOutput;
+  }
+
+  if (copyBtn) {
+    if (savedOutput) copyBtn.classList.remove('hidden');
+    else copyBtn.classList.add('hidden');
+  }
 
   const showLoader = (duration: number, callback: () => void) => {
     if (cookieLoader) {
@@ -296,12 +315,14 @@ export const bindCookieToolEvents = () => {
         finalOutput = resultsArray.join('');
         
         processingResults.value = finalOutput.trim();
+        savedOutput = finalOutput.trim();
         processBtn.disabled = false;
         processBtn.textContent = 'Proses Data';
         
         if (copyBtn) copyBtn.classList.remove('hidden');
       } else {
         processingResults.value = "Tidak ditemukan Nomor AJU SSM / PTK (26 karakter) yang valid pada teks.";
+        savedOutput = processingResults.value;
         if (copyBtn) copyBtn.classList.add('hidden');
       }
     });
