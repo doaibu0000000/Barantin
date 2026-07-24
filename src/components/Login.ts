@@ -90,45 +90,77 @@ export const bindLoginEvents = (onSuccess: () => void) => {
   let currentCaptchaToken = '';
   let currentCaptchaImageSrc = '';
 
-  // Load Tesseract.js OCR dari CDN
-  const loadTesseract = (): Promise<any> => new Promise((resolve) => {
-    if ((window as any).Tesseract) { resolve((window as any).Tesseract); return; }
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-    script.onload = () => resolve((window as any).Tesseract);
-    script.onerror = () => resolve(null);
-    document.head.appendChild(script);
-  });
+  // === STRATEGI AUTO CAPTCHA (tanpa server) ===
+  // 1. Decode JWT token → cek apakah ada teks captcha di payload
+  // 2. Preprocessing canvas (scale 3x + binarisasi) → Tesseract.js OCR
 
-  // Baca teks dari gambar captcha
-  const readCaptchaOCR = async (imgSrc: string): Promise<string> => {
+  const decodeJwt = (token: string): any => {
     try {
-      const Tesseract = await loadTesseract();
-      if (!Tesseract) return '';
-      const result = await Tesseract.recognize(imgSrc, 'eng', {
-        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+      const pad = parts[1] + '='.repeat((4 - parts[1].length % 4) % 4);
+      return JSON.parse(atob(pad));
+    } catch { return null; }
+  };
+
+  // Preprocess gambar captcha: scale 3x + grayscale + threshold
+  const preprocessCaptcha = (imgSrc: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = 3;
+        const canvas = document.createElement('canvas');
+        canvas.width  = img.width  * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d')!;
+        // Background putih
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // Binarisasi: piksel gelap → hitam, terang → putih
+        const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < d.data.length; i += 4) {
+          const gray = 0.299 * d.data[i] + 0.587 * d.data[i+1] + 0.114 * d.data[i+2];
+          const v = gray < 160 ? 0 : 255;
+          d.data[i] = d.data[i+1] = d.data[i+2] = v;
+        }
+        ctx.putImageData(d, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => resolve(imgSrc);
+      img.src = imgSrc;
+    });
+  };
+
+  // OCR via Tesseract.js (preload di background segera setelah login muncul)
+  let tesseractReady: any = null;
+  const preloadTesseract = () => {
+    if ((window as any).Tesseract) { tesseractReady = (window as any).Tesseract; return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload = () => { tesseractReady = (window as any).Tesseract; };
+    document.head.appendChild(s);
+  };
+  preloadTesseract(); // Mulai load sekarang di background
+
+  const solveCaptchaOCR = async (imgSrc: string): Promise<string> => {
+    try {
+      // Tunggu Tesseract siap (max 10 detik)
+      let waited = 0;
+      while (!tesseractReady && waited < 100) {
+        await new Promise(r => setTimeout(r, 100));
+        waited++;
+      }
+      if (!tesseractReady) return '';
+      const processed = await preprocessCaptcha(imgSrc);
+      const result = await tesseractReady.recognize(processed, 'eng', {
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+        tessedit_pageseg_mode: '7' // Single line mode
       });
       return (result.data.text || '').trim().replace(/[\s\n\r]/g, '');
     } catch (e) {
       console.error('OCR error:', e);
       return '';
-    }
-  };
-  
-  // Kirim gambar ke ddddocr server lokal
-  const solveCaptchaLocal = async (imgSrc: string): Promise<string> => {
-    try {
-      const res = await fetch('http://localhost:5050/solve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: imgSrc }),
-        signal: AbortSignal.timeout(4000)
-      });
-      if (!res.ok) return '';
-      const data = await res.json();
-      return (data.text || '').trim();
-    } catch {
-      return ''; // Server tidak aktif, isi manual
     }
   };
 
@@ -157,17 +189,27 @@ export const bindLoginEvents = (onSuccess: () => void) => {
           captchaImageEl.src = imgSrc;
           captchaImageEl.onload = async () => {
             captchaImageEl.style.display = 'block';
-            if (captchaLoadingEl) captchaLoadingEl.style.display = 'none';
 
-            // Auto-solve via ddddocr server lokal
-            if (captchaLoadingEl) { captchaLoadingEl.textContent = 'Membaca...'; captchaLoadingEl.style.display = 'inline'; }
-            const solved = await solveCaptchaLocal(imgSrc);
-            if (captchaLoadingEl) captchaLoadingEl.style.display = 'none';
-            if (solved && captchaInputEl) {
-              captchaInputEl.value = solved;
-              if (captchaHintEl) { captchaHintEl.textContent = `Terisi otomatis: ${solved}`; captchaHintEl.style.display = 'block'; }
-            }
-          };
+            // Coba 1: Decode JWT token untuk dapat teks captcha langsung
+            const jwtPayload = decodeJwt(data.token || '');
+            const jwtText = (jwtPayload?.captcha || jwtPayload?.answer || jwtPayload?.code || jwtPayload?.text || '').toString().trim();
+
+            if (jwtText && captchaInputEl) {
+              // Dapat dari JWT — instant!
+              captchaInputEl.value = jwtText;
+              if (captchaLoadingEl) captchaLoadingEl.style.display = 'none';
+              if (captchaHintEl) { captchaHintEl.textContent = `Terisi otomatis: ${jwtText}`; captchaHintEl.style.display = 'block'; }
+            } else {
+              // Coba 2: OCR via Tesseract.js (browser-native, tidak butuh server)
+              if (captchaLoadingEl) { captchaLoadingEl.textContent = 'Membaca...'; captchaLoadingEl.style.display = 'inline'; }
+              const solved = await solveCaptchaOCR(imgSrc);
+              if (captchaLoadingEl) captchaLoadingEl.style.display = 'none';
+              if (solved && captchaInputEl) {
+                captchaInputEl.value = solved;
+                if (captchaHintEl) { captchaHintEl.textContent = `Terisi otomatis: ${solved}`; captchaHintEl.style.display = 'block'; }
+              }
+            } // end else (OCR fallback)
+          }; // end onload
           captchaImageEl.onerror = () => {
             if (captchaLoadingEl) captchaLoadingEl.textContent = 'Gagal memuat gambar';
           };
