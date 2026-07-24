@@ -519,7 +519,7 @@ export const bindCookieToolEvents = () => {
                                  'Content-Type': 'application/json'
                               },
                               body: JSON.stringify({
-                                 id: data.id,
+                                 id: data.tssm_id || data.id,
                                  ptk_id: finalPtkId,
                                  noReg: data.noReg || data.noAju
                                })
@@ -841,8 +841,85 @@ export const bindCookieToolEvents = () => {
                                                      const detil2Data = await detil2Res.json();
                                                      const d2Ok = detil2Data.status === '201' || detil2Data.status === true;
                                                      petugasResults2 += `  - ${petugas.nama}: ${d2Ok ? 'BERHASIL' : 'GAGAL'}\n`;
+                                                     await fetch(`https://api2.karantinaindonesia.go.id/barantin-sys/surtug/penugasan/${surtugPtkId}`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ ptk_id: surtugPtkId, penugasan_id: "" }) });
                                                   }
                                                   ptkBlock += `Petugas Surtug2:\n${petugasResults2}`;
+                                                  
+                                                  // Refresh detil surtug ke-2
+                                                  await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
+                                                     method: 'POST',
+                                                     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                     body: JSON.stringify({ ptk_surtug_header_id: surtug2HeaderId, ptk_surtug_petugas_id: "", penugasan_id: "" })
+                                                  });
+                                                  await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/ptk`, {
+                                                     method: 'POST',
+                                                     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                     body: JSON.stringify({ ptk_id: surtugPtkId, penugasan_id: "" })
+                                                  });
+                                                  
+                                                  // K-3.7b: Simpan Pemeriksaan Kesehatan (pn-adm untuk Surtug ke-2)
+                                                  try {
+                                                     const pnKesId = uuidv4();
+                                                     const pnKesNomor = ptkNomor.replace('K.1.1', 'K.3.7b').replace('K.2.2', 'K.3.7b').replace('K.3.7a', 'K.3.7b');
+                                                     const tanggalPnKes = localISOTime.substring(0, 16);
+                                                     
+                                                     // Cari Suherman untuk ttd K-3.7b
+                                                     const suhermanObj2 = petugasUpt.find((p: any) => p.nama.toLowerCase().includes('suherman'));
+                                                     const suhermanId2 = suhermanObj2 ? suhermanObj2.id : 4111;
+                                                     
+                                                     const pnKesPayload = {
+                                                        id: pnKesId,
+                                                        ptk_id: surtugPtkId,
+                                                        ptk_surat_tugas_id: surtug2HeaderId,
+                                                        nomor: pnKesNomor,
+                                                        tanggal: tanggalPnKes,
+                                                        hasil_periksa_id: "6",
+                                                        rekomendasi_id: "22",
+                                                        user_ttd_id: String(suhermanId2),
+                                                        is_sampel: null,
+                                                        user_id: String(userData?.id || "3267")
+                                                     };
+                                                     
+                                                     const pnKesRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm`, {
+                                                        method: 'POST',
+                                                        headers: {
+                                                           'Authorization': `Bearer ${token}`,
+                                                           'Content-Type': 'application/json'
+                                                        },
+                                                        body: JSON.stringify(pnKesPayload)
+                                                     });
+                                                     const pnKesData = await pnKesRes.json();
+                                                     const pnKesOk = pnKesData.status === '201' || pnKesData.status === true;
+                                                     ptkBlock += `K-3.7b pn-adm  : ${pnKesOk ? 'BERHASIL' : 'GAGAL (' + (pnKesData.message || pnKesRes.status) + ')'}\n`;
+                                                     
+                                                     if (pnKesOk) {
+                                                        await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
+                                                           method: 'POST',
+                                                           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                           body: JSON.stringify({
+                                                              ptk_id: surtugPtkId,
+                                                              status_p8: "p1b",
+                                                              dokumen: "K-3.7b",
+                                                              status: "NEW",
+                                                              user_id: String(userData?.id || "3267")
+                                                           })
+                                                        });
+                                                        const rekKesRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/rek-history`, {
+                                                           method: 'POST',
+                                                           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                           body: JSON.stringify({
+                                                              ptk_id: surtugPtkId,
+                                                              pn_id: pnKesId,
+                                                              rekomendasi_id: ["22"]
+                                                           })
+                                                        });
+                                                        const rekKesData = await rekKesRes.json();
+                                                        const rekKesOk = rekKesData.status === '201' || rekKesData.status === true;
+                                                        ptkBlock += `K-3.7b rek-hist: ${rekKesOk ? 'BERHASIL' : 'GAGAL (' + (rekKesData.message || rekKesRes.status) + ')'}\n`;
+                                                     }
+                                                  } catch(e: any) {
+                                                     ptkBlock += `K-3.7b         : ERROR (${e.message})\n`;
+                                                  }
                                                }
                                             } catch(e: any) {
                                                ptkBlock += `Surtug ke-2    : ERROR (${e.message})\n`;
