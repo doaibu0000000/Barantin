@@ -550,7 +550,9 @@ export const bindCookieToolEvents = () => {
                                        created_at: localISOTime
                                     };
                                     
-                                    const surtugRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/surtug`, {
+                                    debugBlock += `[DEBUG] Surtug Req : ${JSON.stringify(surtugPayload)}\n`;
+                                    
+                                    const surtugRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug`, {
                                        method: 'POST',
                                        headers: {
                                           'Authorization': `Bearer ${token}`,
