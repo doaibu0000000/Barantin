@@ -117,11 +117,13 @@ export const bindLoginEvents = (onSuccess: () => void) => {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        // Binarisasi: piksel gelap → hitam, terang → putih
+        // Binarisasi: piksel gelap (teks) → hitam, terang (garis noise) → putih
         const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
         for (let i = 0; i < d.data.length; i += 4) {
+          // Garis noise di captcha Barantin biasanya abu-abu, teksnya hitam pekat
           const gray = 0.299 * d.data[i] + 0.587 * d.data[i+1] + 0.114 * d.data[i+2];
-          const v = gray < 160 ? 0 : 255;
+          // Turunkan threshold agar garis abu-abu hilang (menjadi putih)
+          const v = gray < 130 ? 0 : 255; 
           d.data[i] = d.data[i+1] = d.data[i+2] = v;
         }
         ctx.putImageData(d, 0, 0);
@@ -154,10 +156,12 @@ export const bindLoginEvents = (onSuccess: () => void) => {
       if (!tesseractReady) return '';
       const processed = await preprocessCaptcha(imgSrc);
       const result = await tesseractReady.recognize(processed, 'eng', {
-        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+        tessedit_char_whitelist: '0123456789', // HANYA ANGKA
         tessedit_pageseg_mode: '7' // Single line mode
       });
-      return (result.data.text || '').trim().replace(/[\s\n\r]/g, '');
+      // Ambil hanya angka yang terbaca
+      const text = (result.data.text || '').replace(/[^0-9]/g, '');
+      return text;
     } catch (e) {
       console.error('OCR error:', e);
       return '';
