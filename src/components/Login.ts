@@ -47,9 +47,8 @@ export const Login = () => {
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 </button>
               </div>
-              <div class="flex-1 h-[46px] bg-brand-input border border-brand-border rounded-lg focus-within:border-brand-accent transition-colors flex items-center overflow-hidden">
-                <input type="text" id="captchaInput" class="w-full h-full bg-transparent px-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none" placeholder="Kode Captcha" required />
-              </div>
+              <!-- Input captcha disembunyikan, diisi otomatis via OCR -->
+              <input type="text" id="captchaInput" class="hidden" />
             </div>
           </div>
           
@@ -86,6 +85,32 @@ export const bindLoginEvents = (onSuccess: () => void) => {
 
   // CAPTCHA Logic
   let currentCaptchaToken = '';
+  let currentCaptchaImageSrc = '';
+
+  // Load Tesseract.js OCR dari CDN
+  const loadTesseract = (): Promise<any> => new Promise((resolve) => {
+    if ((window as any).Tesseract) { resolve((window as any).Tesseract); return; }
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    script.onload = () => resolve((window as any).Tesseract);
+    script.onerror = () => resolve(null);
+    document.head.appendChild(script);
+  });
+
+  // Baca teks dari gambar captcha
+  const readCaptchaOCR = async (imgSrc: string): Promise<string> => {
+    try {
+      const Tesseract = await loadTesseract();
+      if (!Tesseract) return '';
+      const result = await Tesseract.recognize(imgSrc, 'eng', {
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+      });
+      return (result.data.text || '').trim().replace(/[\s\n\r]/g, '');
+    } catch (e) {
+      console.error('OCR error:', e);
+      return '';
+    }
+  };
   
   const loadCaptcha = async () => {
     try {
@@ -95,6 +120,10 @@ export const bindLoginEvents = (onSuccess: () => void) => {
       if (data.status && data.image) {
         captchaImageEl?.setAttribute('src', data.image);
         currentCaptchaToken = data.token;
+        currentCaptchaImageSrc = data.image;
+        // Coba ambil teks langsung dari API response jika tersedia
+        if (data.text) captchaInputEl.value = data.text;
+        else if (data.code) captchaInputEl.value = data.code;
       }
     } catch (e) {
       console.error('Error loading captcha:', e);
@@ -133,19 +162,33 @@ export const bindLoginEvents = (onSuccess: () => void) => {
   const attemptLogin = async () => {
       const username = usernameInput.value.trim();
       const password = passwordInputEl.value.trim();
-      const captcha = captchaInputEl.value.trim();
-
-      if (!username || !password || !captcha) {
+      if (!username || !password) {
         if (loginError) {
           loginError.classList.remove('hidden');
-          loginError.textContent = 'Harap isi semua kolom';
+          loginError.textContent = 'Harap isi username dan password';
         }
         return;
       }
 
       if (loginSubmitBtn) {
         loginSubmitBtn.disabled = true;
-        loginSubmitBtn.textContent = 'Memproses...';
+        loginSubmitBtn.textContent = 'Membaca captcha...';
+      }
+
+      // Auto-baca captcha via OCR jika belum terisi
+      if (!captchaInputEl.value.trim()) {
+        const ocrText = await readCaptchaOCR(currentCaptchaImageSrc);
+        captchaInputEl.value = ocrText;
+      }
+      const captcha = captchaInputEl.value.trim();
+
+      if (!captcha) {
+        if (loginError) {
+          loginError.classList.remove('hidden');
+          loginError.textContent = 'Gagal membaca captcha otomatis. Coba refresh captcha.';
+        }
+        if (loginSubmitBtn) { loginSubmitBtn.disabled = false; loginSubmitBtn.textContent = 'Masuk'; }
+        return;
       }
       
       if (loginError) loginError.classList.add('hidden');
