@@ -676,7 +676,80 @@ export const bindCookieToolEvents = () => {
                                             }
                                             ptkBlock += `Input Petugas  :\n${petugasResults}`;
                                             
-                                            // 4. Ambil ulang PTK & Detil Surtug setelah berhasil
+                                             // 5. K-3.7a: Simpan Pemeriksaan Administrasi (pn-adm)
+                                             try {
+                                                const pnAdmId = uuidv4();
+                                                const pnAdmNomor = ptkNomor.replace('K.1.1', 'K.3.7a').replace('K.2.2', 'K.3.7a');
+                                                const tanggalPnAdm = localISOTime.substring(0, 16);
+                                                
+                                                // Cari Suherman di daftar pegawai untuk user_ttd_id K-3.7a
+                                                const suhermanObj = petugasUpt.find((p: any) => p.nama.toLowerCase().includes('suherman'));
+                                                const suhermanId = suhermanObj ? suhermanObj.id : 4111;
+                                                
+                                                const pnAdmPayload = {
+                                                   id: pnAdmId,
+                                                   ptk_id: surtugPtkId,
+                                                   ptk_surat_tugas_id: surtugHeaderId,
+                                                   nomor: pnAdmNomor,
+                                                   tanggal: tanggalPnAdm,
+                                                   hasil_periksa_id: "6",     // Semua persyaratan lengkap
+                                                   rekomendasi_id: "14",      // Dilanjutkan pemeriksaan kesehatan
+                                                   user_ttd_id: String(suhermanId),
+                                                   is_sampel: null,
+                                                   user_id: String(userData?.id || "3267")
+                                                };
+                                                
+                                                const pnAdmRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm`, {
+                                                   method: 'POST',
+                                                   headers: {
+                                                      'Authorization': `Bearer ${token}`,
+                                                      'Content-Type': 'application/json'
+                                                   },
+                                                   body: JSON.stringify(pnAdmPayload)
+                                                });
+                                                const pnAdmData = await pnAdmRes.json();
+                                                const pnAdmOk = pnAdmData.status === '201' || pnAdmData.status === true;
+                                                ptkBlock += `K-3.7a pn-adm  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL (' + (pnAdmData.message || pnAdmRes.status) + ')'}\n`;
+                                                
+                                                if (pnAdmOk) {
+                                                   // 6. ptk-history (update status dokumen K-3.7a)
+                                                   await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
+                                                      method: 'POST',
+                                                      headers: {
+                                                         'Authorization': `Bearer ${token}`,
+                                                         'Content-Type': 'application/json'
+                                                      },
+                                                      body: JSON.stringify({
+                                                         ptk_id: surtugPtkId,
+                                                         status_p8: "p1a",
+                                                         dokumen: "K-3.7a",
+                                                         status: "NEW",
+                                                         user_id: String(userData?.id || "3267")
+                                                      })
+                                                   });
+                                                   
+                                                   // 7. rek-history (simpan rekomendasi)
+                                                   const rekHistoryRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/rek-history`, {
+                                                      method: 'POST',
+                                                      headers: {
+                                                         'Authorization': `Bearer ${token}`,
+                                                         'Content-Type': 'application/json'
+                                                      },
+                                                      body: JSON.stringify({
+                                                         ptk_id: surtugPtkId,
+                                                         pn_id: pnAdmId,
+                                                         rekomendasi_id: ["14"]
+                                                      })
+                                                   });
+                                                   const rekData = await rekHistoryRes.json();
+                                                   const rekOk = rekData.status === '201' || rekData.status === true;
+                                                   ptkBlock += `K-3.7a rek-hist: ${rekOk ? 'BERHASIL' : 'GAGAL (' + (rekData.message || rekHistoryRes.status) + ')'}\n`;
+                                                }
+                                             } catch(e: any) {
+                                                ptkBlock += `K-3.7a         : ERROR (${e.message})\n`;
+                                             }
+
+                                            // 8. Ambil ulang PTK & Detil Surtug setelah berhasil
                                            await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/ptk`, {
                                               method: 'POST',
                                               headers: {
