@@ -1029,9 +1029,9 @@ export const bindCookieToolEvents = () => {
                         } else {
                            ptkBlock += `Status PTK     : GAGAL (${submitData.message || 'Unknown Error'})\n`;
                         }
-                     } else {
-                        ptkBlock += `Status PTK     : GAGAL (HTTP ${submitRes.status})\n`;
-                     }
+                      } else {
+                         ptkBlock += `Status PTK     : GAGAL (lihat log di atas)\n`;
+                      }
                   } catch (err: any) {
                      ptkBlock += `Status PTK     : ERROR (${err.message})\n`;
                   }

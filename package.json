@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "@types/chrome": "^0.2.2",
     "chokidar": "^3.6.0",
     "concurrently": "^10.0.3",
     "gh-pages": "^6.3.0",
