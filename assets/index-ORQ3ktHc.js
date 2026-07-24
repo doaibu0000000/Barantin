@@ -72,7 +72,7 @@
 `,R+=`[DEBUG] Checkbox   : ${l&&l.checked?"DICENTANG":"TIDAK DICENTANG"}
 `,l&&l.checked&&N)if(!d)T+=`Status PTK     : GAGAL (Sesi Token tidak ditemukan. Silakan ke menu Login terlebih dahulu)
 `;else try{const y=localStorage.getItem("userData"),S=y?JSON.parse(y):{},G=te(k,N,S),C=await fetch("https://api.karantinaindonesia.go.id/barantin-sys/ssm",{method:"POST",headers:{Authorization:`Bearer ${d}`,"Content-Type":"application/json"},body:JSON.stringify(G)});if(C.ok||C.status===201){const $=await C.json();if($.status==="201"||$.status===!0){T+=`Status PTK     : BERHASIL DIBUAT (ID: ${G.id})
-`;const z=await fetch("https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk",{method:"POST",headers:{Authorization:`Bearer ${d}`,"Content-Type":"application/json"},body:JSON.stringify({id:k.id,ptk_id:G.id,noReg:k.noReg||k.noAju})});z.ok||z.status===201?T+=`Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)
+`;const z=await fetch("https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk",{method:"POST",headers:{Authorization:"Basic bXJpZHdhbjpaPnV5JCx+NjR7KF42WDQm","Content-Type":"application/json"},body:JSON.stringify({id:k.id,ptk_id:G.id,noReg:k.noReg||k.noAju})});z.ok||z.status===201?T+=`Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)
 `:T+=`Verifikasi     : GAGAL DIPROSES
 `}else T+=`Status PTK     : GAGAL (${$.message||"Unknown Error"})
 `}else T+=`Status PTK     : GAGAL (HTTP ${C.status})
