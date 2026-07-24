@@ -127,12 +127,25 @@ export const bindCookieToolEvents = () => {
         // Helper function to fetch data
         const fetchAju = async (noAju: string, jeniscari: string) => {
           const today = new Date().toISOString().split('T')[0];
+          const lastYear = new Date();
+          lastYear.setFullYear(lastYear.getFullYear() - 1);
+          const dFrom = lastYear.toISOString().split('T')[0];
+          
+          let userUpt = '3200';
+          const userDataStr = localStorage.getItem('userData');
+          if (userDataStr) {
+            try {
+              const userData = JSON.parse(userDataStr);
+              userUpt = userData.upt || '3200';
+            } catch (e) {}
+          }
+
           const payload = {
-            dFrom: "2000-01-01", // Make date range very broad so we always find it
+            dFrom: dFrom, 
             dTo: today,
             stat: "",
             karantina: "",
-            upt: "",
+            upt: userUpt,
             jnsAju: "EKSPOR",
             jeniscari,
             noAju
