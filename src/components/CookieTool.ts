@@ -1,4 +1,4 @@
-﻿let savedInput = '';
+let savedInput = '';
 let savedOutput = '';
 
 function uuidv4() {
@@ -99,7 +99,7 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     pengguna_jasa_id: userData?.pengguna_jasa_id || "9e7347a8-ea62-4aee-899e-ea7087949eb7",
     calo_id: "0",
     upt_id: data.upt,
-    kode_satpel: data.upt,
+    kode_satpel: data.upt ? data.upt + '.2' : '3200.2',
     nama_pemohon: perus.NAMA || data.nmPerusahaan,
     jenis_identitas_pemohon: "NPWP",
     nomor_identitas_pemohon: perus.ID || data.npwp,
@@ -188,7 +188,7 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     is_draft: "1",
     is_verifikasi: "1",
     petugas: userData?.petugas || "SUHERMAN",
-    nip: userData?.nip || "196702031992031001",
+    nip: userData?.nip || "197812302006041002",
     tgl_aju: data.tglAju || "",
     user_created: userData?.id || "3267",
     komoditi: komoditiArr,
@@ -747,10 +747,10 @@ export const bindCookieToolEvents = () => {
                                                });
                                                const detilData = await detilRes.json();
                                                const ok = detilData.status === '201' || detilData.status === true;
-                                               petugasResults += `${ok ? '' : 'âœ— '}${petugas.nama}`;
+                                               petugasResults += ok ? petugas.nama : ('[X] ' + petugas.nama);
                                             }
-                                            const petugasOkCount = resolvedPetugas.filter(p => petugasResults.includes(p.nama) && !petugasResults.includes(`âœ— ${p.nama}`)).length;
-                                            ptkBlock += `  âœ“ Petugas : ${petugasOkCount}/${resolvedPetugas.length} â€” ${resolvedPetugas.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
+                                            const petugasOkCount = resolvedPetugas.filter(p => !petugasResults.includes('[X] ' + p.nama)).length;
+                                            ptkBlock += `  [OK] Petugas : ${petugasOkCount}/${resolvedPetugas.length} — ${resolvedPetugas.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
                                             liveLog(`[STEP 5] Input Petugas Surtug1 selesai`);
                                             
                                              // 5. K-3.7a: Simpan Pemeriksaan Administrasi (pn-adm)
@@ -788,8 +788,8 @@ export const bindCookieToolEvents = () => {
                                                 let pnAdmData: any = {};
                                                 try { if (pnAdmText) pnAdmData = JSON.parse(pnAdmText); } catch(_e) {}
                                                 const pnAdmOk = pnAdmRes.ok || pnAdmRes.status === 201 || pnAdmRes.status === 204 || pnAdmRes.status === 500 || pnAdmData.status === '201' || pnAdmData.status === true;
-                                                ptkBlock += `  ${pnAdmOk ? 'âœ“' : 'âœ—'} K-3.7a  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL  HTTP ' + pnAdmRes.status}\n`;
-                                                liveLog(`[STEP 6] K-3.7a: ${pnAdmOk ? 'BERHASIL â† K-3.7a MUNCUL!' : 'GAGAL - HTTP ' + pnAdmRes.status + ' ' + pnAdmText}`);
+                                                ptkBlock += `  ${pnAdmOk ? '✓' : '✗'} K-3.7a  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL  HTTP ' + pnAdmRes.status}\n`;
+                                                liveLog(`[STEP 6] K-3.7a: ${pnAdmOk ? 'BERHASIL ← K-3.7a MUNCUL!' : 'GAGAL - HTTP ' + pnAdmRes.status + ' ' + pnAdmText}`);
                                                 
                                                 if (pnAdmOk) {
                                                    // 6. ptk-history (update status dokumen K-3.7a)
@@ -858,7 +858,7 @@ export const bindCookieToolEvents = () => {
                                            });
 
                                             // 9. Buat Surat Tugas ke-2 (K-2.2/3) - Pemeriksaan Fisik/Kesehatan
-                                            // Setelah K-3.7a selesai, user klik "Surat Tugas (K-2.2)" â†’ muncul form baru
+                                            // Setelah K-3.7a selesai, user klik "Surat Tugas (K-2.2)" → muncul form baru
                                             try {
                                                const surtug2Id = uuidv4();
                                                const surtug2Payload = {
@@ -885,7 +885,7 @@ export const bindCookieToolEvents = () => {
                                                });
                                                const surtug2Data = await surtug2Res.json();
                                                const surtug2Ok = surtug2Data.status === '201' || surtug2Data.status === true;
-                                               ptkBlock += `  ${surtug2Ok ? 'âœ“' : 'âœ—'} Surtug2 : ${surtug2Ok ? surtug2Data.data?.nomor : 'GAGAL  HTTP ' + surtug2Res.status}\n`;
+                                               ptkBlock += `  ${surtug2Ok ? '✓' : '✗'} Surtug2 : ${surtug2Ok ? surtug2Data.data?.nomor : 'GAGAL  HTTP ' + surtug2Res.status}\n`;
                                                liveLog(`[STEP 7] Surtug 2: ${surtug2Ok ? 'BERHASIL ' + surtug2Data.data?.nomor : 'GAGAL - ' + JSON.stringify(surtug2Data)}`);
                                                
                                                if (surtug2Ok) {
@@ -923,10 +923,11 @@ export const bindCookieToolEvents = () => {
                                                      });
                                                      const detil2Data = await detil2Res.json();
                                                      const d2Ok = detil2Data.status === '201' || detil2Data.status === true;
-                                                     petugasResults2 += `  - ${petugas.nama}: ${d2Ok ? 'BERHASIL' : 'GAGAL'}\n`;
+                                                     petugasResults2 += d2Ok ? petugas.nama : ('[X] ' + petugas.nama);
                                                      await fetch(`https://api2.karantinaindonesia.go.id/barantin-sys/surtug/penugasan/${surtugPtkId}`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ ptk_id: surtugPtkId, penugasan_id: "" }) });
                                                   }
-                                                  ptkBlock += `Petugas Surtug2:\n${petugasResults2}`;
+                                                  const petugas2OkCount = resolvedPetugas2.filter(p => !petugasResults2.includes('[X] ' + p.nama)).length;
+                                                  ptkBlock += `  [OK] Petugas : ${petugas2OkCount}/${resolvedPetugas2.length} — ${resolvedPetugas2.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
                                                   
                                                   // Refresh detil surtug ke-2
                                                   await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
