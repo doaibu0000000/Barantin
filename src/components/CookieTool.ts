@@ -127,9 +127,24 @@ export const bindCookieToolEvents = () => {
         // Helper function to fetch data
         const fetchAju = async (noAju: string, jeniscari: string) => {
           const today = new Date().toISOString().split('T')[0];
-          const lastYear = new Date();
-          lastYear.setFullYear(lastYear.getFullYear() - 1);
-          const dFrom = lastYear.toISOString().split('T')[0];
+          let dFrom = '';
+          
+          // Ekstrak tanggal langsung dari teks (format YYYYMMDD atau YYMMDD) untuk query super cepat
+          const datePattern1 = /(\d{4})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])/;
+          const match1 = noAju.match(datePattern1);
+          if (match1 && parseInt(match1[1]) >= 2020) {
+            dFrom = `${match1[1]}-${match1[2]}-${match1[3]}`;
+          } else {
+            const datePattern2 = /(?:EXT|IMP|DOM)(\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])/;
+            const match2 = noAju.match(datePattern2);
+            if (match2) {
+              dFrom = `20${match2[1]}-${match2[2]}-${match2[3]}`;
+            } else {
+              const lastYear = new Date();
+              lastYear.setFullYear(lastYear.getFullYear() - 1);
+              dFrom = lastYear.toISOString().split('T')[0];
+            }
+          }
           
           let userUpt = '3200';
           const userDataStr = localStorage.getItem('userData');
@@ -198,8 +213,11 @@ export const bindCookieToolEvents = () => {
         for (const aju of matches) {
           finalOutput += `\n--- MENCARI AJU: ${aju} ---\n`;
           
-          let data = await fetchAju(aju, 'noAju');
-          if (!data) data = await fetchAju(aju, 'noReg');
+          const [dataAju, dataReg] = await Promise.all([
+            fetchAju(aju, 'noAju'),
+            fetchAju(aju, 'noReg')
+          ]);
+          let data = dataAju || dataReg;
           
           if (data) {
             // Priority: if it's an SSM record, it has a ptk_id. Otherwise fallback to its own id
