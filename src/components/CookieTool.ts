@@ -461,7 +461,10 @@ export const bindCookieToolEvents = () => {
                   const ptkData = await ptkRes.json();
                   if (ptkData?.data?.ptk?.no_dok_permohonan) {
                     currentSsmPtk = ptkData.data.ptk.no_dok_permohonan;
+                    liveLog(`[STEP 1] PTK Nomor: ${currentSsmPtk}`);
                   }
+                } else if (ptkRes.status === 401) {
+                  liveLog(`[STEP 1] ⚠ Token expired (401) - PTK detail tidak bisa diambil. Silakan Login ulang!`);
                 }
               } catch (e) {
                 console.error('Failed to fetch PTK details', e);
