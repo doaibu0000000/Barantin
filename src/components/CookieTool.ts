@@ -262,6 +262,16 @@ export const bindCookieToolEvents = () => {
             finalOutput += `Pelabuhan Tuju : ${data.portTujuan || '-'}\n`;
             finalOutput += `Karantina      : ${data.jenis_karantina || '-'}\n`;
             finalOutput += `UPT            : ${data.upt || '-'}\n`;
+            
+            finalOutput += `\n--- DATA JSON LENGKAP ---\n`;
+            const displayData = { ...data };
+            if (displayData.xml) {
+              try {
+                displayData.xml = JSON.parse(displayData.xml);
+              } catch (e) {}
+            }
+            finalOutput += JSON.stringify(displayData, null, 2) + `\n`;
+            
           } else {
             finalOutput += `Status         : TIDAK DITEMUKAN / GAGAL\n`;
           }
