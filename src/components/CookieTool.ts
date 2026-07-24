@@ -415,10 +415,9 @@ export const bindCookieToolEvents = () => {
           }
         };
 
-        // Promise wrapper for getting token
         const getToken = (): Promise<string> => {
           return new Promise((resolve) => {
-            const localToken = localStorage.getItem('accessToken');
+            const localToken = localStorage.getItem('accessToken') || localStorage.getItem('token');
             if (localToken) {
               resolve(localToken);
               return;
@@ -429,7 +428,8 @@ export const bindCookieToolEvents = () => {
                 resolve(tokenCookie ? tokenCookie.value : '');
               });
             } else {
-              resolve('');
+              const match = document.cookie.match(/(?:^|; )token=([^;]*)/);
+              resolve(match ? match[1] : '');
             }
           });
         };
@@ -506,53 +506,57 @@ export const bindCookieToolEvents = () => {
             outputBlock += `UPT            : ${data.upt || '-'}\n`;
             
             // Automation Logic for Proses PTK & Verifikasi
-            if (autoProcessPtk && autoProcessPtk.checked && xmlObjParsed && token) {
-               try {
-                  const userDataStr = localStorage.getItem('userData');
-                  const userData = userDataStr ? JSON.parse(userDataStr) : {};
-                  const ptkPayload = buildPtkPayload(data, xmlObjParsed, userData);
-                  
-                  const submitRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ssm`, {
-                     method: 'POST',
-                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                     },
-                     body: JSON.stringify(ptkPayload)
-                  });
-                  
-                  if (submitRes.ok || submitRes.status === 201) {
-                     const submitData = await submitRes.json();
-                     if (submitData.status === '201' || submitData.status === true) {
-                        outputBlock += `Status PTK     : BERHASIL DIBUAT (ID: ${ptkPayload.id})\n`;
-                        
-                        // Verification Step
-                        const verifyRes = await fetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
-                           method: 'POST',
-                           headers: {
-                              'Authorization': `Bearer ${token}`,
-                              'Content-Type': 'application/json'
-                           },
-                           body: JSON.stringify({
-                              id: data.id,
-                              ptk_id: ptkPayload.id,
-                              noReg: data.noReg || data.noAju
-                           })
-                        });
-                        
-                        if (verifyRes.ok || verifyRes.status === 201) {
-                           outputBlock += `Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)\n`;
+            if (autoProcessPtk && autoProcessPtk.checked && xmlObjParsed) {
+               if (!token) {
+                  outputBlock += `Status PTK     : GAGAL (Sesi Token tidak ditemukan. Silakan ke menu Login terlebih dahulu)\n`;
+               } else {
+                  try {
+                     const userDataStr = localStorage.getItem('userData');
+                     const userData = userDataStr ? JSON.parse(userDataStr) : {};
+                     const ptkPayload = buildPtkPayload(data, xmlObjParsed, userData);
+                     
+                     const submitRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ssm`, {
+                        method: 'POST',
+                        headers: {
+                           'Authorization': `Bearer ${token}`,
+                           'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(ptkPayload)
+                     });
+                     
+                     if (submitRes.ok || submitRes.status === 201) {
+                        const submitData = await submitRes.json();
+                        if (submitData.status === '201' || submitData.status === true) {
+                           outputBlock += `Status PTK     : BERHASIL DIBUAT (ID: ${ptkPayload.id})\n`;
+                           
+                           // Verification Step
+                           const verifyRes = await fetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
+                              method: 'POST',
+                              headers: {
+                                 'Authorization': `Bearer ${token}`,
+                                 'Content-Type': 'application/json'
+                              },
+                              body: JSON.stringify({
+                                 id: data.id,
+                                 ptk_id: ptkPayload.id,
+                                 noReg: data.noReg || data.noAju
+                              })
+                           });
+                           
+                           if (verifyRes.ok || verifyRes.status === 201) {
+                              outputBlock += `Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)\n`;
+                           } else {
+                              outputBlock += `Verifikasi     : GAGAL DIPROSES\n`;
+                           }
                         } else {
-                           outputBlock += `Verifikasi     : GAGAL DIPROSES\n`;
+                           outputBlock += `Status PTK     : GAGAL (${submitData.message || 'Unknown Error'})\n`;
                         }
                      } else {
-                        outputBlock += `Status PTK     : GAGAL (${submitData.message || 'Unknown Error'})\n`;
+                        outputBlock += `Status PTK     : GAGAL (HTTP ${submitRes.status})\n`;
                      }
-                  } else {
-                     outputBlock += `Status PTK     : GAGAL (HTTP ${submitRes.status})\n`;
+                  } catch (err: any) {
+                     outputBlock += `Status PTK     : ERROR (${err.message})\n`;
                   }
-               } catch (err: any) {
-                  outputBlock += `Status PTK     : ERROR (${err.message})\n`;
                }
             }
 
