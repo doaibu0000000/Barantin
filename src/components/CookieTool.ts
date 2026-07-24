@@ -557,31 +557,49 @@ export const bindCookieToolEvents = () => {
                                  }
                               }
                            } catch(e) {}
-                           
-                           // Verification Step
-                           const verifyRes = await fetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
-                              method: 'POST',
-                              headers: {
-                                 'Authorization': 'Basic bXJpZHdhbjpaPnV5JCx+NjR7KF42WDQm',
-                                 'Content-Type': 'application/json'
-                              },
-                              body: JSON.stringify({
-                                 id: data.tssm_id || data.id,
-                                 ptk_id: finalPtkId,
-                                 noReg: data.noReg || data.noAju
-                               })
-                           });
-                           
-                           if (verifyRes.ok || verifyRes.status === 201) {
-                              ptkBlock += `Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)\n`;
-                              liveLog(`[STEP 3] ✓ Verifikasi BERHASIL`);
-                              
-                               // surtugPtkId: gunakan existing ptk_id dari SSM jika ada, atau finalPtkId (baru dibuat)
-                               const surtugPtkId = currentSsmPtkId || finalPtkId;
-                               // ptkNomor: dari detail PTK (format K.1.1) atau fallback
-                               const ptkNomor = currentSsmPtk || submitData.data?.nomor || data.noReg || data.noAju;
-                               liveLog(`[STEP 3] PTK Nomor: ${ptkNomor}`);
-                               liveLog(`[STEP 3] Surtug PTK ID: ${surtugPtkId}`);
+                         
+                         // Verification Step
+                         // Jika PTK sudah ada = verifikasi sudah dilakukan sebelumnya
+                         // (tombol Simpan hilang, diganti tombol "Buka Form Surat Tugas")
+                         // Maka skip verifikasi dan langsung ke surtug
+                         let verifyOk = false;
+                         
+                         if (skipPtkPost) {
+                             // PTK sudah ada → verifikasi sudah selesai sebelumnya → langsung ke surtug
+                             verifyOk = true;
+                             ptkBlock += `Verifikasi     : SUDAH DILAKUKAN (lanjut buat Surat Tugas)\n`;
+                             liveLog(`[STEP 3] Verifikasi sudah selesai → Buka Form Surat Tugas`);
+                         } else {
+                             // PTK baru → lakukan verifikasi
+                             const verifyRes = await fetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
+                                method: 'POST',
+                                headers: {
+                                   'Authorization': 'Basic bXJpZHdhbjpaPnV5JCx+NjR7KF42WDQm',
+                                   'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                   id: data.tssm_id || data.id,
+                                   ptk_id: finalPtkId,
+                                   noReg: data.noReg || data.noAju
+                                 })
+                             });
+                             if (verifyRes.ok || verifyRes.status === 201) {
+                                verifyOk = true;
+                                ptkBlock += `Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)\n`;
+                                liveLog(`[STEP 3] ✓ Verifikasi BERHASIL`);
+                             } else {
+                                ptkBlock += `Verifikasi     : GAGAL DIPROSES\n`;
+                                liveLog(`[STEP 3] ✗ Verifikasi GAGAL (HTTP ${verifyRes.status})`);
+                             }
+                         }
+                         
+                         if (verifyOk) {
+                             // surtugPtkId: gunakan existing ptk_id dari SSM jika ada, atau finalPtkId (baru dibuat)
+                             const surtugPtkId = currentSsmPtkId || finalPtkId;
+                             // ptkNomor: dari detail PTK (format K.1.1) atau fallback
+                             const ptkNomor = currentSsmPtk || submitData.data?.nomor || data.noReg || data.noAju;
+                             liveLog(`[STEP 3] PTK Nomor: ${ptkNomor}`);
+                             liveLog(`[STEP 3] Surtug PTK ID: ${surtugPtkId}`);
                                
                                    try {
                                      const surtugId = uuidv4();
