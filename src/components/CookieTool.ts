@@ -8,7 +8,7 @@ function uuidv4() {
   });
 }
 
-const buildPtkPayload = (data: any, xmlObj: any, userData: any) => {
+const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: string = '') => {
   const dok = xmlObj?.DOKUMEN || {};
   const header = dok.HEADER || {};
   const perus = header.PERUSAHAAN || {};
@@ -81,7 +81,7 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any) => {
     efile: d.FILELINK || ""
   }));
 
-  const ptkUuid = uuidv4();
+  const ptkUuid = existingPtkId || uuidv4();
   komoditiArr.forEach((k: any) => k.ptk_id = ptkUuid);
   kontainerArr.forEach((c: any) => c.ptk_id = ptkUuid);
   dokumenArr.forEach((d: any) => d.ptk_id = ptkUuid);
@@ -494,7 +494,7 @@ export const bindCookieToolEvents = () => {
                   try {
                      const userDataStr = localStorage.getItem('userData');
                      const userData = userDataStr ? JSON.parse(userDataStr) : {};
-                     const ptkPayload = buildPtkPayload(data, xmlObjParsed, userData);
+                     const ptkPayload = buildPtkPayload(data, xmlObjParsed, userData, currentSsmPtkId);
                      
                      const submitRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ssm`, {
                         method: 'POST',
