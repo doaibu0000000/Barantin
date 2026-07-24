@@ -526,7 +526,7 @@ export const bindCookieToolEvents = () => {
                            const verifyRes = await fetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
                               method: 'POST',
                               headers: {
-                                 'Authorization': `Bearer ${token}`,
+                                 'Authorization': 'Basic bXJpZHdhbjpaPnV5JCx+NjR7KF42WDQm',
                                  'Content-Type': 'application/json'
                               },
                               body: JSON.stringify({
