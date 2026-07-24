@@ -273,6 +273,11 @@ export const bindCookieToolEvents = () => {
         // Promise wrapper for getting token
         const getToken = (): Promise<string> => {
           return new Promise((resolve) => {
+            const localToken = localStorage.getItem('accessToken');
+            if (localToken) {
+              resolve(localToken);
+              return;
+            }
             if (typeof chrome !== 'undefined' && chrome.cookies) {
               chrome.cookies.getAll({ domain: 'apps.karantinaindonesia.go.id' }, (cookies) => {
                 const tokenCookie = cookies.find(c => c.name === 'token');
@@ -438,7 +443,7 @@ export const bindCookieToolEvents = () => {
       if (userDataStr) {
         try {
           const userData = JSON.parse(userDataStr);
-          userId = userData.id || userData.userId || '3267';
+          userId = userData.idpegawai || userData.id || userData.userId || '3267';
         } catch (e) {}
       }
 
@@ -624,7 +629,7 @@ export const bindCookieToolEvents = () => {
       if (userDataStr) {
         try {
           const userData = JSON.parse(userDataStr);
-          userId = userData.id || userData.userId || '3267';
+          userId = userData.idpegawai || userData.id || userData.userId || '3267';
         } catch (e) {}
       }
 
