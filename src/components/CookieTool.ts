@@ -780,10 +780,12 @@ export const bindCookieToolEvents = () => {
                                                    },
                                                    body: JSON.stringify(pnAdmPayload)
                                                 });
-                                                const pnAdmData = await pnAdmRes.json();
-                                                const pnAdmOk = pnAdmData.status === '201' || pnAdmData.status === true;
+                                                const pnAdmText = await pnAdmRes.text();
+                                                let pnAdmData: any = {};
+                                                try { if (pnAdmText) pnAdmData = JSON.parse(pnAdmText); } catch(_e) {}
+                                                const pnAdmOk = pnAdmRes.ok || pnAdmRes.status === 201 || pnAdmRes.status === 204 || pnAdmData.status === '201' || pnAdmData.status === true;
                                                 ptkBlock += `K-3.7a pn-adm  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL (' + (pnAdmData.message || pnAdmRes.status) + ')'}\n`;
-                                                liveLog(`[STEP 6] K-3.7a: ${pnAdmOk ? 'BERHASIL' : 'GAGAL - ' + JSON.stringify(pnAdmData)}`);
+                                                liveLog(`[STEP 6] K-3.7a: ${pnAdmOk ? 'BERHASIL ← K-3.7a MUNCUL!' : 'GAGAL - HTTP ' + pnAdmRes.status + ' ' + pnAdmText}`);
                                                 
                                                 if (pnAdmOk) {
                                                    // 6. ptk-history (update status dokumen K-3.7a)
@@ -815,8 +817,10 @@ export const bindCookieToolEvents = () => {
                                                          rekomendasi_id: ["14"]
                                                       })
                                                    });
-                                                   const rekData = await rekHistoryRes.json();
-                                                   const rekOk = rekData.status === '201' || rekData.status === true;
+                                                   const rekText = await rekHistoryRes.text();
+                                                   let rekData: any = {};
+                                                   try { if (rekText) rekData = JSON.parse(rekText); } catch(_e) {}
+                                                   const rekOk = rekHistoryRes.ok || rekHistoryRes.status === 201 || rekHistoryRes.status === 204 || rekData.status === '201' || rekData.status === true;
                                                    ptkBlock += `K-3.7a rek-hist: ${rekOk ? 'BERHASIL' : 'GAGAL (' + (rekData.message || rekHistoryRes.status) + ')'}\n`;
                                                 }
                                              } catch(e: any) {
@@ -963,10 +967,12 @@ export const bindCookieToolEvents = () => {
                                                         },
                                                         body: JSON.stringify(pnKesPayload)
                                                      });
-                                                     const pnKesData = await pnKesRes.json();
-                                                     const pnKesOk = pnKesData.status === '201' || pnKesData.status === true;
+                                                     const pnKesText = await pnKesRes.text();
+                                                     let pnKesData: any = {};
+                                                     try { if (pnKesText) pnKesData = JSON.parse(pnKesText); } catch(_e) {}
+                                                     const pnKesOk = pnKesRes.ok || pnKesRes.status === 201 || pnKesRes.status === 204 || pnKesData.status === '201' || pnKesData.status === true;
                                                      ptkBlock += `K-3.7b pn-adm  : ${pnKesOk ? 'BERHASIL' : 'GAGAL (' + (pnKesData.message || pnKesRes.status) + ')'}\n`;
-                                                     liveLog(`[STEP 8] K-3.7b: ${pnKesOk ? 'BERHASIL ← K-3.7b MUNCUL!' : 'GAGAL - ' + JSON.stringify(pnKesData)}`);
+                                                     liveLog(`[STEP 8] K-3.7b: ${pnKesOk ? 'BERHASIL ← K-3.7b MUNCUL!' : 'GAGAL - HTTP ' + pnKesRes.status + ' ' + pnKesText}`);
                                                      
                                                      if (pnKesOk) {
                                                         await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
@@ -989,8 +995,10 @@ export const bindCookieToolEvents = () => {
                                                               rekomendasi_id: ["22"]
                                                            })
                                                         });
-                                                        const rekKesData = await rekKesRes.json();
-                                                        const rekKesOk = rekKesData.status === '201' || rekKesData.status === true;
+                                                        const rekKesText = await rekKesRes.text();
+                                                        let rekKesData: any = {};
+                                                        try { if (rekKesText) rekKesData = JSON.parse(rekKesText); } catch(_e) {}
+                                                        const rekKesOk = rekKesRes.ok || rekKesRes.status === 201 || rekKesRes.status === 204 || rekKesData.status === '201' || rekKesData.status === true;
                                                         ptkBlock += `K-3.7b rek-hist: ${rekKesOk ? 'BERHASIL' : 'GAGAL (' + (rekKesData.message || rekKesRes.status) + ')'}\n`;
                                                      }
                                                   } catch(e: any) {
