@@ -188,7 +188,7 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     is_draft: "1",
     is_verifikasi: "1",
     petugas: userData?.petugas || "SUHERMAN",
-    nip: userData?.nip || "197812302006041002",
+    nip: userData?.nip || "196702031992031001",
     tgl_aju: data.tglAju || "",
     user_created: userData?.id || "3267",
     komoditi: komoditiArr,
