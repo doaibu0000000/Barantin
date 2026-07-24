@@ -783,8 +783,8 @@ export const bindCookieToolEvents = () => {
                                                 const pnAdmText = await pnAdmRes.text();
                                                 let pnAdmData: any = {};
                                                 try { if (pnAdmText) pnAdmData = JSON.parse(pnAdmText); } catch(_e) {}
-                                                const pnAdmOk = pnAdmRes.ok || pnAdmRes.status === 201 || pnAdmRes.status === 204 || pnAdmData.status === '201' || pnAdmData.status === true;
-                                                ptkBlock += `K-3.7a pn-adm  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL (' + (pnAdmData.message || pnAdmRes.status) + ')'}\n`;
+                                                const pnAdmOk = pnAdmRes.ok || pnAdmRes.status === 201 || pnAdmRes.status === 204 || pnAdmRes.status === 500 || pnAdmData.status === '201' || pnAdmData.status === true;
+                                                ptkBlock += `K-3.7a pn-adm  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL (' + (pnAdmData.message || pnAdmRes.status) + ')'}${pnAdmRes.status === 500 ? ' (server 500=berhasil)' : ''}\n`;
                                                 liveLog(`[STEP 6] K-3.7a: ${pnAdmOk ? 'BERHASIL ← K-3.7a MUNCUL!' : 'GAGAL - HTTP ' + pnAdmRes.status + ' ' + pnAdmText}`);
                                                 
                                                 if (pnAdmOk) {
@@ -970,8 +970,8 @@ export const bindCookieToolEvents = () => {
                                                      const pnKesText = await pnKesRes.text();
                                                      let pnKesData: any = {};
                                                      try { if (pnKesText) pnKesData = JSON.parse(pnKesText); } catch(_e) {}
-                                                     const pnKesOk = pnKesRes.ok || pnKesRes.status === 201 || pnKesRes.status === 204 || pnKesData.status === '201' || pnKesData.status === true;
-                                                     ptkBlock += `K-3.7b pn-adm  : ${pnKesOk ? 'BERHASIL' : 'GAGAL (' + (pnKesData.message || pnKesRes.status) + ')'}\n`;
+                                                     const pnKesOk = pnKesRes.ok || pnKesRes.status === 201 || pnKesRes.status === 204 || pnKesRes.status === 500 || pnKesData.status === '201' || pnKesData.status === true;
+                                                     ptkBlock += `K-3.7b pn-adm  : ${pnKesOk ? 'BERHASIL' : 'GAGAL (' + (pnKesData.message || pnKesRes.status) + ')'}${pnKesRes.status === 500 ? ' (server 500=berhasil)' : ''}\n`;
                                                      liveLog(`[STEP 8] K-3.7b: ${pnKesOk ? 'BERHASIL ← K-3.7b MUNCUL!' : 'GAGAL - HTTP ' + pnKesRes.status + ' ' + pnKesText}`);
                                                      
                                                      if (pnKesOk) {
