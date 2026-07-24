@@ -41,15 +41,18 @@ export const Login = () => {
 
           <div class="flex flex-col gap-2">
             <div class="flex items-center gap-3">
-              <div class="h-[46px] flex items-center bg-white rounded-lg px-2 border border-brand-border">
-                <img id="captchaImage" src="" class="h-full max-w-[120px] object-contain" alt="captcha" />
-                <button type="button" id="refreshCaptchaBtn" class="ml-2 text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer" title="Refresh Captcha">
+              <div class="h-[46px] flex items-center bg-white rounded-lg px-2 border border-brand-border relative" style="min-width:140px">
+                <span id="captchaLoading" class="text-gray-400 text-xs px-2">Memuat...</span>
+                <img id="captchaImage" src="" class="h-full max-w-[120px] object-contain" alt="captcha" style="display:none" />
+                <button type="button" id="refreshCaptchaBtn" class="ml-2 text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer flex-shrink-0" title="Refresh Captcha">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 </button>
               </div>
-              <!-- Input captcha disembunyikan, diisi otomatis via OCR -->
-              <input type="text" id="captchaInput" class="hidden" />
+              <div class="flex-1 h-[46px] bg-brand-input border border-brand-border rounded-lg focus-within:border-brand-accent transition-colors flex items-center overflow-hidden">
+                <input type="text" id="captchaInput" class="w-full h-full bg-transparent px-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none" placeholder="Kode Captcha" maxlength="10" />
+              </div>
             </div>
+            <p id="captchaHint" class="text-xs text-zinc-500" style="display:none">Kode terisi otomatis. Koreksi jika salah.</p>
           </div>
           
           <div id="loginError" class="text-red-500 text-sm hidden"></div>
@@ -113,20 +116,50 @@ export const bindLoginEvents = (onSuccess: () => void) => {
   };
   
   const loadCaptcha = async () => {
+    // Reset state
+    const captchaLoadingEl = document.getElementById('captchaLoading');
+    const captchaHintEl = document.getElementById('captchaHint');
+    if (captchaLoadingEl) { captchaLoadingEl.style.display = 'inline'; }
+    if (captchaImageEl) captchaImageEl.style.display = 'none';
+    if (captchaInputEl) captchaInputEl.value = '';
+
     try {
       const res = await fetch('https://api.karantinaindonesia.go.id/barantin-sys-v2/captcha?app=APP001');
-      if (!res.ok) throw new Error('Failed to fetch captcha');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
+
+      // Cek semua kemungkinan field text dari API
+      const apiText = data.text || data.code || data.captcha || data.answer || '';
+
       if (data.status && data.image) {
-        captchaImageEl?.setAttribute('src', data.image);
+        // Handle base64 tanpa prefix
+        let imgSrc = data.image;
+        if (imgSrc && !imgSrc.startsWith('data:') && !imgSrc.startsWith('http')) {
+          imgSrc = 'data:image/png;base64,' + imgSrc;
+        }
+        if (captchaImageEl) {
+          captchaImageEl.src = imgSrc;
+          captchaImageEl.onload = () => {
+            captchaImageEl.style.display = 'block';
+            if (captchaLoadingEl) captchaLoadingEl.style.display = 'none';
+          };
+          captchaImageEl.onerror = () => {
+            if (captchaLoadingEl) captchaLoadingEl.textContent = 'Gagal muat';
+          };
+        }
         currentCaptchaToken = data.token;
-        currentCaptchaImageSrc = data.image;
-        // Coba ambil teks langsung dari API response jika tersedia
-        if (data.text) captchaInputEl.value = data.text;
-        else if (data.code) captchaInputEl.value = data.code;
+        currentCaptchaImageSrc = imgSrc;
+        // Jika API langsung kasih teks, isi otomatis
+        if (apiText && captchaInputEl) {
+          captchaInputEl.value = apiText;
+          if (captchaHintEl) captchaHintEl.style.display = 'block';
+        }
+      } else {
+        if (captchaLoadingEl) captchaLoadingEl.textContent = 'Gagal muat captcha';
       }
     } catch (e) {
       console.error('Error loading captcha:', e);
+      if (captchaLoadingEl) captchaLoadingEl.textContent = 'Error: ' + (e as any).message;
     }
   };
 
