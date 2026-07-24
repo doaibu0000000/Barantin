@@ -206,12 +206,12 @@ export const bindCookieToolEvents = () => {
           });
         };
 
-        // Variables to store current active data
-        let currentSsmPtk = '';
-        let currentSsmPtkId = '';
+        const token = await getToken(); // Ambil token sekali di luar loop untuk mempercepat
         
-        for (const aju of matches) {
-          finalOutput += `\n--- MENCARI AJU: ${aju} ---\n`;
+        const fetchPromises = matches.map(async (aju) => {
+          let outputBlock = `\n--- MENCARI AJU: ${aju} ---\n`;
+          let currentSsmPtk = '';
+          let currentSsmPtkId = '';
           
           const [dataAju, dataReg] = await Promise.all([
             fetchAju(aju, 'noAju'),
@@ -220,23 +220,18 @@ export const bindCookieToolEvents = () => {
           let data = dataAju || dataReg;
           
           if (data) {
-            // Priority: if it's an SSM record, it has a ptk_id. Otherwise fallback to its own id
             currentSsmPtkId = data.ptk_id || data.id || '';
             if (data.noReg) currentSsmPtk = data.noReg;
             
-            // Auto fetch K.1.1 Document Number if possible
-            if (currentSsmPtkId) {
+            if (currentSsmPtkId && token) {
               try {
-                const token = await getToken();
-                if (token) {
-                  const ptkRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk/${currentSsmPtkId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-                  if (ptkRes.ok) {
-                    const ptkData = await ptkRes.json();
-                    if (ptkData?.data?.ptk?.no_dok_permohonan) {
-                      currentSsmPtk = ptkData.data.ptk.no_dok_permohonan;
-                    }
+                const ptkRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk/${currentSsmPtkId}`, {
+                  headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (ptkRes.ok) {
+                  const ptkData = await ptkRes.json();
+                  if (ptkData?.data?.ptk?.no_dok_permohonan) {
+                    currentSsmPtk = ptkData.data.ptk.no_dok_permohonan;
                   }
                 }
               } catch (e) {
@@ -267,33 +262,38 @@ export const bindCookieToolEvents = () => {
               }
             }
 
-            finalOutput += `Status         : DITEMUKAN (${data.jnsAju})\n`;
-            finalOutput += `No Aju SSM     : ${data.noAju || '-'}\n`;
-            finalOutput += `No Dokumen     : ${currentSsmPtk || data.noReg || '-'}\n`;
-            finalOutput += `Perusahaan     : ${data.nmPerusahaan || '-'}\n`;
-            finalOutput += `Barang         : ${barangText}\n`;
-            finalOutput += `Netto          : ${nettoText}\n`;
-            finalOutput += `Kemasan        : ${kemasanText}\n`;
-            finalOutput += `Alat Angkut    : ${data.namaAngkut || '-'}\n`;
-            finalOutput += `Tgl Tiba       : ${data.tglTiba || '-'}\n`;
-            finalOutput += `Pelabuhan Asal : ${data.portAsal || '-'}\n`;
-            finalOutput += `Pelabuhan Tuju : ${data.portTujuan || '-'}\n`;
-            finalOutput += `Karantina      : ${data.jenis_karantina || '-'}\n`;
-            finalOutput += `UPT            : ${data.upt || '-'}\n`;
+            outputBlock += `Status         : DITEMUKAN (${data.jnsAju})\n`;
+            outputBlock += `No Aju SSM     : ${data.noAju || '-'}\n`;
+            outputBlock += `No Dokumen     : ${currentSsmPtk || data.noReg || '-'}\n`;
+            outputBlock += `Perusahaan     : ${data.nmPerusahaan || '-'}\n`;
+            outputBlock += `Barang         : ${barangText}\n`;
+            outputBlock += `Netto          : ${nettoText}\n`;
+            outputBlock += `Kemasan        : ${kemasanText}\n`;
+            outputBlock += `Alat Angkut    : ${data.namaAngkut || '-'}\n`;
+            outputBlock += `Tgl Tiba       : ${data.tglTiba || '-'}\n`;
+            outputBlock += `Pelabuhan Asal : ${data.portAsal || '-'}\n`;
+            outputBlock += `Pelabuhan Tuju : ${data.portTujuan || '-'}\n`;
+            outputBlock += `Karantina      : ${data.jenis_karantina || '-'}\n`;
+            outputBlock += `UPT            : ${data.upt || '-'}\n`;
             
-            finalOutput += `\n--- DATA JSON LENGKAP ---\n`;
+            outputBlock += `\n--- DATA JSON LENGKAP ---\n`;
             const displayData = { ...data };
             if (displayData.xml) {
               try {
                 displayData.xml = JSON.parse(displayData.xml);
               } catch (e) {}
             }
-            finalOutput += JSON.stringify(displayData, null, 2) + `\n`;
+            outputBlock += JSON.stringify(displayData, null, 2) + `\n`;
             
           } else {
-            finalOutput += `Status         : TIDAK DITEMUKAN / GAGAL\n`;
+            outputBlock += `Status         : TIDAK DITEMUKAN / GAGAL\n`;
           }
-        }
+          
+          return outputBlock;
+        });
+        
+        const resultsArray = await Promise.all(fetchPromises);
+        finalOutput = resultsArray.join('');
         
         processingResults.value = finalOutput.trim();
         processBtn.disabled = false;
