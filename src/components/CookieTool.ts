@@ -505,26 +505,45 @@ export const bindCookieToolEvents = () => {
                   ptkBlock += `Status PTK     : GAGAL (Sesi Token tidak ditemukan. Silakan ke menu Login terlebih dahulu)\n`;
                } else {
                   try {
-                     liveLog(`[STEP 2] Membuat PTK...`);
-                     const userDataStr = localStorage.getItem('userData');
-                     const userData = userDataStr ? JSON.parse(userDataStr) : {};
-                     const ptkPayload = buildPtkPayload(data, xmlObjParsed, userData, currentSsmPtkId);
-                     
-                     const submitRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ssm`, {
-                        method: 'POST',
-                        headers: {
-                           'Authorization': `Bearer ${token}`,
-                           'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(ptkPayload)
-                     });
-                     
-                     if (submitRes.ok || submitRes.status === 201) {
-                        const submitData = await submitRes.json();
-                        if (submitData.status === '201' || submitData.status === true) {
-                           const finalPtkId = submitData.data?.id || ptkPayload.id;
-                           ptkBlock += `Status PTK     : BERHASIL DIBUAT (ID: ${finalPtkId})\n`;
-                           liveLog(`[STEP 2] ✓ PTK BERHASIL (ID: ${finalPtkId})`);
+                      const userDataStr = localStorage.getItem('userData');
+                      const userData = userDataStr ? JSON.parse(userDataStr) : {};
+                      const ptkPayload = buildPtkPayload(data, xmlObjParsed, userData, currentSsmPtkId);
+                      
+                      // Jika PTK sudah ada, skip POST — langsung pakai existing ID
+                      const skipPtkPost = !!currentSsmPtkId;
+                      liveLog(`[STEP 2] ${skipPtkPost ? '✓ PTK sudah ada (skip POST): ' + currentSsmPtkId : 'Membuat PTK baru...'}`);
+                      
+                      let submitOk = false;
+                      let submitData: any = {};
+                      
+                      if (skipPtkPost) {
+                         // Gunakan PTK yang sudah ada
+                         submitOk = true;
+                         submitData = { status: true, data: { id: currentSsmPtkId } };
+                         ptkBlock += `Status PTK     : SUDAH ADA (ID: ${currentSsmPtkId})\n`;
+                      } else {
+                         const submitRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ssm`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify(ptkPayload)
+                         });
+                         if (submitRes.ok || submitRes.status === 201) {
+                            try { submitData = await submitRes.json(); } catch(_e) {}
+                            submitOk = true;
+                         } else {
+                            const hint = submitRes.status === 401 ? ' (Token expired — silakan Login ulang dulu!)' : '';
+                            ptkBlock += `Status PTK     : GAGAL (HTTP ${submitRes.status})${hint}\n`;
+                            liveLog(`[STEP 2] ✗ GAGAL HTTP ${submitRes.status}${hint}`);
+                         }
+                      }
+                      
+                      if (submitOk) {
+                         if (submitData.status === '201' || submitData.status === true) {
+                            const finalPtkId = submitData.data?.id || currentSsmPtkId || ptkPayload.id;
+                            if (!skipPtkPost) {
+                               ptkBlock += `Status PTK     : BERHASIL DIBUAT (ID: ${finalPtkId})\n`;
+                            }
+                            liveLog(`[STEP 2] ✓ PTK ID: ${finalPtkId}`);
                            
                            // Fetch detail PTK untuk mendapatkan nomor K.1.1 yang benar
                            try {
