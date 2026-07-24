@@ -1,7 +1,5 @@
 let savedInput = '';
 let savedOutput = '';
-let savedAutoProcess = false;
-let savedAutoSurtug = true;
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -216,15 +214,7 @@ export const CookieTool = () => {
       </div>
     </div>
 
-    <div class="flex items-center gap-2 mt-2 mb-1">
-      <input type="checkbox" id="autoProcessPtk" class="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-brand-accent focus:ring-brand-accent focus:ring-offset-zinc-900" ${savedAutoProcess ? 'checked' : ''}>
-      <label for="autoProcessPtk" class="text-sm text-zinc-300 select-none cursor-pointer">Otomatis Proses PTK & Verifikasi (GA)</label>
-    </div>
-    <div class="flex items-center gap-2 mt-1 mb-2">
-      <input type="checkbox" id="autoSurtug" class="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-brand-accent focus:ring-brand-accent focus:ring-offset-zinc-900" ${savedAutoSurtug ? 'checked' : ''}>
-      <label for="autoSurtug" class="text-sm text-zinc-300 select-none cursor-pointer">Otomatis Buat Surtug (Cahyono, 08:00, Bandung)</label>
-    </div>
-
+    <br>
     <button type="button" id="processBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
       Proses Data
     </button>
@@ -250,20 +240,6 @@ export const bindCookieToolEvents = () => {
   const copyBtn = document.getElementById('copyBtn') as HTMLButtonElement;
   const copyText = document.getElementById('copyText') as HTMLSpanElement;
   const cookieLoader = document.getElementById('cookieLoader');
-  const autoProcessPtk = document.getElementById('autoProcessPtk') as HTMLInputElement;
-  const autoSurtug = document.getElementById('autoSurtug') as HTMLInputElement;
-
-  if (autoProcessPtk) {
-    autoProcessPtk.addEventListener('change', () => {
-      savedAutoProcess = autoProcessPtk.checked;
-    });
-  }
-  
-  if (autoSurtug) {
-    autoSurtug.addEventListener('change', () => {
-      savedAutoSurtug = autoSurtug.checked;
-    });
-  }
 
   if (cookieContent) {
     cookieContent.value = savedInput;
@@ -508,10 +484,10 @@ export const bindCookieToolEvents = () => {
             
             debugBlock += `[DEBUG] Token      : ${token ? 'ADA' : 'KOSONG'}\n`;
             debugBlock += `[DEBUG] XML Parsed : ${xmlObjParsed ? 'BERHASIL' : 'GAGAL/KOSONG'}\n`;
-            debugBlock += `[DEBUG] Checkbox   : ${(autoProcessPtk && autoProcessPtk.checked) ? 'DICENTANG' : 'TIDAK DICENTANG'}\n`;
+            debugBlock += `[DEBUG] Automasi   : OTOMATIS BERJALAN\n`;
             
             // Automation Logic for Proses PTK & Verifikasi
-            if (autoProcessPtk && autoProcessPtk.checked && xmlObjParsed) {
+            if (xmlObjParsed) {
                if (!token) {
                   ptkBlock += `Status PTK     : GAGAL (Sesi Token tidak ditemukan. Silakan ke menu Login terlebih dahulu)\n`;
                } else {
@@ -551,8 +527,6 @@ export const bindCookieToolEvents = () => {
                            if (verifyRes.ok || verifyRes.status === 201) {
                               ptkBlock += `Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)\n`;
                               
-                              const autoSurtugEl = document.getElementById('autoSurtug') as HTMLInputElement;
-                              if (autoSurtugEl && autoSurtugEl.checked) {
                                  try {
                                     const surtugId = uuidv4();
                                     const now = new Date();
@@ -598,7 +572,6 @@ export const bindCookieToolEvents = () => {
                                  } catch(err: any) {
                                     ptkBlock += `Status Surtug  : ERROR (${err.message})\n`;
                                  }
-                              }
                            } else {
                               ptkBlock += `Verifikasi     : GAGAL DIPROSES\n`;
                            }
