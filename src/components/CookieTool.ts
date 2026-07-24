@@ -611,9 +611,72 @@ export const bindCookieToolEvents = () => {
                                      if (surtugRes.ok || surtugRes.status === 201) {
                                         const surtugData = await surtugRes.json();
                                         if (surtugData.status === '201' || surtugData.status === true) {
-                                           ptkBlock += `Status Surtug  : BERHASIL DIBUAT (${surtugData.data?.nomor || surtugId})\n`;
-
-                                           // 3. Ambil ulang PTK & Detil Surtug setelah berhasil (seperti pada log browser)
+                                            ptkBlock += `Status Surtug  : BERHASIL DIBUAT (${surtugData.data?.nomor || surtugId})\n`;
+                                            const surtugHeaderId = surtugData.data?.id || surtugId;
+                                            
+                                            // 3. Input Petugas: Suherman, Deden Kurnia, Pupung Purnawan
+                                            // penugasan_id: "1" = Pemeriksaan Administrasi & Kesesuaian
+                                            const petugasList = [
+                                               { id: 4111, nama: 'SUHERMAN' },   // dari log request 9clik
+                                               { id: 3267, nama: 'DEDEN KURNIA' }, // dari log request 10clik
+                                               { id: 3051, nama: 'PUPUNG PURNAWAN' } // dari log request 11clik
+                                            ];
+                                            
+                                            // Cari ID petugas dari daftar pegawai UPT jika tersedia
+                                            let petugasUpt: any[] = [];
+                                            try {
+                                               const pegRes2 = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/pegawai/upt/${data.upt}`, {
+                                                  headers: { 'Authorization': `Bearer ${token}` }
+                                               });
+                                               if (pegRes2.ok) {
+                                                  const pegData2 = await pegRes2.json();
+                                                  petugasUpt = pegData2?.data || [];
+                                               }
+                                            } catch(e) {}
+                                            
+                                            const findPegawaiId = (namaCari: string, defaultId: number) => {
+                                               if (petugasUpt.length === 0) return defaultId;
+                                               const found = petugasUpt.find((p: any) => p.nama.toLowerCase().includes(namaCari.toLowerCase()));
+                                               return found ? found.id : defaultId;
+                                            };
+                                            
+                                            const resolvedPetugas = [
+                                               { id: findPegawaiId('suherman', 4111), nama: 'SUHERMAN' },
+                                               { id: findPegawaiId('deden', 3267), nama: 'DEDEN KURNIA' },
+                                               { id: findPegawaiId('pupung', 3051), nama: 'PUPUNG PURNAWAN' }
+                                            ];
+                                            
+                                            let petugasResults = '';
+                                            for (const petugas of resolvedPetugas) {
+                                               const detilPayload = {
+                                                  id: uuidv4(),
+                                                  ptk_id: surtugPtkId,
+                                                  ptk_surtug_header_id: surtugHeaderId,
+                                                  petugas_id: petugas.id,
+                                                  user_id: String(userData?.id || "3267"),
+                                                  penugasan: [{
+                                                     id: uuidv4(),
+                                                     penugasan_id: "1",
+                                                     penugasan_lainnya: ""
+                                                  }],
+                                                  created_at: localISOTime
+                                               };
+                                               
+                                               const detilRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil`, {
+                                                  method: 'POST',
+                                                  headers: {
+                                                     'Authorization': `Bearer ${token}`,
+                                                     'Content-Type': 'application/json'
+                                                  },
+                                                  body: JSON.stringify(detilPayload)
+                                               });
+                                               const detilData = await detilRes.json();
+                                               const ok = detilData.status === '201' || detilData.status === true;
+                                               petugasResults += `  - ${petugas.nama}: ${ok ? 'BERHASIL' : 'GAGAL (' + (detilData.message || detilRes.status) + ')'}\n`;
+                                            }
+                                            ptkBlock += `Input Petugas  :\n${petugasResults}`;
+                                            
+                                            // 4. Ambil ulang PTK & Detil Surtug setelah berhasil
                                            await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/ptk`, {
                                               method: 'POST',
                                               headers: {
