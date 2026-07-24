@@ -336,7 +336,15 @@ export const bindCookieToolEvents = () => {
       if (matches && matches.length > 0) {
         processBtn.disabled = true;
         processBtn.textContent = 'Mencari Data...';
-        processingResults.value = "Sedang mengambil data dari server, mohon tunggu...";
+        processingResults.value = `[MULAI] Ditemukan ${matches.length} AJU: ${matches.join(', ')}\nSedang memproses...\n`;
+        savedOutput = processingResults.value;
+        
+        // Helper: live update output
+        const liveLog = (text: string) => {
+          processingResults.value += text + '\n';
+          savedOutput = processingResults.value;
+          processingResults.scrollTop = processingResults.scrollHeight;
+        };
         
         let finalOutput = '';
         
@@ -429,6 +437,8 @@ export const bindCookieToolEvents = () => {
           let currentSsmPtk = '';
           let currentSsmPtkId = '';
           
+          liveLog(`\n[STEP 1] Mencari AJU: ${aju}...`);
+          
           const [dataAju, dataReg] = await Promise.all([
             fetchAju(aju, 'noAju'),
             fetchAju(aju, 'noReg')
@@ -436,7 +446,10 @@ export const bindCookieToolEvents = () => {
           let data = dataAju || dataReg;
           
           if (data) {
+            liveLog(`[STEP 1] ✓ AJU ditemukan: ${data.noReg || data.noAju}`);
             currentSsmPtkId = data.ptk_id || '';  // HANYA pakai ptk_id, bukan data.id (SSM id)
+            if (currentSsmPtkId) liveLog(`[STEP 1] PTK ID existing: ${currentSsmPtkId}`);
+            else liveLog(`[STEP 1] PTK belum ada, akan dibuat baru`);
             if (data.noReg) currentSsmPtk = data.noReg;
             
             if (currentSsmPtkId && token) {
@@ -492,6 +505,7 @@ export const bindCookieToolEvents = () => {
                   ptkBlock += `Status PTK     : GAGAL (Sesi Token tidak ditemukan. Silakan ke menu Login terlebih dahulu)\n`;
                } else {
                   try {
+                     liveLog(`[STEP 2] Membuat PTK...`);
                      const userDataStr = localStorage.getItem('userData');
                      const userData = userDataStr ? JSON.parse(userDataStr) : {};
                      const ptkPayload = buildPtkPayload(data, xmlObjParsed, userData, currentSsmPtkId);
@@ -510,6 +524,7 @@ export const bindCookieToolEvents = () => {
                         if (submitData.status === '201' || submitData.status === true) {
                            const finalPtkId = submitData.data?.id || ptkPayload.id;
                            ptkBlock += `Status PTK     : BERHASIL DIBUAT (ID: ${finalPtkId})\n`;
+                           liveLog(`[STEP 2] ✓ PTK BERHASIL (ID: ${finalPtkId})`);
                            
                            // Fetch detail PTK untuk mendapatkan nomor K.1.1 yang benar
                            try {
@@ -540,11 +555,14 @@ export const bindCookieToolEvents = () => {
                            
                            if (verifyRes.ok || verifyRes.status === 201) {
                               ptkBlock += `Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)\n`;
+                              liveLog(`[STEP 3] ✓ Verifikasi BERHASIL`);
                               
                                // surtugPtkId: gunakan existing ptk_id dari SSM jika ada, atau finalPtkId (baru dibuat)
                                const surtugPtkId = currentSsmPtkId || finalPtkId;
                                // ptkNomor: dari detail PTK (format K.1.1) atau fallback
                                const ptkNomor = currentSsmPtk || submitData.data?.nomor || data.noReg || data.noAju;
+                               liveLog(`[STEP 3] PTK Nomor: ${ptkNomor}`);
+                               liveLog(`[STEP 3] Surtug PTK ID: ${surtugPtkId}`);
                                
                                    try {
                                      const surtugId = uuidv4();
@@ -625,6 +643,7 @@ export const bindCookieToolEvents = () => {
                                         const surtugData = await surtugRes.json();
                                         if (surtugData.status === '201' || surtugData.status === true) {
                                             ptkBlock += `Status Surtug  : BERHASIL DIBUAT (${surtugData.data?.nomor || surtugId})\n`;
+                                            liveLog(`[STEP 4] ✓ Surtug 1 BERHASIL: ${surtugData.data?.nomor}`);
                                             const surtugHeaderId = surtugData.data?.id || surtugId;
                                             
                                             // 3. Input Petugas: Suherman, Deden Kurnia, Pupung Purnawan
@@ -688,6 +707,7 @@ export const bindCookieToolEvents = () => {
                                                petugasResults += `  - ${petugas.nama}: ${ok ? 'BERHASIL' : 'GAGAL (' + (detilData.message || detilRes.status) + ')'}\n`;
                                             }
                                             ptkBlock += `Input Petugas  :\n${petugasResults}`;
+                                            liveLog(`[STEP 5] Input Petugas Surtug1 selesai`);
                                             
                                              // 5. K-3.7a: Simpan Pemeriksaan Administrasi (pn-adm)
                                              try {
@@ -723,6 +743,7 @@ export const bindCookieToolEvents = () => {
                                                 const pnAdmData = await pnAdmRes.json();
                                                 const pnAdmOk = pnAdmData.status === '201' || pnAdmData.status === true;
                                                 ptkBlock += `K-3.7a pn-adm  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL (' + (pnAdmData.message || pnAdmRes.status) + ')'}\n`;
+                                                liveLog(`[STEP 6] K-3.7a: ${pnAdmOk ? 'BERHASIL' : 'GAGAL - ' + JSON.stringify(pnAdmData)}`);
                                                 
                                                 if (pnAdmOk) {
                                                    // 6. ptk-history (update status dokumen K-3.7a)
@@ -817,6 +838,7 @@ export const bindCookieToolEvents = () => {
                                                const surtug2Data = await surtug2Res.json();
                                                const surtug2Ok = surtug2Data.status === '201' || surtug2Data.status === true;
                                                ptkBlock += `Surtug ke-2    : ${surtug2Ok ? 'BERHASIL (' + surtug2Data.data?.nomor + ')' : 'GAGAL (' + (surtug2Data.message || surtug2Res.status) + ')'}\n`;
+                                               liveLog(`[STEP 7] Surtug 2: ${surtug2Ok ? 'BERHASIL ' + surtug2Data.data?.nomor : 'GAGAL - ' + JSON.stringify(surtug2Data)}`);
                                                
                                                if (surtug2Ok) {
                                                   const surtug2HeaderId = surtug2Data.data?.id || surtug2Id;
@@ -904,6 +926,7 @@ export const bindCookieToolEvents = () => {
                                                      const pnKesData = await pnKesRes.json();
                                                      const pnKesOk = pnKesData.status === '201' || pnKesData.status === true;
                                                      ptkBlock += `K-3.7b pn-adm  : ${pnKesOk ? 'BERHASIL' : 'GAGAL (' + (pnKesData.message || pnKesRes.status) + ')'}\n`;
+                                                     liveLog(`[STEP 8] K-3.7b: ${pnKesOk ? 'BERHASIL ← K-3.7b MUNCUL!' : 'GAGAL - ' + JSON.stringify(pnKesData)}`);
                                                      
                                                      if (pnKesOk) {
                                                         await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
