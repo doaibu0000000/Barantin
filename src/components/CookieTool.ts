@@ -775,6 +775,79 @@ export const bindCookieToolEvents = () => {
                                               })
                                            });
 
+                                            // 9. Buat Surat Tugas ke-2 (K-2.2/3) - Pemeriksaan Fisik/Kesehatan
+                                            // Setelah K-3.7a selesai, user klik "Surat Tugas (K-2.2)" → muncul form baru
+                                            try {
+                                               const surtug2Id = uuidv4();
+                                               const surtug2Payload = {
+                                                  id: surtug2Id,
+                                                  ptk_id: surtugPtkId,
+                                                  no_dok_permohonan: ptkNomor,
+                                                  ptk_analisis_id: "",
+                                                  nomor: "",
+                                                  tanggal: localDateOnly + "T09:00",
+                                                  perihal: "Pelaksanaan Tindakan Karantina",
+                                                  penanda_tangan_id: ttdId,
+                                                  diterbitkan_di: "BANDUNG",
+                                                  user_id: String(userData?.id || "3267"),
+                                                  created_at: localISOTime
+                                               };
+                                               
+                                               const surtug2Res = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug`, {
+                                                  method: 'POST',
+                                                  headers: {
+                                                     'Authorization': `Bearer ${token}`,
+                                                     'Content-Type': 'application/json'
+                                                  },
+                                                  body: JSON.stringify(surtug2Payload)
+                                               });
+                                               const surtug2Data = await surtug2Res.json();
+                                               const surtug2Ok = surtug2Data.status === '201' || surtug2Data.status === true;
+                                               ptkBlock += `Surtug ke-2    : ${surtug2Ok ? 'BERHASIL (' + surtug2Data.data?.nomor + ')' : 'GAGAL (' + (surtug2Data.message || surtug2Res.status) + ')'}\n`;
+                                               
+                                               if (surtug2Ok) {
+                                                  const surtug2HeaderId = surtug2Data.data?.id || surtug2Id;
+                                                  
+                                                  // Input Petugas ke Surtug ke-2 dengan penugasan_id "2" (pemeriksaan fisik)
+                                                  const resolvedPetugas2 = [
+                                                     { id: findPegawaiId('suherman', 4111), nama: 'SUHERMAN' },
+                                                     { id: findPegawaiId('deden', 3267), nama: 'DEDEN KURNIA' },
+                                                     { id: findPegawaiId('pupung', 3051), nama: 'PUPUNG PURNAWAN' }
+                                                  ];
+                                                  
+                                                  let petugasResults2 = '';
+                                                  for (const petugas of resolvedPetugas2) {
+                                                     const detil2Payload = {
+                                                        id: uuidv4(),
+                                                        ptk_id: surtugPtkId,
+                                                        ptk_surtug_header_id: surtug2HeaderId,
+                                                        petugas_id: petugas.id,
+                                                        user_id: String(userData?.id || "3267"),
+                                                        penugasan: [{
+                                                           id: uuidv4(),
+                                                           penugasan_id: "2",
+                                                           penugasan_lainnya: ""
+                                                        }],
+                                                        created_at: localISOTime
+                                                     };
+                                                     const detil2Res = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil`, {
+                                                        method: 'POST',
+                                                        headers: {
+                                                           'Authorization': `Bearer ${token}`,
+                                                           'Content-Type': 'application/json'
+                                                        },
+                                                        body: JSON.stringify(detil2Payload)
+                                                     });
+                                                     const detil2Data = await detil2Res.json();
+                                                     const d2Ok = detil2Data.status === '201' || detil2Data.status === true;
+                                                     petugasResults2 += `  - ${petugas.nama}: ${d2Ok ? 'BERHASIL' : 'GAGAL'}\n`;
+                                                  }
+                                                  ptkBlock += `Petugas Surtug2:\n${petugasResults2}`;
+                                               }
+                                            } catch(e: any) {
+                                               ptkBlock += `Surtug ke-2    : ERROR (${e.message})\n`;
+                                            }
+
                                         } else {
                                            ptkBlock += `Status Surtug  : GAGAL (${surtugData.message || 'Unknown Error'})\n`;
                                         }
