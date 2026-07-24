@@ -1,6 +1,7 @@
 let savedInput = '';
 let savedOutput = '';
 let savedAutoProcess = false;
+let savedAutoSurtug = true;
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -219,6 +220,10 @@ export const CookieTool = () => {
       <input type="checkbox" id="autoProcessPtk" class="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-brand-accent focus:ring-brand-accent focus:ring-offset-zinc-900" ${savedAutoProcess ? 'checked' : ''}>
       <label for="autoProcessPtk" class="text-sm text-zinc-300 select-none cursor-pointer">Otomatis Proses PTK & Verifikasi (GA)</label>
     </div>
+    <div class="flex items-center gap-2 mt-1 mb-2">
+      <input type="checkbox" id="autoSurtug" class="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-brand-accent focus:ring-brand-accent focus:ring-offset-zinc-900" ${savedAutoSurtug ? 'checked' : ''}>
+      <label for="autoSurtug" class="text-sm text-zinc-300 select-none cursor-pointer">Otomatis Buat Surtug (Cahyono, 08:00, Bandung)</label>
+    </div>
 
     <button type="button" id="processBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
       Proses Data
@@ -246,10 +251,17 @@ export const bindCookieToolEvents = () => {
   const copyText = document.getElementById('copyText') as HTMLSpanElement;
   const cookieLoader = document.getElementById('cookieLoader');
   const autoProcessPtk = document.getElementById('autoProcessPtk') as HTMLInputElement;
+  const autoSurtug = document.getElementById('autoSurtug') as HTMLInputElement;
 
   if (autoProcessPtk) {
     autoProcessPtk.addEventListener('change', () => {
       savedAutoProcess = autoProcessPtk.checked;
+    });
+  }
+  
+  if (autoSurtug) {
+    autoSurtug.addEventListener('change', () => {
+      savedAutoSurtug = autoSurtug.checked;
     });
   }
 
@@ -538,6 +550,55 @@ export const bindCookieToolEvents = () => {
                            
                            if (verifyRes.ok || verifyRes.status === 201) {
                               ptkBlock += `Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)\n`;
+                              
+                              const autoSurtugEl = document.getElementById('autoSurtug') as HTMLInputElement;
+                              if (autoSurtugEl && autoSurtugEl.checked) {
+                                 try {
+                                    const surtugId = uuidv4();
+                                    const now = new Date();
+                                    const tzOffset = now.getTimezoneOffset() * 60000;
+                                    const localISOTime = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 19).replace('T', ' ');
+                                    const localDateOnly = localISOTime.split(' ')[0];
+                                    
+                                    const ptkNomor = submitData.data?.nomor || data.noReg || data.noAju;
+                                    
+                                    const surtugPayload = {
+                                       id: surtugId,
+                                       ptk_id: ptkPayload.id,
+                                       no_dok_permohonan: ptkNomor,
+                                       ptk_analisis_id: "",
+                                       nomor: "",
+                                       tanggal: localDateOnly + "T08:00",
+                                       perihal: "Pelaksanaan Tindakan Karantina",
+                                       penanda_tangan_id: 2085,
+                                       diterbitkan_di: "BANDUNG",
+                                       user_id: userData?.id || "3267",
+                                       created_at: localISOTime
+                                    };
+                                    
+                                    const surtugRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/surtug`, {
+                                       method: 'POST',
+                                       headers: {
+                                          'Authorization': `Bearer ${token}`,
+                                          'Content-Type': 'application/json'
+                                       },
+                                       body: JSON.stringify(surtugPayload)
+                                    });
+                                    
+                                    if (surtugRes.ok || surtugRes.status === 201) {
+                                       const surtugData = await surtugRes.json();
+                                       if (surtugData.status === '201' || surtugData.status === true) {
+                                          ptkBlock += `Status Surtug  : BERHASIL DIBUAT (${surtugData.data?.nomor || surtugId})\n`;
+                                       } else {
+                                          ptkBlock += `Status Surtug  : GAGAL (${surtugData.message || 'Unknown Error'})\n`;
+                                       }
+                                    } else {
+                                       ptkBlock += `Status Surtug  : GAGAL (HTTP ${surtugRes.status})\n`;
+                                    }
+                                 } catch(err: any) {
+                                    ptkBlock += `Status Surtug  : ERROR (${err.message})\n`;
+                                 }
+                              }
                            } else {
                               ptkBlock += `Verifikasi     : GAGAL DIPROSES\n`;
                            }
