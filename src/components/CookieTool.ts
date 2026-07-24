@@ -588,7 +588,7 @@ export const bindCookieToolEvents = () => {
                                         perihal: "Pelaksanaan Tindakan Karantina",
                                         penanda_tangan_id: ttdId,
                                         diterbitkan_di: "BANDUNG",
-                                        user_id: userData?.id || "3267",
+                                        user_id: String(userData?.id || "3267"),
                                         created_at: localISOTime
                                      };
                                      
