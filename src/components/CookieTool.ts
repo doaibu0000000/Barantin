@@ -497,20 +497,19 @@ export const bindCookieToolEvents = () => {
 
             let ptkBlock = '';
             
-            // Header profesional per AJU
             const nmPerusahaan = data.nmPerusahaan || '-';
             const jnsAju = data.jnsAju || '-';
             const tglAju = (data.tglAju || '').substring(0, 10);
-            outputBlock += `\n${'â•'.repeat(52)}\n`;
-            outputBlock += `  ðŸ“‹ AJU  : ${aju}\n`;
-            outputBlock += `  ðŸ¢ PT   : ${nmPerusahaan}\n`;
-            outputBlock += `  ðŸ“¦ Jenis: ${jnsAju} | Tgl: ${tglAju}\n`;
-            outputBlock += `${'â•'.repeat(52)}\n`;
+            outputBlock += `\n${'='.repeat(52)}\n`;
+            outputBlock += `  AJU  : ${aju}\n`;
+            outputBlock += `  PT   : ${nmPerusahaan}\n`;
+            outputBlock += `  Jenis: ${jnsAju} | Tgl: ${tglAju}\n`;
+            outputBlock += `${'='.repeat(52)}\n`;
             
             // Automation Logic for Proses PTK & Verifikasi
             if (xmlObjParsed) {
                if (!token) {
-                   ptkBlock += `  âœ— PTK    : GAGAL â€” token tidak ditemukan, silakan Login\n`;
+                   ptkBlock += `  X PTK    : GAGAL - token tidak ditemukan, silakan Login\n`;
                } else {
                   try {
                       const userDataStr = localStorage.getItem('userData');
@@ -627,8 +626,7 @@ export const bindCookieToolEvents = () => {
                                         errorPegawai: ""
                                      };
                                      
-                                     debugBlock += `[DEBUG] PTK Nomor  : ${ptkNomor}\n`;
-                                     debugBlock += `[DEBUG] DokumenCek : ${JSON.stringify(dokumencekPayload)}\n`;
+
                                      
                                      await fetch(`https://api3.karantinaindonesia.go.id/rest-ptkonline/nomorSeri/dokumencek`, {
                                         method: 'POST',
@@ -673,7 +671,7 @@ export const bindCookieToolEvents = () => {
                                         created_at: localISOTime
                                      };
                                      
-                                     debugBlock += `[DEBUG] Surtug Req : ${JSON.stringify(surtugPayload)}\n`;
+
                                      
                                      const surtugRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug`, {
                                         method: 'POST',
