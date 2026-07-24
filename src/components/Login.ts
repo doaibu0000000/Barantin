@@ -103,126 +103,108 @@ export const bindLoginEvents = (onSuccess: () => void) => {
     } catch { return null; }
   };
 
-  // Preprocess gambar captcha: Median Filter (menghapus garis coretan)
-  const preprocessCaptcha = (imgSrc: string, threshold: number = 140): Promise<string> => {
+  // --- ddddocr murni di Browser via ONNX Runtime Web ---
+  const charsetMap: Record<number, string> = {
+    0: '', 78: '2', 409: '7', 2879: '9', 4410: '1', 
+    5806: '4', 5961: '6', 6749: '0', 6977: '5', 6979: '8', 7721: '3'
+  };
+  const allowedIndices = Object.keys(charsetMap).map(Number);
+
+  let ortReady = false;
+  let ddddOcrSession: any = null;
+
+  const preloadDdddOcr = async () => {
+    if (!(window as any).ort) {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/ort.min.js';
+      document.head.appendChild(s);
+      await new Promise(r => { s.onload = r; });
+    }
+    ortReady = true;
+    (window as any).ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/';
+    try {
+      // Load model ddddocr (sudah dipush ke folder public/)
+      if (!ddddOcrSession) {
+        ddddOcrSession = await (window as any).ort.InferenceSession.create('/Barantin/ddddocr.onnx');
+      }
+    } catch (e) { console.error('Gagal meload model ddddocr', e); }
+  };
+  preloadDdddOcr();
+
+  const preprocessForDdddOcr = (imgSrc: string): Promise<{ data: Float32Array, width: number }> => {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
-        const w = img.width;
-        const h = img.height;
-        const origCanvas = document.createElement('canvas');
-        origCanvas.width = w;
-        origCanvas.height = h;
-        const ctx = origCanvas.getContext('2d')!;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, w, h);
-        ctx.drawImage(img, 0, 0, w, h);
+        // ddddocr butuh tinggi fix 64
+        const targetHeight = 64;
+        const targetWidth = Math.floor(img.width * targetHeight / img.height);
         
-        let imgData = ctx.getImageData(0, 0, w, h);
-        let data = imgData.data;
-
-        // 1. Grayscale & Thresholding (Binarisasi Awal)
-        const binary = new Uint8Array(w * h);
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            const idx = (y * w + x) * 4;
+        const canvas = document.createElement('canvas');
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        const ctx = canvas.getContext('2d')!;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, targetWidth, targetHeight);
+        ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+        
+        const imgData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+        const data = imgData.data;
+        
+        const tensorData = new Float32Array(targetHeight * targetWidth);
+        for (let y = 0; y < targetHeight; y++) {
+          for (let x = 0; x < targetWidth; x++) {
+            const idx = (y * targetWidth + x) * 4;
             const gray = 0.299 * data[idx] + 0.587 * data[idx+1] + 0.114 * data[idx+2];
-            binary[y * w + x] = gray < threshold ? 0 : 255; // 0 = hitam, 255 = putih
+            // Normalisasi untuk model ONNX: (pixel / 127.5) - 1.0
+            tensorData[y * targetWidth + x] = (gray / 127.5) - 1.0;
           }
         }
-
-        // 2. Median Filter 3x3 (Dua pass untuk hasil maksimal)
-        // Menghapus garis tipis secara drastis tanpa membuat gambar menjadi buram (blur)
-        let currentBinary = binary;
-        for (let pass = 0; pass < 2; pass++) {
-          const nextBinary = new Uint8Array(w * h);
-          for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-              let blacks = 0;
-              let total = 0;
-              for (let dy = -1; dy <= 1; dy++) {
-                for (let dx = -1; dx <= 1; dx++) {
-                  const nx = x + dx, ny = y + dy;
-                  if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-                    if (currentBinary[ny * w + nx] === 0) blacks++;
-                    total++;
-                  }
-                }
-              }
-              // Jika mayoritas piksel tetangga adalah putih, jadikan putih. 
-              // Garis tipis 1px hanya memiliki 3 tetangga hitam (dari 9), sehingga akan terhapus!
-              nextBinary[y * w + x] = blacks >= 4 ? 0 : 255; 
-            }
-          }
-          currentBinary = nextBinary;
-        }
-
-        // Terapkan hasil bersih ke canvas data
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            const idx = (y * w + x) * 4;
-            const v = currentBinary[y * w + x];
-            data[idx] = data[idx+1] = data[idx+2] = v;
-          }
-        }
-        ctx.putImageData(imgData, 0, 0);
-
-        // 3. Scale up 3x untuk Tesseract
-        const scale = 3;
-        const scaleCanvas = document.createElement('canvas');
-        scaleCanvas.width = w * scale;
-        scaleCanvas.height = h * scale;
-        const ctxScale = scaleCanvas.getContext('2d')!;
-        ctxScale.imageSmoothingEnabled = false; 
-        ctxScale.drawImage(origCanvas, 0, 0, scaleCanvas.width, scaleCanvas.height);
-
-        resolve(scaleCanvas.toDataURL('image/png'));
+        resolve({ data: tensorData, width: targetWidth });
       };
-      img.onerror = () => resolve(imgSrc);
+      img.onerror = () => resolve({ data: new Float32Array(0), width: 0 });
       img.src = imgSrc;
     });
   };
 
-  // OCR via Tesseract.js (preload di background segera setelah login muncul)
-  let tesseractReady: any = null;
-  const preloadTesseract = () => {
-    if ((window as any).Tesseract) { tesseractReady = (window as any).Tesseract; return; }
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-    s.onload = () => { tesseractReady = (window as any).Tesseract; };
-    document.head.appendChild(s);
-  };
-  preloadTesseract(); // Mulai load sekarang di background
-
   const solveCaptchaOCR = async (imgSrc: string): Promise<string> => {
     try {
       let waited = 0;
-      while (!tesseractReady && waited < 100) {
+      while ((!ortReady || !ddddOcrSession) && waited < 100) {
         await new Promise(r => setTimeout(r, 100));
         waited++;
       }
-      if (!tesseractReady) return '';
+      if (!ddddOcrSession) return '';
 
-      // Strategi Multi-pass: Captcha Barantin pasti 6 digit.
-      // Coba variasi ketebalan (threshold) hingga mendapat tepat 6 angka.
-      const thresholds = [140, 160, 120, 180];
-      let bestText = '';
+      const { data, width } = await preprocessForDdddOcr(imgSrc);
+      if (width === 0) return '';
 
-      for (const th of thresholds) {
-        const processed = await preprocessCaptcha(imgSrc, th);
-        const result = await tesseractReady.recognize(processed, 'eng', {
-          tessedit_char_whitelist: '0123456789',
-          tessedit_pageseg_mode: '8' // Mode '8' (Single Word) sangat optimal untuk captcha
-        });
+      const tensor = new (window as any).ort.Tensor('float32', data, [1, 1, 64, width]);
+      const results = await ddddOcrSession.run({ 'input1': tensor });
+      
+      const outTensor = results['387']; // Output logits
+      const resultData = outTensor.data;
+      const seqLen = outTensor.dims[0];
+      const numClasses = outTensor.dims[2]; // 8210
+
+      let text = '';
+      let lastIdx = -1;
+
+      // CTC Decoding dengan Filter Hanya Angka (Whitelist)
+      for (let t = 0; t < seqLen; t++) {
+        let maxVal = -Infinity;
+        let bestIdx = 0;
         
-        const text = (result.data.text || '').replace(/[^0-9]/g, '');
-        if (text.length === 6) {
-          return text; // Sempurna 6 digit
+        for (const idx of allowedIndices) {
+          const val = resultData[t * numClasses + idx];
+          if (val > maxVal) { maxVal = val; bestIdx = idx; }
         }
-        if (text.length > bestText.length) bestText = text; // Simpan yang terpanjang sebagai fallback
+        
+        if (bestIdx !== 0 && bestIdx !== lastIdx) {
+          text += charsetMap[bestIdx];
+        }
+        lastIdx = bestIdx;
       }
-
-      return bestText;
+      return text;
     } catch (e) {
       console.error('OCR error:', e);
       return '';
