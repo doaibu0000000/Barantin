@@ -103,31 +103,64 @@ export const bindLoginEvents = (onSuccess: () => void) => {
     } catch { return null; }
   };
 
-  // Preprocess gambar captcha: scale 3x + grayscale + threshold
-  const preprocessCaptcha = (imgSrc: string): Promise<string> => {
+  // Preprocess gambar captcha: Box Blur (menghapus garis tipis) + Thresholding
+  const preprocessCaptcha = (imgSrc: string, threshold: number = 140): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
-        const scale = 3;
-        const canvas = document.createElement('canvas');
-        canvas.width  = img.width  * scale;
-        canvas.height = img.height * scale;
-        const ctx = canvas.getContext('2d')!;
-        // Background putih
+        const w = img.width;
+        const h = img.height;
+        const origCanvas = document.createElement('canvas');
+        origCanvas.width = w;
+        origCanvas.height = h;
+        const ctx = origCanvas.getContext('2d')!;
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        // Binarisasi: piksel gelap (teks) → hitam, terang (garis noise) → putih
-        const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        for (let i = 0; i < d.data.length; i += 4) {
-          // Garis noise di captcha Barantin biasanya abu-abu, teksnya hitam pekat
-          const gray = 0.299 * d.data[i] + 0.587 * d.data[i+1] + 0.114 * d.data[i+2];
-          // Turunkan threshold agar garis abu-abu hilang (menjadi putih)
-          const v = gray < 130 ? 0 : 255; 
-          d.data[i] = d.data[i+1] = d.data[i+2] = v;
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        
+        let imgData = ctx.getImageData(0, 0, w, h);
+        let data = imgData.data;
+        let tempData = new Uint8ClampedArray(data);
+
+        // 1. Box Blur (Radius 1) - Mengaburkan garis tipis agar memudar
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            let r = 0, g = 0, b = 0, count = 0;
+            for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                const nx = x + dx, ny = y + dy;
+                if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+                  const idx = (ny * w + nx) * 4;
+                  r += tempData[idx]; g += tempData[idx+1]; b += tempData[idx+2];
+                  count++;
+                }
+              }
+            }
+            const outIdx = (y * w + x) * 4;
+            data[outIdx] = r / count;
+            data[outIdx+1] = g / count;
+            data[outIdx+2] = b / count;
+          }
         }
-        ctx.putImageData(d, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
+
+        // 2. Grayscale & Thresholding
+        for (let i = 0; i < data.length; i += 4) {
+          const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+          const v = gray < threshold ? 0 : 255; 
+          data[i] = data[i+1] = data[i+2] = v;
+        }
+        ctx.putImageData(imgData, 0, 0);
+
+        // 3. Scale up 3x untuk Tesseract
+        const scale = 3;
+        const scaleCanvas = document.createElement('canvas');
+        scaleCanvas.width = w * scale;
+        scaleCanvas.height = h * scale;
+        const ctxScale = scaleCanvas.getContext('2d')!;
+        ctxScale.imageSmoothingEnabled = false; // Pertahankan sudut tajam teks
+        ctxScale.drawImage(origCanvas, 0, 0, scaleCanvas.width, scaleCanvas.height);
+
+        resolve(scaleCanvas.toDataURL('image/png'));
       };
       img.onerror = () => resolve(imgSrc);
       img.src = imgSrc;
@@ -147,21 +180,33 @@ export const bindLoginEvents = (onSuccess: () => void) => {
 
   const solveCaptchaOCR = async (imgSrc: string): Promise<string> => {
     try {
-      // Tunggu Tesseract siap (max 10 detik)
       let waited = 0;
       while (!tesseractReady && waited < 100) {
         await new Promise(r => setTimeout(r, 100));
         waited++;
       }
       if (!tesseractReady) return '';
-      const processed = await preprocessCaptcha(imgSrc);
-      const result = await tesseractReady.recognize(processed, 'eng', {
-        tessedit_char_whitelist: '0123456789', // HANYA ANGKA
-        tessedit_pageseg_mode: '7' // Single line mode
-      });
-      // Ambil hanya angka yang terbaca
-      const text = (result.data.text || '').replace(/[^0-9]/g, '');
-      return text;
+
+      // Strategi Multi-pass: Captcha Barantin pasti 6 digit.
+      // Coba variasi ketebalan (threshold) hingga mendapat tepat 6 angka.
+      const thresholds = [140, 160, 120, 180];
+      let bestText = '';
+
+      for (const th of thresholds) {
+        const processed = await preprocessCaptcha(imgSrc, th);
+        const result = await tesseractReady.recognize(processed, 'eng', {
+          tessedit_char_whitelist: '0123456789',
+          tessedit_pageseg_mode: '8' // Mode '8' (Single Word) sangat optimal untuk captcha
+        });
+        
+        const text = (result.data.text || '').replace(/[^0-9]/g, '');
+        if (text.length === 6) {
+          return text; // Sempurna 6 digit
+        }
+        if (text.length > bestText.length) bestText = text; // Simpan yang terpanjang sebagai fallback
+      }
+
+      return bestText;
     } catch (e) {
       console.error('OCR error:', e);
       return '';
