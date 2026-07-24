@@ -1,4 +1,4 @@
-let savedInput = '';
+﻿let savedInput = '';
 let savedOutput = '';
 
 function uuidv4() {
@@ -433,7 +433,7 @@ export const bindCookieToolEvents = () => {
         const token = await getToken(); // Ambil token sekali di luar loop untuk mempercepat
         
         const fetchPromises = matches.map(async (aju) => {
-          let outputBlock = `\n--- MENCARI AJU: ${aju} ---\n`;
+          let outputBlock = '';
           let currentSsmPtk = '';
           let currentSsmPtkId = '';
           
@@ -446,7 +446,7 @@ export const bindCookieToolEvents = () => {
           let data = dataAju || dataReg;
           
           if (data) {
-            liveLog(`[STEP 1] ✓ AJU ditemukan: ${data.noReg || data.noAju}`);
+            liveLog(`[STEP 1] âœ“ AJU ditemukan: ${data.noReg || data.noAju}`);
             currentSsmPtkId = data.ptk_id || '';  // HANYA pakai ptk_id, bukan data.id (SSM id)
             if (currentSsmPtkId) liveLog(`[STEP 1] PTK ID existing: ${currentSsmPtkId}`);
             else liveLog(`[STEP 1] PTK belum ada, akan dibuat baru`);
@@ -464,7 +464,7 @@ export const bindCookieToolEvents = () => {
                     liveLog(`[STEP 1] PTK Nomor: ${currentSsmPtk}`);
                   }
                 } else if (ptkRes.status === 401) {
-                  liveLog(`[STEP 1] ⚠ Token expired (401) - PTK detail tidak bisa diambil. Silakan Login ulang!`);
+                  liveLog(`[STEP 1] âš  Token expired (401) - PTK detail tidak bisa diambil. Silakan Login ulang!`);
                 }
               } catch (e) {
                 console.error('Failed to fetch PTK details', e);
@@ -496,25 +496,30 @@ export const bindCookieToolEvents = () => {
             }
 
             let ptkBlock = '';
-            let debugBlock = '';
             
-            debugBlock += `[DEBUG] Token      : ${token ? 'ADA' : 'KOSONG'}\n`;
-            debugBlock += `[DEBUG] XML Parsed : ${xmlObjParsed ? 'BERHASIL' : 'GAGAL/KOSONG'}\n`;
-            debugBlock += `[DEBUG] Automasi   : OTOMATIS BERJALAN\n`;
+            // Header profesional per AJU
+            const nmPerusahaan = data.nmPerusahaan || '-';
+            const jnsAju = data.jnsAju || '-';
+            const tglAju = (data.tglAju || '').substring(0, 10);
+            outputBlock += `\n${'â•'.repeat(52)}\n`;
+            outputBlock += `  ðŸ“‹ AJU  : ${aju}\n`;
+            outputBlock += `  ðŸ¢ PT   : ${nmPerusahaan}\n`;
+            outputBlock += `  ðŸ“¦ Jenis: ${jnsAju} | Tgl: ${tglAju}\n`;
+            outputBlock += `${'â•'.repeat(52)}\n`;
             
             // Automation Logic for Proses PTK & Verifikasi
             if (xmlObjParsed) {
                if (!token) {
-                  ptkBlock += `Status PTK     : GAGAL (Sesi Token tidak ditemukan. Silakan ke menu Login terlebih dahulu)\n`;
+                   ptkBlock += `  âœ— PTK    : GAGAL â€” token tidak ditemukan, silakan Login\n`;
                } else {
                   try {
                       const userDataStr = localStorage.getItem('userData');
                       const userData = userDataStr ? JSON.parse(userDataStr) : {};
                       const ptkPayload = buildPtkPayload(data, xmlObjParsed, userData, currentSsmPtkId);
                       
-                      // Jika PTK sudah ada, skip POST — langsung pakai existing ID
+                      // Jika PTK sudah ada, skip POST â€” langsung pakai existing ID
                       const skipPtkPost = !!currentSsmPtkId;
-                      liveLog(`[STEP 2] ${skipPtkPost ? '✓ PTK sudah ada (skip POST): ' + currentSsmPtkId : 'Membuat PTK baru...'}`);
+                      liveLog(`[STEP 2] ${skipPtkPost ? 'âœ“ PTK sudah ada (skip POST): ' + currentSsmPtkId : 'Membuat PTK baru...'}`);
                       
                       let submitOk = false;
                       let submitData: any = {};
@@ -523,7 +528,7 @@ export const bindCookieToolEvents = () => {
                          // Gunakan PTK yang sudah ada
                          submitOk = true;
                          submitData = { status: true, data: { id: currentSsmPtkId } };
-                         ptkBlock += `Status PTK     : SUDAH ADA (ID: ${currentSsmPtkId})\n`;
+                         ptkBlock += `  âœ“ PTK    : SUDAH ADA  [${currentSsmPtkId.substring(0,8)}...]\n`;
                       } else {
                          const submitRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ssm`, {
                             method: 'POST',
@@ -534,9 +539,9 @@ export const bindCookieToolEvents = () => {
                             try { submitData = await submitRes.json(); } catch(_e) {}
                             submitOk = true;
                          } else {
-                            const hint = submitRes.status === 401 ? ' (Token expired — silakan Login ulang dulu!)' : '';
-                            ptkBlock += `Status PTK     : GAGAL (HTTP ${submitRes.status})${hint}\n`;
-                            liveLog(`[STEP 2] ✗ GAGAL HTTP ${submitRes.status}${hint}`);
+                            const hint = submitRes.status === 401 ? ' â€” silakan Login ulang!' : '';
+                            ptkBlock += `  âœ— PTK    : GAGAL  HTTP ${submitRes.status}${hint}\n`;
+                            liveLog(`[STEP 2] âœ— GAGAL HTTP ${submitRes.status}${hint}`);
                          }
                       }
                       
@@ -544,9 +549,9 @@ export const bindCookieToolEvents = () => {
                          if (submitData.status === '201' || submitData.status === true) {
                             const finalPtkId = submitData.data?.id || currentSsmPtkId || ptkPayload.id;
                             if (!skipPtkPost) {
-                               ptkBlock += `Status PTK     : BERHASIL DIBUAT (ID: ${finalPtkId})\n`;
+                               ptkBlock += `  âœ“ PTK    : BERHASIL DIBUAT  [${finalPtkId.substring(0,8)}...]\n`;
                             }
-                            liveLog(`[STEP 2] ✓ PTK ID: ${finalPtkId}`);
+                            liveLog(`[STEP 2] âœ“ PTK ID: ${finalPtkId}`);
                            
                            // Fetch detail PTK untuk mendapatkan nomor K.1.1 yang benar
                            try {
@@ -568,12 +573,12 @@ export const bindCookieToolEvents = () => {
                          let verifyOk = false;
                          
                          if (skipPtkPost) {
-                             // PTK sudah ada → verifikasi sudah selesai sebelumnya → langsung ke surtug
+                             // PTK sudah ada â†’ verifikasi sudah selesai sebelumnya â†’ langsung ke surtug
                              verifyOk = true;
-                             ptkBlock += `Verifikasi     : SUDAH DILAKUKAN (lanjut buat Surat Tugas)\n`;
-                             liveLog(`[STEP 3] Verifikasi sudah selesai → Buka Form Surat Tugas`);
+                             ptkBlock += `  âœ“ Status : PTK sudah terverifikasi\n`;
+                             liveLog(`[STEP 3] Verifikasi sudah selesai â†’ Buka Form Surat Tugas`);
                          } else {
-                             // PTK baru → lakukan verifikasi
+                             // PTK baru â†’ lakukan verifikasi
                              const verifyRes = await fetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
                                 method: 'POST',
                                 headers: {
@@ -588,11 +593,11 @@ export const bindCookieToolEvents = () => {
                              });
                              if (verifyRes.ok || verifyRes.status === 201) {
                                 verifyOk = true;
-                                ptkBlock += `Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)\n`;
-                                liveLog(`[STEP 3] ✓ Verifikasi BERHASIL`);
+                                ptkBlock += `  âœ“ Status : Terverifikasi (GA - PROSES VERIFIKASI)\n`;
+                                liveLog(`[STEP 3] âœ“ Verifikasi BERHASIL`);
                              } else {
-                                ptkBlock += `Verifikasi     : GAGAL DIPROSES\n`;
-                                liveLog(`[STEP 3] ✗ Verifikasi GAGAL (HTTP ${verifyRes.status})`);
+                                ptkBlock += `  âœ— Status : Verifikasi GAGAL  HTTP ${verifyRes.status}\n`;
+                                liveLog(`[STEP 3] âœ— Verifikasi GAGAL (HTTP ${verifyRes.status})`);
                              }
                          }
                          
@@ -682,8 +687,8 @@ export const bindCookieToolEvents = () => {
                                      if (surtugRes.ok || surtugRes.status === 201) {
                                         const surtugData = await surtugRes.json();
                                         if (surtugData.status === '201' || surtugData.status === true) {
-                                            ptkBlock += `Status Surtug  : BERHASIL DIBUAT (${surtugData.data?.nomor || surtugId})\n`;
-                                            liveLog(`[STEP 4] ✓ Surtug 1 BERHASIL: ${surtugData.data?.nomor}`);
+                                            ptkBlock += `  âœ“ Surtug1 : ${surtugData.data?.nomor || surtugId}\n`;
+                                            liveLog(`[STEP 4] âœ“ Surtug 1 BERHASIL: ${surtugData.data?.nomor}`);
                                             const surtugHeaderId = surtugData.data?.id || surtugId;
                                             
                                             // 3. Input Petugas: Suherman, Deden Kurnia, Pupung Purnawan
@@ -744,9 +749,10 @@ export const bindCookieToolEvents = () => {
                                                });
                                                const detilData = await detilRes.json();
                                                const ok = detilData.status === '201' || detilData.status === true;
-                                               petugasResults += `  - ${petugas.nama}: ${ok ? 'BERHASIL' : 'GAGAL (' + (detilData.message || detilRes.status) + ')'}\n`;
+                                               petugasResults += `${ok ? '' : 'âœ— '}${petugas.nama}`;
                                             }
-                                            ptkBlock += `Input Petugas  :\n${petugasResults}`;
+                                            const petugasOkCount = resolvedPetugas.filter(p => petugasResults.includes(p.nama) && !petugasResults.includes(`âœ— ${p.nama}`)).length;
+                                            ptkBlock += `  âœ“ Petugas : ${petugasOkCount}/${resolvedPetugas.length} â€” ${resolvedPetugas.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
                                             liveLog(`[STEP 5] Input Petugas Surtug1 selesai`);
                                             
                                              // 5. K-3.7a: Simpan Pemeriksaan Administrasi (pn-adm)
@@ -784,8 +790,8 @@ export const bindCookieToolEvents = () => {
                                                 let pnAdmData: any = {};
                                                 try { if (pnAdmText) pnAdmData = JSON.parse(pnAdmText); } catch(_e) {}
                                                 const pnAdmOk = pnAdmRes.ok || pnAdmRes.status === 201 || pnAdmRes.status === 204 || pnAdmRes.status === 500 || pnAdmData.status === '201' || pnAdmData.status === true;
-                                                ptkBlock += `K-3.7a pn-adm  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL (' + (pnAdmData.message || pnAdmRes.status) + ')'}${pnAdmRes.status === 500 ? ' (server 500=berhasil)' : ''}\n`;
-                                                liveLog(`[STEP 6] K-3.7a: ${pnAdmOk ? 'BERHASIL ← K-3.7a MUNCUL!' : 'GAGAL - HTTP ' + pnAdmRes.status + ' ' + pnAdmText}`);
+                                                ptkBlock += `  ${pnAdmOk ? 'âœ“' : 'âœ—'} K-3.7a  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL  HTTP ' + pnAdmRes.status}\n`;
+                                                liveLog(`[STEP 6] K-3.7a: ${pnAdmOk ? 'BERHASIL â† K-3.7a MUNCUL!' : 'GAGAL - HTTP ' + pnAdmRes.status + ' ' + pnAdmText}`);
                                                 
                                                 if (pnAdmOk) {
                                                    // 6. ptk-history (update status dokumen K-3.7a)
@@ -854,7 +860,7 @@ export const bindCookieToolEvents = () => {
                                            });
 
                                             // 9. Buat Surat Tugas ke-2 (K-2.2/3) - Pemeriksaan Fisik/Kesehatan
-                                            // Setelah K-3.7a selesai, user klik "Surat Tugas (K-2.2)" → muncul form baru
+                                            // Setelah K-3.7a selesai, user klik "Surat Tugas (K-2.2)" â†’ muncul form baru
                                             try {
                                                const surtug2Id = uuidv4();
                                                const surtug2Payload = {
@@ -881,7 +887,7 @@ export const bindCookieToolEvents = () => {
                                                });
                                                const surtug2Data = await surtug2Res.json();
                                                const surtug2Ok = surtug2Data.status === '201' || surtug2Data.status === true;
-                                               ptkBlock += `Surtug ke-2    : ${surtug2Ok ? 'BERHASIL (' + surtug2Data.data?.nomor + ')' : 'GAGAL (' + (surtug2Data.message || surtug2Res.status) + ')'}\n`;
+                                               ptkBlock += `  ${surtug2Ok ? 'âœ“' : 'âœ—'} Surtug2 : ${surtug2Ok ? surtug2Data.data?.nomor : 'GAGAL  HTTP ' + surtug2Res.status}\n`;
                                                liveLog(`[STEP 7] Surtug 2: ${surtug2Ok ? 'BERHASIL ' + surtug2Data.data?.nomor : 'GAGAL - ' + JSON.stringify(surtug2Data)}`);
                                                
                                                if (surtug2Ok) {
@@ -972,7 +978,7 @@ export const bindCookieToolEvents = () => {
                                                      try { if (pnKesText) pnKesData = JSON.parse(pnKesText); } catch(_e) {}
                                                      const pnKesOk = pnKesRes.ok || pnKesRes.status === 201 || pnKesRes.status === 204 || pnKesRes.status === 500 || pnKesData.status === '201' || pnKesData.status === true;
                                                      ptkBlock += `K-3.7b pn-adm  : ${pnKesOk ? 'BERHASIL' : 'GAGAL (' + (pnKesData.message || pnKesRes.status) + ')'}${pnKesRes.status === 500 ? ' (server 500=berhasil)' : ''}\n`;
-                                                     liveLog(`[STEP 8] K-3.7b: ${pnKesOk ? 'BERHASIL ← K-3.7b MUNCUL!' : 'GAGAL - HTTP ' + pnKesRes.status + ' ' + pnKesText}`);
+                                                     liveLog(`[STEP 8] K-3.7b: ${pnKesOk ? 'BERHASIL â† K-3.7b MUNCUL!' : 'GAGAL - HTTP ' + pnKesRes.status + ' ' + pnKesText}`);
                                                      
                                                      if (pnKesOk) {
                                                         await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
@@ -1034,16 +1040,7 @@ export const bindCookieToolEvents = () => {
             }
             
             outputBlock += ptkBlock;
-            outputBlock += debugBlock;
-
-            outputBlock += `\n--- DATA JSON LENGKAP ---\n`;
-            const displayData = { ...data };
-            if (displayData.xml) {
-              try {
-                displayData.xml = JSON.parse(displayData.xml);
-              } catch (e) {}
-            }
-            outputBlock += JSON.stringify(displayData, null, 2) + `\n`;
+            outputBlock += `${'â”€'.repeat(52)}\n`;
             
           } else {
             outputBlock += `Status         : TIDAK DITEMUKAN / GAGAL\n`;
