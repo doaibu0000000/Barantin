@@ -103,7 +103,7 @@ export const bindLoginEvents = (onSuccess: () => void) => {
     } catch { return null; }
   };
 
-  // Preprocess gambar captcha: Box Blur (menghapus garis tipis) + Thresholding
+  // Preprocess gambar captcha: Median Filter (menghapus garis coretan)
   const preprocessCaptcha = (imgSrc: string, threshold: number = 140): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -120,34 +120,50 @@ export const bindLoginEvents = (onSuccess: () => void) => {
         
         let imgData = ctx.getImageData(0, 0, w, h);
         let data = imgData.data;
-        let tempData = new Uint8ClampedArray(data);
 
-        // 1. Box Blur (Radius 1) - Mengaburkan garis tipis agar memudar
+        // 1. Grayscale & Thresholding (Binarisasi Awal)
+        const binary = new Uint8Array(w * h);
         for (let y = 0; y < h; y++) {
           for (let x = 0; x < w; x++) {
-            let r = 0, g = 0, b = 0, count = 0;
-            for (let dy = -1; dy <= 1; dy++) {
-              for (let dx = -1; dx <= 1; dx++) {
-                const nx = x + dx, ny = y + dy;
-                if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-                  const idx = (ny * w + nx) * 4;
-                  r += tempData[idx]; g += tempData[idx+1]; b += tempData[idx+2];
-                  count++;
-                }
-              }
-            }
-            const outIdx = (y * w + x) * 4;
-            data[outIdx] = r / count;
-            data[outIdx+1] = g / count;
-            data[outIdx+2] = b / count;
+            const idx = (y * w + x) * 4;
+            const gray = 0.299 * data[idx] + 0.587 * data[idx+1] + 0.114 * data[idx+2];
+            binary[y * w + x] = gray < threshold ? 0 : 255; // 0 = hitam, 255 = putih
           }
         }
 
-        // 2. Grayscale & Thresholding
-        for (let i = 0; i < data.length; i += 4) {
-          const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-          const v = gray < threshold ? 0 : 255; 
-          data[i] = data[i+1] = data[i+2] = v;
+        // 2. Median Filter 3x3 (Dua pass untuk hasil maksimal)
+        // Menghapus garis tipis secara drastis tanpa membuat gambar menjadi buram (blur)
+        let currentBinary = binary;
+        for (let pass = 0; pass < 2; pass++) {
+          const nextBinary = new Uint8Array(w * h);
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              let blacks = 0;
+              let total = 0;
+              for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                  const nx = x + dx, ny = y + dy;
+                  if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+                    if (currentBinary[ny * w + nx] === 0) blacks++;
+                    total++;
+                  }
+                }
+              }
+              // Jika mayoritas piksel tetangga adalah putih, jadikan putih. 
+              // Garis tipis 1px hanya memiliki 3 tetangga hitam (dari 9), sehingga akan terhapus!
+              nextBinary[y * w + x] = blacks >= 4 ? 0 : 255; 
+            }
+          }
+          currentBinary = nextBinary;
+        }
+
+        // Terapkan hasil bersih ke canvas data
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const idx = (y * w + x) * 4;
+            const v = currentBinary[y * w + x];
+            data[idx] = data[idx+1] = data[idx+2] = v;
+          }
         }
         ctx.putImageData(imgData, 0, 0);
 
@@ -157,7 +173,7 @@ export const bindLoginEvents = (onSuccess: () => void) => {
         scaleCanvas.width = w * scale;
         scaleCanvas.height = h * scale;
         const ctxScale = scaleCanvas.getContext('2d')!;
-        ctxScale.imageSmoothingEnabled = false; // Pertahankan sudut tajam teks
+        ctxScale.imageSmoothingEnabled = false; 
         ctxScale.drawImage(origCanvas, 0, 0, scaleCanvas.width, scaleCanvas.height);
 
         resolve(scaleCanvas.toDataURL('image/png'));
