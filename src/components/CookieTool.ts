@@ -505,6 +505,10 @@ export const bindCookieToolEvents = () => {
             outputBlock += `Karantina      : ${data.jenis_karantina || '-'}\n`;
             outputBlock += `UPT            : ${data.upt || '-'}\n`;
             
+            outputBlock += `[DEBUG] Token      : ${token ? 'ADA' : 'KOSONG'}\n`;
+            outputBlock += `[DEBUG] XML Parsed : ${xmlObjParsed ? 'BERHASIL' : 'GAGAL/KOSONG'}\n`;
+            outputBlock += `[DEBUG] Checkbox   : ${(autoProcessPtk && autoProcessPtk.checked) ? 'DICENTANG' : 'TIDAK DICENTANG'}\n`;
+            
             // Automation Logic for Proses PTK & Verifikasi
             if (autoProcessPtk && autoProcessPtk.checked && xmlObjParsed) {
                if (!token) {
