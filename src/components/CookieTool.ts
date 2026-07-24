@@ -491,28 +491,17 @@ export const bindCookieToolEvents = () => {
               }
             }
 
-            outputBlock += `Status         : DITEMUKAN (${data.jnsAju})\n`;
-            outputBlock += `No Aju SSM     : ${data.noAju || '-'}\n`;
-            outputBlock += `No Dokumen     : ${currentSsmPtk || data.noReg || '-'}\n`;
-            outputBlock += `Perusahaan     : ${data.nmPerusahaan || '-'}\n`;
-            outputBlock += `Barang         : ${barangText}\n`;
-            outputBlock += `Netto          : ${nettoText}\n`;
-            outputBlock += `Kemasan        : ${kemasanText}\n`;
-            outputBlock += `Alat Angkut    : ${data.namaAngkut || '-'}\n`;
-            outputBlock += `Tgl Tiba       : ${data.tglTiba || '-'}\n`;
-            outputBlock += `Pelabuhan Asal : ${data.portAsal || '-'}\n`;
-            outputBlock += `Pelabuhan Tuju : ${data.portTujuan || '-'}\n`;
-            outputBlock += `Karantina      : ${data.jenis_karantina || '-'}\n`;
-            outputBlock += `UPT            : ${data.upt || '-'}\n`;
+            let ptkBlock = '';
+            let debugBlock = '';
             
-            outputBlock += `[DEBUG] Token      : ${token ? 'ADA' : 'KOSONG'}\n`;
-            outputBlock += `[DEBUG] XML Parsed : ${xmlObjParsed ? 'BERHASIL' : 'GAGAL/KOSONG'}\n`;
-            outputBlock += `[DEBUG] Checkbox   : ${(autoProcessPtk && autoProcessPtk.checked) ? 'DICENTANG' : 'TIDAK DICENTANG'}\n`;
+            debugBlock += `[DEBUG] Token      : ${token ? 'ADA' : 'KOSONG'}\n`;
+            debugBlock += `[DEBUG] XML Parsed : ${xmlObjParsed ? 'BERHASIL' : 'GAGAL/KOSONG'}\n`;
+            debugBlock += `[DEBUG] Checkbox   : ${(autoProcessPtk && autoProcessPtk.checked) ? 'DICENTANG' : 'TIDAK DICENTANG'}\n`;
             
             // Automation Logic for Proses PTK & Verifikasi
             if (autoProcessPtk && autoProcessPtk.checked && xmlObjParsed) {
                if (!token) {
-                  outputBlock += `Status PTK     : GAGAL (Sesi Token tidak ditemukan. Silakan ke menu Login terlebih dahulu)\n`;
+                  ptkBlock += `Status PTK     : GAGAL (Sesi Token tidak ditemukan. Silakan ke menu Login terlebih dahulu)\n`;
                } else {
                   try {
                      const userDataStr = localStorage.getItem('userData');
@@ -531,7 +520,7 @@ export const bindCookieToolEvents = () => {
                      if (submitRes.ok || submitRes.status === 201) {
                         const submitData = await submitRes.json();
                         if (submitData.status === '201' || submitData.status === true) {
-                           outputBlock += `Status PTK     : BERHASIL DIBUAT (ID: ${ptkPayload.id})\n`;
+                           ptkBlock += `Status PTK     : BERHASIL DIBUAT (ID: ${ptkPayload.id})\n`;
                            
                            // Verification Step
                            const verifyRes = await fetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
@@ -548,21 +537,37 @@ export const bindCookieToolEvents = () => {
                            });
                            
                            if (verifyRes.ok || verifyRes.status === 201) {
-                              outputBlock += `Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)\n`;
+                              ptkBlock += `Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)\n`;
                            } else {
-                              outputBlock += `Verifikasi     : GAGAL DIPROSES\n`;
+                              ptkBlock += `Verifikasi     : GAGAL DIPROSES\n`;
                            }
                         } else {
-                           outputBlock += `Status PTK     : GAGAL (${submitData.message || 'Unknown Error'})\n`;
+                           ptkBlock += `Status PTK     : GAGAL (${submitData.message || 'Unknown Error'})\n`;
                         }
                      } else {
-                        outputBlock += `Status PTK     : GAGAL (HTTP ${submitRes.status})\n`;
+                        ptkBlock += `Status PTK     : GAGAL (HTTP ${submitRes.status})\n`;
                      }
                   } catch (err: any) {
-                     outputBlock += `Status PTK     : ERROR (${err.message})\n`;
+                     ptkBlock += `Status PTK     : ERROR (${err.message})\n`;
                   }
                }
             }
+            
+            outputBlock += ptkBlock;
+            outputBlock += debugBlock;
+            outputBlock += `Status         : DITEMUKAN (${data.jnsAju})\n`;
+            outputBlock += `No Aju SSM     : ${data.noAju || '-'}\n`;
+            outputBlock += `No Dokumen     : ${currentSsmPtk || data.noReg || '-'}\n`;
+            outputBlock += `Perusahaan     : ${data.nmPerusahaan || '-'}\n`;
+            outputBlock += `Barang         : ${barangText}\n`;
+            outputBlock += `Netto          : ${nettoText}\n`;
+            outputBlock += `Kemasan        : ${kemasanText}\n`;
+            outputBlock += `Alat Angkut    : ${data.namaAngkut || '-'}\n`;
+            outputBlock += `Tgl Tiba       : ${data.tglTiba || '-'}\n`;
+            outputBlock += `Pelabuhan Asal : ${data.portAsal || '-'}\n`;
+            outputBlock += `Pelabuhan Tuju : ${data.portTujuan || '-'}\n`;
+            outputBlock += `Karantina      : ${data.jenis_karantina || '-'}\n`;
+            outputBlock += `UPT            : ${data.upt || '-'}\n`;
 
             outputBlock += `\n--- DATA JSON LENGKAP ---\n`;
             const displayData = { ...data };
