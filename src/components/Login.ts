@@ -115,11 +115,27 @@ export const bindLoginEvents = (onSuccess: () => void) => {
     }
   };
   
+  // Kirim gambar ke ddddocr server lokal
+  const solveCaptchaLocal = async (imgSrc: string): Promise<string> => {
+    try {
+      const res = await fetch('http://localhost:5050/solve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imgSrc }),
+        signal: AbortSignal.timeout(4000)
+      });
+      if (!res.ok) return '';
+      const data = await res.json();
+      return (data.text || '').trim();
+    } catch {
+      return ''; // Server tidak aktif, isi manual
+    }
+  };
+
   const loadCaptcha = async () => {
-    // Reset state
     const captchaLoadingEl = document.getElementById('captchaLoading');
     const captchaHintEl = document.getElementById('captchaHint');
-    if (captchaLoadingEl) { captchaLoadingEl.style.display = 'inline'; }
+    if (captchaLoadingEl) { captchaLoadingEl.textContent = 'Memuat...'; captchaLoadingEl.style.display = 'inline'; }
     if (captchaImageEl) captchaImageEl.style.display = 'none';
     if (captchaInputEl) captchaInputEl.value = '';
 
@@ -128,34 +144,36 @@ export const bindLoginEvents = (onSuccess: () => void) => {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
 
-      // Cek semua kemungkinan field text dari API
-      const apiText = data.text || data.code || data.captcha || data.answer || '';
-
       if (data.status && data.image) {
-        // Handle base64 tanpa prefix
+        // Normalkan format base64
         let imgSrc = data.image;
         if (imgSrc && !imgSrc.startsWith('data:') && !imgSrc.startsWith('http')) {
           imgSrc = 'data:image/png;base64,' + imgSrc;
         }
-        if (captchaImageEl) {
-          captchaImageEl.src = imgSrc;
-          captchaImageEl.onload = () => {
-            captchaImageEl.style.display = 'block';
-            if (captchaLoadingEl) captchaLoadingEl.style.display = 'none';
-          };
-          captchaImageEl.onerror = () => {
-            if (captchaLoadingEl) captchaLoadingEl.textContent = 'Gagal muat';
-          };
-        }
         currentCaptchaToken = data.token;
         currentCaptchaImageSrc = imgSrc;
-        // Jika API langsung kasih teks, isi otomatis
-        if (apiText && captchaInputEl) {
-          captchaInputEl.value = apiText;
-          if (captchaHintEl) captchaHintEl.style.display = 'block';
+
+        if (captchaImageEl) {
+          captchaImageEl.src = imgSrc;
+          captchaImageEl.onload = async () => {
+            captchaImageEl.style.display = 'block';
+            if (captchaLoadingEl) captchaLoadingEl.style.display = 'none';
+
+            // Auto-solve via ddddocr server lokal
+            if (captchaLoadingEl) { captchaLoadingEl.textContent = 'Membaca...'; captchaLoadingEl.style.display = 'inline'; }
+            const solved = await solveCaptchaLocal(imgSrc);
+            if (captchaLoadingEl) captchaLoadingEl.style.display = 'none';
+            if (solved && captchaInputEl) {
+              captchaInputEl.value = solved;
+              if (captchaHintEl) { captchaHintEl.textContent = `Terisi otomatis: ${solved}`; captchaHintEl.style.display = 'block'; }
+            }
+          };
+          captchaImageEl.onerror = () => {
+            if (captchaLoadingEl) captchaLoadingEl.textContent = 'Gagal memuat gambar';
+          };
         }
       } else {
-        if (captchaLoadingEl) captchaLoadingEl.textContent = 'Gagal muat captcha';
+        if (captchaLoadingEl) captchaLoadingEl.textContent = 'Gagal memuat captcha';
       }
     } catch (e) {
       console.error('Error loading captcha:', e);
