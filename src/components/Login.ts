@@ -172,11 +172,16 @@ export const bindLoginEvents = (onSuccess: () => void) => {
     if (captchaInputEl) captchaInputEl.value = '';
 
     try {
-      const res = await fetch('https://api.karantinaindonesia.go.id/barantin-sys-v2/captcha?app=APP001', {
-        headers: { 'Accept': 'application/json, text/plain, */*' },
-        referrerPolicy: 'no-referrer'
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const CAPTCHA_URL = 'https://api.karantinaindonesia.go.id/barantin-sys-v2/captcha?app=APP001';
+      const fetchOptions = { headers: { 'Accept': 'application/json, text/plain, */*' }, referrerPolicy: 'no-referrer' as RequestInit['referrerPolicy'] };
+
+      // Coba langsung dulu, jika gagal pakai CORS proxy
+      let res = await fetch(CAPTCHA_URL, fetchOptions).catch(() => null);
+      if (!res || !res.ok) {
+        // Fallback: gunakan CORS proxy (tidak kirim Sec-Fetch-Site)
+        res = await fetch('https://corsproxy.io/?' + encodeURIComponent(CAPTCHA_URL), fetchOptions).catch(() => null);
+      }
+      if (!res || !res.ok) throw new Error('Captcha tidak dapat dimuat');
       const data = await res.json();
 
       if (data.status && data.image) {
