@@ -226,10 +226,36 @@ export const bindCookieToolEvents = () => {
               }
             }
             
+            let barangText = '-';
+            let nettoText = '-';
+            let kemasanText = '-';
+
+            if (data.xml) {
+              try {
+                const xmlObj = JSON.parse(data.xml);
+                const barangArr = xmlObj?.DOKUMEN?.ITEMS?.BARANG;
+                if (barangArr && barangArr.length > 0) {
+                  const brg = barangArr[0];
+                  barangText = brg.URAIAN ? brg.URAIAN.trim() : '-';
+                  nettoText = `${brg.NETTO || '-'} ${brg.JNSSATUAN || ''}`.trim();
+                  kemasanText = `${brg.JMLKEMAS || '-'} ${brg.JNSKEMAS || ''}`.trim();
+                  
+                  if (barangArr.length > 1) {
+                    barangText += ` (+${barangArr.length - 1} item lainnya)`;
+                  }
+                }
+              } catch(e) {
+                console.error('Failed parsing xml', e);
+              }
+            }
+
             finalOutput += `Status         : DITEMUKAN (${data.jnsAju})\n`;
             finalOutput += `No Aju SSM     : ${data.noAju || '-'}\n`;
             finalOutput += `No Dokumen     : ${currentSsmPtk || data.noReg || '-'}\n`;
             finalOutput += `Perusahaan     : ${data.nmPerusahaan || '-'}\n`;
+            finalOutput += `Barang         : ${barangText}\n`;
+            finalOutput += `Netto          : ${nettoText}\n`;
+            finalOutput += `Kemasan        : ${kemasanText}\n`;
             finalOutput += `Alat Angkut    : ${data.namaAngkut || '-'}\n`;
             finalOutput += `Tgl Tiba       : ${data.tglTiba || '-'}\n`;
             finalOutput += `Pelabuhan Asal : ${data.portAsal || '-'}\n`;
