@@ -325,7 +325,7 @@ export const bindLoginEvents = (onSuccess: () => void) => {
 
       // Auto-baca captcha via OCR jika belum terisi
       if (!captchaInputEl.value.trim()) {
-        const ocrText = await readCaptchaOCR(currentCaptchaImageSrc);
+        const ocrText = await solveCaptchaOCR(currentCaptchaImageSrc);
         captchaInputEl.value = ocrText;
       }
       const captcha = captchaInputEl.value.trim();
