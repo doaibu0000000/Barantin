@@ -508,7 +508,8 @@ export const bindCookieToolEvents = () => {
                      if (submitRes.ok || submitRes.status === 201) {
                         const submitData = await submitRes.json();
                         if (submitData.status === '201' || submitData.status === true) {
-                           ptkBlock += `Status PTK     : BERHASIL DIBUAT (ID: ${ptkPayload.id})\n`;
+                           const finalPtkId = submitData.data?.id || ptkPayload.id;
+                           ptkBlock += `Status PTK     : BERHASIL DIBUAT (ID: ${finalPtkId})\n`;
                            
                            // Verification Step
                            const verifyRes = await fetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
@@ -519,9 +520,9 @@ export const bindCookieToolEvents = () => {
                               },
                               body: JSON.stringify({
                                  id: data.id,
-                                 ptk_id: ptkPayload.id,
+                                 ptk_id: finalPtkId,
                                  noReg: data.noReg || data.noAju
-                              })
+                               })
                            });
                            
                            if (verifyRes.ok || verifyRes.status === 201) {
@@ -540,7 +541,7 @@ export const bindCookieToolEvents = () => {
                                      const dokumencekPayload = {
                                         listRekom: [],
                                         noAju: data.noReg || data.noAju,
-                                        idPtk: ptkPayload.id,
+                                        idPtk: finalPtkId,
                                         noDokumen: ptkNomor,
                                         tglDokumen: localISOTime.substring(0, 16),
                                         errorSurtug: "",
@@ -562,7 +563,7 @@ export const bindCookieToolEvents = () => {
                                      // 2. Surtug Request (Simulasi klik Buat Nomor Surtug)
                                      const surtugPayload = {
                                         id: surtugId,
-                                        ptk_id: ptkPayload.id,
+                                        ptk_id: finalPtkId,
                                         no_dok_permohonan: ptkNomor,
                                         ptk_analisis_id: "",
                                         nomor: "",
