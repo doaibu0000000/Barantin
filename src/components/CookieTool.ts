@@ -560,6 +560,23 @@ export const bindCookieToolEvents = () => {
                                         body: JSON.stringify(dokumencekPayload)
                                      });
 
+                                     // Ambil daftar pegawai untuk UPT terkait
+                                     let ttdId = 2085; // Default Cahyono ID
+                                     try {
+                                         const pegRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/pegawai/upt/${data.upt}`, {
+                                            headers: { 'Authorization': `Bearer ${token}` }
+                                         });
+                                         if (pegRes.ok) {
+                                            const pegData = await pegRes.json();
+                                            if (pegData?.data && pegData.data.length > 0) {
+                                                const cahyono = pegData.data.find((p: any) => p.nama.toLowerCase().includes('cahyono'));
+                                                ttdId = cahyono ? cahyono.id : pegData.data[0].id;
+                                            }
+                                         }
+                                     } catch (e) {
+                                         console.log('Failed to fetch pegawai', e);
+                                     }
+                                     
                                      // 2. Surtug Request (Simulasi klik Buat Nomor Surtug)
                                      const surtugPayload = {
                                         id: surtugId,
@@ -569,7 +586,7 @@ export const bindCookieToolEvents = () => {
                                         nomor: "",
                                         tanggal: localDateOnly + "T08:00",
                                         perihal: "Pelaksanaan Tindakan Karantina",
-                                        penanda_tangan_id: 2085,
+                                        penanda_tangan_id: ttdId,
                                         diterbitkan_di: "BANDUNG",
                                         user_id: userData?.id || "3267",
                                         created_at: localISOTime
