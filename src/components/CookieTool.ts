@@ -436,7 +436,7 @@ export const bindCookieToolEvents = () => {
           let data = dataAju || dataReg;
           
           if (data) {
-            currentSsmPtkId = data.ptk_id || data.id || '';
+            currentSsmPtkId = data.ptk_id || '';  // HANYA pakai ptk_id, bukan data.id (SSM id)
             if (data.noReg) currentSsmPtk = data.noReg;
             
             if (currentSsmPtkId && token) {
@@ -511,6 +511,19 @@ export const bindCookieToolEvents = () => {
                            const finalPtkId = submitData.data?.id || ptkPayload.id;
                            ptkBlock += `Status PTK     : BERHASIL DIBUAT (ID: ${finalPtkId})\n`;
                            
+                           // Fetch detail PTK untuk mendapatkan nomor K.1.1 yang benar
+                           try {
+                              const ptkDetailRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk/${finalPtkId}`, {
+                                 headers: { 'Authorization': `Bearer ${token}` }
+                              });
+                              if (ptkDetailRes.ok) {
+                                 const ptkDetailData = await ptkDetailRes.json();
+                                 if (ptkDetailData?.data?.ptk?.no_dok_permohonan) {
+                                    currentSsmPtk = ptkDetailData.data.ptk.no_dok_permohonan;
+                                 }
+                              }
+                           } catch(e) {}
+                           
                            // Verification Step
                            const verifyRes = await fetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
                               method: 'POST',
@@ -528,9 +541,9 @@ export const bindCookieToolEvents = () => {
                            if (verifyRes.ok || verifyRes.status === 201) {
                               ptkBlock += `Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)\n`;
                               
-                               // Gunakan ID PTK yang sudah ada di SSM (bukan yang baru dibuat)
-                               // Ini sama persis dengan yang dilakukan website resmi saat klik Buat Nomor Surtug
+                               // surtugPtkId: gunakan existing ptk_id dari SSM jika ada, atau finalPtkId (baru dibuat)
                                const surtugPtkId = currentSsmPtkId || finalPtkId;
+                               // ptkNomor: dari detail PTK (format K.1.1) atau fallback
                                const ptkNomor = currentSsmPtk || submitData.data?.nomor || data.noReg || data.noAju;
                                
                                    try {
