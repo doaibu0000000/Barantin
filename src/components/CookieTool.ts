@@ -555,19 +555,6 @@ export const bindCookieToolEvents = () => {
             
             outputBlock += ptkBlock;
             outputBlock += debugBlock;
-            outputBlock += `Status         : DITEMUKAN (${data.jnsAju})\n`;
-            outputBlock += `No Aju SSM     : ${data.noAju || '-'}\n`;
-            outputBlock += `No Dokumen     : ${currentSsmPtk || data.noReg || '-'}\n`;
-            outputBlock += `Perusahaan     : ${data.nmPerusahaan || '-'}\n`;
-            outputBlock += `Barang         : ${barangText}\n`;
-            outputBlock += `Netto          : ${nettoText}\n`;
-            outputBlock += `Kemasan        : ${kemasanText}\n`;
-            outputBlock += `Alat Angkut    : ${data.namaAngkut || '-'}\n`;
-            outputBlock += `Tgl Tiba       : ${data.tglTiba || '-'}\n`;
-            outputBlock += `Pelabuhan Asal : ${data.portAsal || '-'}\n`;
-            outputBlock += `Pelabuhan Tuju : ${data.portTujuan || '-'}\n`;
-            outputBlock += `Karantina      : ${data.jenis_karantina || '-'}\n`;
-            outputBlock += `UPT            : ${data.upt || '-'}\n`;
 
             outputBlock += `\n--- DATA JSON LENGKAP ---\n`;
             const displayData = { ...data };
