@@ -534,7 +534,7 @@ export const bindCookieToolEvents = () => {
                                      const localISOTime = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 19).replace('T', ' ');
                                      const localDateOnly = localISOTime.split(' ')[0];
                                      
-                                     const ptkNomor = submitData.data?.nomor || data.noReg || data.noAju;
+                                     const ptkNomor = currentSsmPtk || submitData.data?.nomor || data.noReg || data.noAju;
                                      
                                      // 1. DokumenCek Request (Simulasi klik Buat Surat Tugas Baru)
                                      const dokumencekPayload = {
@@ -547,6 +547,7 @@ export const bindCookieToolEvents = () => {
                                         errorPegawai: ""
                                      };
                                      
+                                     debugBlock += `[DEBUG] PTK Nomor  : ${ptkNomor}\n`;
                                      debugBlock += `[DEBUG] DokumenCek : ${JSON.stringify(dokumencekPayload)}\n`;
                                      
                                      await fetch(`https://api3.karantinaindonesia.go.id/rest-ptkonline/nomorSeri/dokumencek`, {
