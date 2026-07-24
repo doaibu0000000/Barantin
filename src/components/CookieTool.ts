@@ -527,53 +527,103 @@ export const bindCookieToolEvents = () => {
                            if (verifyRes.ok || verifyRes.status === 201) {
                               ptkBlock += `Verifikasi     : BERHASIL (GA - PROSES VERIFIKASI)\n`;
                               
-                                 try {
-                                    const surtugId = uuidv4();
-                                    const now = new Date();
-                                    const tzOffset = now.getTimezoneOffset() * 60000;
-                                    const localISOTime = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 19).replace('T', ' ');
-                                    const localDateOnly = localISOTime.split(' ')[0];
-                                    
-                                    const ptkNomor = submitData.data?.nomor || data.noReg || data.noAju;
-                                    
-                                    const surtugPayload = {
-                                       id: surtugId,
-                                       ptk_id: ptkPayload.id,
-                                       no_dok_permohonan: ptkNomor,
-                                       ptk_analisis_id: "",
-                                       nomor: "",
-                                       tanggal: localDateOnly + "T08:00",
-                                       perihal: "Pelaksanaan Tindakan Karantina",
-                                       penanda_tangan_id: 2085,
-                                       diterbitkan_di: "BANDUNG",
-                                       user_id: userData?.id || "3267",
-                                       created_at: localISOTime
-                                    };
-                                    
-                                    debugBlock += `[DEBUG] Surtug Req : ${JSON.stringify(surtugPayload)}\n`;
-                                    
-                                    const surtugRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug`, {
-                                       method: 'POST',
-                                       headers: {
-                                          'Authorization': `Bearer ${token}`,
-                                          'Content-Type': 'application/json'
-                                       },
-                                       body: JSON.stringify(surtugPayload)
-                                    });
-                                    
-                                    if (surtugRes.ok || surtugRes.status === 201) {
-                                       const surtugData = await surtugRes.json();
-                                       if (surtugData.status === '201' || surtugData.status === true) {
-                                          ptkBlock += `Status Surtug  : BERHASIL DIBUAT (${surtugData.data?.nomor || surtugId})\n`;
-                                       } else {
-                                          ptkBlock += `Status Surtug  : GAGAL (${surtugData.message || 'Unknown Error'})\n`;
-                                       }
-                                    } else {
-                                       ptkBlock += `Status Surtug  : GAGAL (HTTP ${surtugRes.status})\n`;
-                                    }
-                                 } catch(err: any) {
-                                    ptkBlock += `Status Surtug  : ERROR (${err.message})\n`;
-                                 }
+                                  try {
+                                     const surtugId = uuidv4();
+                                     const now = new Date();
+                                     const tzOffset = now.getTimezoneOffset() * 60000;
+                                     const localISOTime = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 19).replace('T', ' ');
+                                     const localDateOnly = localISOTime.split(' ')[0];
+                                     
+                                     const ptkNomor = submitData.data?.nomor || data.noReg || data.noAju;
+                                     
+                                     // 1. DokumenCek Request (Simulasi klik Buat Surat Tugas Baru)
+                                     const dokumencekPayload = {
+                                        listRekom: [],
+                                        noAju: data.noReg || data.noAju,
+                                        idPtk: ptkPayload.id,
+                                        noDokumen: ptkNomor,
+                                        tglDokumen: localISOTime.substring(0, 16),
+                                        errorSurtug: "",
+                                        errorPegawai: ""
+                                     };
+                                     
+                                     debugBlock += `[DEBUG] DokumenCek : ${JSON.stringify(dokumencekPayload)}\n`;
+                                     
+                                     await fetch(`https://api3.karantinaindonesia.go.id/rest-ptkonline/nomorSeri/dokumencek`, {
+                                        method: 'POST',
+                                        headers: {
+                                           'Authorization': 'Basic bXJpZHdhbjpaPnV5JCx+NjR7KF42WDQm',
+                                           'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify(dokumencekPayload)
+                                     });
+
+                                     // 2. Surtug Request (Simulasi klik Buat Nomor Surtug)
+                                     const surtugPayload = {
+                                        id: surtugId,
+                                        ptk_id: ptkPayload.id,
+                                        no_dok_permohonan: ptkNomor,
+                                        ptk_analisis_id: "",
+                                        nomor: "",
+                                        tanggal: localDateOnly + "T08:00",
+                                        perihal: "Pelaksanaan Tindakan Karantina",
+                                        penanda_tangan_id: 2085,
+                                        diterbitkan_di: "BANDUNG",
+                                        user_id: userData?.id || "3267",
+                                        created_at: localISOTime
+                                     };
+                                     
+                                     debugBlock += `[DEBUG] Surtug Req : ${JSON.stringify(surtugPayload)}\n`;
+                                     
+                                     const surtugRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug`, {
+                                        method: 'POST',
+                                        headers: {
+                                           'Authorization': `Bearer ${token}`,
+                                           'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify(surtugPayload)
+                                     });
+                                     
+                                     if (surtugRes.ok || surtugRes.status === 201) {
+                                        const surtugData = await surtugRes.json();
+                                        if (surtugData.status === '201' || surtugData.status === true) {
+                                           ptkBlock += `Status Surtug  : BERHASIL DIBUAT (${surtugData.data?.nomor || surtugId})\n`;
+
+                                           // 3. Ambil ulang PTK & Detil Surtug setelah berhasil (seperti pada log browser)
+                                           await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/ptk`, {
+                                              method: 'POST',
+                                              headers: {
+                                                 'Authorization': `Bearer ${token}`,
+                                                 'Content-Type': 'application/json'
+                                              },
+                                              body: JSON.stringify({
+                                                 ptk_id: ptkPayload.id,
+                                                 penugasan_id: ""
+                                              })
+                                           });
+
+                                           await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
+                                              method: 'POST',
+                                              headers: {
+                                                 'Authorization': `Bearer ${token}`,
+                                                 'Content-Type': 'application/json'
+                                              },
+                                              body: JSON.stringify({
+                                                 ptk_surtug_header_id: surtugData.data?.id || surtugId,
+                                                 ptk_surtug_petugas_id: "",
+                                                 penugasan_id: ""
+                                              })
+                                           });
+
+                                        } else {
+                                           ptkBlock += `Status Surtug  : GAGAL (${surtugData.message || 'Unknown Error'})\n`;
+                                        }
+                                     } else {
+                                        ptkBlock += `Status Surtug  : GAGAL (HTTP ${surtugRes.status})\n`;
+                                     }
+                                  } catch(err: any) {
+                                     ptkBlock += `Status Surtug  : ERROR (${err.message})\n`;
+                                  }
                            } else {
                               ptkBlock += `Verifikasi     : GAGAL DIPROSES\n`;
                            }
