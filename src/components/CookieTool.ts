@@ -1,4 +1,4 @@
-let savedInput = '';
+﻿let savedInput = '';
 let savedOutput = '';
 
 function uuidv4() {
@@ -347,6 +347,27 @@ export const bindCookieToolEvents = () => {
         };
         
         let finalOutput = '';
+
+        // Helper: fetch dengan logging request & response
+        const loggedFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+          const url = typeof input === 'string' ? input : input.toString();
+          const method = (init?.method || 'GET').toUpperCase();
+          const shortUrl = url.replace(/https:\/\/api[23]?\.karantinaindonesia\.go\.id\//g, '');
+          const bodyStr = init?.body ? String(init.body) : '';
+          liveLog(`[→ ${method}] ${shortUrl}`);
+          if (bodyStr) liveLog(`  Body: ${bodyStr.substring(0, 500)}${bodyStr.length > 500 ? '...' : ''}`);
+          try {
+            const res = await fetch(url, init);
+            const clone = res.clone();
+            const resText = await clone.text().catch(() => '');
+            liveLog(`[← ${res.status}] ${shortUrl}`);
+            liveLog(`  Resp: ${resText.substring(0, 500)}${resText.length > 500 ? '...' : ''}`);
+            return res;
+          } catch (err: any) {
+            liveLog(`[← ERR] ${shortUrl}: ${err.message}`);
+            throw err;
+          }
+        };
         
         // Helper function to fetch data
         const fetchAju = async (noAju: string, jeniscari: string) => {
@@ -454,7 +475,7 @@ export const bindCookieToolEvents = () => {
             
             if (currentSsmPtkId && token) {
               try {
-                const ptkRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk/${currentSsmPtkId}`, {
+                const ptkRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk/${currentSsmPtkId}`, {
                   headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (ptkRes.ok) {
@@ -529,7 +550,7 @@ export const bindCookieToolEvents = () => {
                          submitData = { status: true, data: { id: currentSsmPtkId } };
                          ptkBlock += `  âœ“ PTK    : SUDAH ADA  [${currentSsmPtkId.substring(0,8)}...]\n`;
                       } else {
-                         const submitRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ssm`, {
+                         const submitRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ssm`, {
                             method: 'POST',
                             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                             body: JSON.stringify(ptkPayload)
@@ -557,7 +578,7 @@ export const bindCookieToolEvents = () => {
                            
                            // Fetch detail PTK untuk mendapatkan nomor K.1.1 yang benar
                            try {
-                              const ptkDetailRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk/${finalPtkId}`, {
+                              const ptkDetailRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk/${finalPtkId}`, {
                                  headers: { 'Authorization': `Bearer ${token}` }
                               });
                               if (ptkDetailRes.ok) {
@@ -581,7 +602,7 @@ export const bindCookieToolEvents = () => {
                              liveLog(`[STEP 3] Verifikasi sudah selesai â†’ Buka Form Surat Tugas`);
                          } else {
                              // PTK baru â†’ lakukan verifikasi
-                             const verifyRes = await fetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
+                             const verifyRes = await loggedFetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
                                 method: 'POST',
                                 headers: {
                                    'Authorization': 'Basic bXJpZHdhbjpaPnV5JCx+NjR7KF42WDQm',
@@ -631,7 +652,7 @@ export const bindCookieToolEvents = () => {
                                      
 
                                      
-                                     await fetch(`https://api3.karantinaindonesia.go.id/rest-ptkonline/nomorSeri/dokumencek`, {
+                                     await loggedFetch(`https://api3.karantinaindonesia.go.id/rest-ptkonline/nomorSeri/dokumencek`, {
                                         method: 'POST',
                                         headers: {
                                            'Authorization': 'Basic bXJpZHdhbjpaPnV5JCx+NjR7KF42WDQm',
@@ -643,7 +664,7 @@ export const bindCookieToolEvents = () => {
                                      // Ambil daftar pegawai untuk UPT terkait
                                      let ttdId = 2085; // Default Cahyono ID
                                      try {
-                                         const pegRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/pegawai/upt/3200`, {
+                                         const pegRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pegawai/upt/3200`, {
                                             headers: { 'Authorization': `Bearer ${token}` }
                                          });
                                          if (pegRes.ok) {
@@ -676,7 +697,7 @@ export const bindCookieToolEvents = () => {
                                      
 
                                      
-                                     const surtugRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug`, {
+                                     const surtugRes = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug`, {
                                         method: 'POST',
                                         headers: {
                                            'Authorization': `Bearer ${token}`,
@@ -703,7 +724,7 @@ export const bindCookieToolEvents = () => {
                                             // Cari ID petugas dari daftar pegawai UPT jika tersedia
                                             let petugasUpt: any[] = [];
                                             try {
-                                               const pegRes2 = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/pegawai/upt/3200`, {
+                                               const pegRes2 = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pegawai/upt/3200`, {
                                                   headers: { 'Authorization': `Bearer ${token}` }
                                                });
                                                if (pegRes2.ok) {
@@ -740,7 +761,7 @@ export const bindCookieToolEvents = () => {
                                                   created_at: localISOTime
                                                };
                                                
-                                               const detilRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil`, {
+                                               const detilRes = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil`, {
                                                   method: 'POST',
                                                   headers: {
                                                      'Authorization': `Bearer ${token}`,
@@ -779,7 +800,7 @@ export const bindCookieToolEvents = () => {
                                                    user_id: String(userData?.id || "3267")
                                                 };
                                                 
-                                                const pnAdmRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm`, {
+                                                const pnAdmRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm`, {
                                                    method: 'POST',
                                                    headers: {
                                                       'Authorization': `Bearer ${token}`,
@@ -796,7 +817,7 @@ export const bindCookieToolEvents = () => {
                                                 
                                                 if (pnAdmOk) {
                                                    // 6. ptk-history (update status dokumen K-3.7a)
-                                                   await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
+                                                   await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
                                                       method: 'POST',
                                                       headers: {
                                                          'Authorization': `Bearer ${token}`,
@@ -812,7 +833,7 @@ export const bindCookieToolEvents = () => {
                                                    });
                                                    
                                                    // 7. rek-history (simpan rekomendasi)
-                                                   const rekHistoryRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/rek-history`, {
+                                                   const rekHistoryRes = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/rek-history`, {
                                                       method: 'POST',
                                                       headers: {
                                                          'Authorization': `Bearer ${token}`,
@@ -835,7 +856,7 @@ export const bindCookieToolEvents = () => {
                                              }
 
                                             // 8. Ambil ulang PTK & Detil Surtug setelah berhasil
-                                           await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/ptk`, {
+                                           await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/ptk`, {
                                               method: 'POST',
                                               headers: {
                                                  'Authorization': `Bearer ${token}`,
@@ -847,7 +868,7 @@ export const bindCookieToolEvents = () => {
                                               })
                                            });
 
-                                           await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
+                                           await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
                                               method: 'POST',
                                               headers: {
                                                  'Authorization': `Bearer ${token}`,
@@ -878,7 +899,7 @@ export const bindCookieToolEvents = () => {
                                                   created_at: localISOTime
                                                };
                                                
-                                               const surtug2Res = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug`, {
+                                               const surtug2Res = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug`, {
                                                   method: 'POST',
                                                   headers: {
                                                      'Authorization': `Bearer ${token}`,
@@ -916,7 +937,7 @@ export const bindCookieToolEvents = () => {
                                                         }],
                                                         created_at: localISOTime
                                                      };
-                                                     const detil2Res = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil`, {
+                                                     const detil2Res = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil`, {
                                                         method: 'POST',
                                                         headers: {
                                                            'Authorization': `Bearer ${token}`,
@@ -927,18 +948,18 @@ export const bindCookieToolEvents = () => {
                                                      const detil2Data = await detil2Res.json();
                                                      const d2Ok = detil2Data.status === '201' || detil2Data.status === true;
                                                      petugasResults2 += d2Ok ? petugas.nama : ('[X] ' + petugas.nama);
-                                                     await fetch(`https://api2.karantinaindonesia.go.id/barantin-sys/surtug/penugasan/${surtugPtkId}`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ ptk_id: surtugPtkId, penugasan_id: "" }) });
+                                                     await loggedFetch(`https://api2.karantinaindonesia.go.id/barantin-sys/surtug/penugasan/${surtugPtkId}`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ ptk_id: surtugPtkId, penugasan_id: "" }) });
                                                   }
                                                   const petugas2OkCount = resolvedPetugas2.filter(p => !petugasResults2.includes('[X] ' + p.nama)).length;
                                                   ptkBlock += `  [OK] Petugas : ${petugas2OkCount}/${resolvedPetugas2.length} — ${resolvedPetugas2.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
                                                   
                                                   // Refresh detil surtug ke-2
-                                                  await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
+                                                  await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
                                                      method: 'POST',
                                                      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                                                      body: JSON.stringify({ ptk_surtug_header_id: surtug2HeaderId, ptk_surtug_petugas_id: "", penugasan_id: "" })
                                                   });
-                                                  await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/ptk`, {
+                                                  await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/ptk`, {
                                                      method: 'POST',
                                                      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                                                      body: JSON.stringify({ ptk_id: surtugPtkId, penugasan_id: "" })
@@ -967,7 +988,7 @@ export const bindCookieToolEvents = () => {
                                                         user_id: String(userData?.id || "3267")
                                                      };
                                                      
-                                                     const pnKesRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm`, {
+                                                     const pnKesRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm`, {
                                                         method: 'POST',
                                                         headers: {
                                                            'Authorization': `Bearer ${token}`,
@@ -983,7 +1004,7 @@ export const bindCookieToolEvents = () => {
                                                      liveLog(`[STEP 8] K-3.7b: ${pnKesOk ? 'BERHASIL â† K-3.7b MUNCUL!' : 'GAGAL - HTTP ' + pnKesRes.status + ' ' + pnKesText}`);
                                                      
                                                      if (pnKesOk) {
-                                                        await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
+                                                        await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
                                                            method: 'POST',
                                                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                                                            body: JSON.stringify({
@@ -994,7 +1015,7 @@ export const bindCookieToolEvents = () => {
                                                               user_id: String(userData?.id || "3267")
                                                            })
                                                         });
-                                                        const rekKesRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/rek-history`, {
+                                                        const rekKesRes = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/rek-history`, {
                                                            method: 'POST',
                                                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                                                            body: JSON.stringify({
