@@ -99,7 +99,7 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     pengguna_jasa_id: userData?.pengguna_jasa_id || "9e7347a8-ea62-4aee-899e-ea7087949eb7",
     calo_id: "0",
     upt_id: '3200',       // UPT Bandung (hardcode, harus konsisten dgn kode_satpel)
-    kode_satpel: '3200.2', // POS LAYANAN: 3200.2 | DRY PORT CIKARANG
+    kode_satpel: '3200', // POS LAYANAN: 3200.2 | DRY PORT CIKARANG (server menambahkan .2)
     nama_pemohon: perus.NAMA || data.nmPerusahaan,
     jenis_identitas_pemohon: "NPWP",
     nomor_identitas_pemohon: perus.ID || data.npwp,
