@@ -108,8 +108,8 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     user_id: userData?.id || "3267",
     pengguna_jasa_id: userData?.pengguna_jasa_id || "9e7347a8-ea62-4aee-899e-ea7087949eb7",
     calo_id: "0",
-    upt_id: '3200',       // UPT Bandung
-    kode_satpel: '3200',   // server baca cookie posLayanan=32002 untuk tentukan suffix .2
+    upt_id: '3200',         // UPT Bandung
+    kode_satpel: '3200.2', // POS LAYANAN: 3200.2 | DRY PORT CIKARANG (harus eksplisit .2)
     nama_pemohon: cleanCompanyName(perus.NAMA || data.nmPerusahaan),
     jenis_identitas_pemohon: "NPWP",
     nomor_identitas_pemohon: perus.ID || data.npwp,
