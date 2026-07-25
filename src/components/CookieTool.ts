@@ -108,8 +108,8 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     user_id: userData?.id || "3267",
     pengguna_jasa_id: userData?.pengguna_jasa_id || "9e7347a8-ea62-4aee-899e-ea7087949eb7",
     calo_id: "0",
-    upt_id: '3200',       // UPT Bandung
-    kode_satpel: '3200',   // server baca cookie posLayanan=32002 untuk tentukan suffix .2
+    upt_id: '3200',         // UPT Bandung
+    kode_satpel: '3200.2', // POS LAYANAN: 3200.2 | DRY PORT CIKARANG (harus eksplisit .2)
     nama_pemohon: cleanCompanyName(perus.NAMA || data.nmPerusahaan),
     jenis_identitas_pemohon: "NPWP",
     nomor_identitas_pemohon: perus.ID || data.npwp,
@@ -461,30 +461,7 @@ export const bindCookieToolEvents = () => {
           });
         };
 
-        // Ambil semua cookie apps.karantinaindonesia.go.id untuk dikirim ke api
-        // Server membaca cookie posLayanan=32002 untuk menentukan suffix .2 (DRY PORT CIKARANG)
-        const getAppsCookies = (): Promise<string> => {
-          return new Promise((resolve) => {
-            if (typeof chrome !== 'undefined' && chrome.cookies) {
-              chrome.cookies.getAll({ domain: 'apps.karantinaindonesia.go.id' }, (cookies) => {
-                // Ambil cookie penting: posLayanan, kodeSatpel, uptId, userId, token
-                const important = ['posLayanan', 'posLayananNama', 'kodeSatpel', 'uptId', 'userId', 'token', 'PHPSESSID'];
-                const cookieStr = cookies
-                  .filter(c => important.includes(c.name))
-                  .map(c => `${c.name}=${c.value}`)
-                  .join('; ');
-                resolve(cookieStr);
-              });
-            } else {
-              // Fallback: baca dari document.cookie
-              resolve(document.cookie);
-            }
-          });
-        };
-
         const token = await getToken(); // Ambil token sekali di luar loop untuk mempercepat
-        const appsCookies = await getAppsCookies(); // Cookie posLayanan untuk suffix nomor PTK
-        liveLog(`[INFO] posLayanan cookie: ${appsCookies.match(/posLayanan=([^;]+)/)?.[1] || 'tidak ditemukan'}`);
         
         const fetchPromises = matches.map(async (aju) => {
           let outputBlock = '';
@@ -570,29 +547,22 @@ export const bindCookieToolEvents = () => {
                       const userData = userDataStr ? JSON.parse(userDataStr) : {};
                       const ptkPayload = buildPtkPayload(data, xmlObjParsed, userData, currentSsmPtkId);
                       
-                      // Jika PTK sudah ada, skip POST — langsung pakai existing ID
+                      // Jika PTK sudah ada, skip POST â€” langsung pakai existing ID
                       const skipPtkPost = !!currentSsmPtkId;
-                      liveLog(`[STEP 2] ${skipPtkPost ? '✓ PTK sudah ada (skip POST): ' + currentSsmPtkId : 'Membuat PTK baru...'}`);
+                      liveLog(`[STEP 2] ${skipPtkPost ? 'âœ“ PTK sudah ada (skip POST): ' + currentSsmPtkId : 'Membuat PTK baru...'}`);
                       
                       let submitOk = false;
                       let submitData: any = {};
-                      const posLayananVal = appsCookies.match(/posLayanan=([^;]+)/)?.[1] || '';
-                      const ptkHeaders: Record<string, string> = {
-                         'Authorization': `Bearer ${token}`,
-                         'Content-Type': 'application/json'
-                      };
-                      if (posLayananVal) ptkHeaders['X-Pos-Layanan'] = posLayananVal;
                       
                       if (skipPtkPost) {
                          // Gunakan PTK yang sudah ada
                          submitOk = true;
                          submitData = { status: true, data: { id: currentSsmPtkId } };
-                         ptkBlock += `  ✓ PTK    : SUDAH ADA  [${currentSsmPtkId.substring(0,8)}...]\n`;
+                         ptkBlock += `  âœ“ PTK    : SUDAH ADA  [${currentSsmPtkId.substring(0,8)}...]\n`;
                       } else {
                          const submitRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ssm`, {
                             method: 'POST',
-                            headers: ptkHeaders,
-                            credentials: 'include',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                             body: JSON.stringify(ptkPayload)
                          });
                          if (submitRes.ok || submitRes.status === 201) {
