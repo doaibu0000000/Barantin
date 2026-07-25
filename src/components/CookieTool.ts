@@ -1,4 +1,4 @@
-﻿let savedInput = '';
+let savedInput = '';
 let savedOutput = '';
 
 function uuidv4() {
@@ -1075,8 +1075,10 @@ export const bindCookieToolEvents = () => {
         const resultsArray = await Promise.all(fetchPromises);
         finalOutput = resultsArray.join('');
         
-        processingResults.value = finalOutput.trim();
-        savedOutput = finalOutput.trim();
+        // Gabungkan live log (dari loggedFetch) + final summary
+        const liveLogContent = savedOutput ? savedOutput.trim() + '\n\n' : '';
+        processingResults.value = liveLogContent + finalOutput.trim();
+        savedOutput = processingResults.value;
         processBtn.disabled = false;
         processBtn.textContent = 'Proses Data';
         
