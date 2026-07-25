@@ -108,8 +108,8 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     user_id: userData?.id || "3267",
     pengguna_jasa_id: userData?.pengguna_jasa_id || "9e7347a8-ea62-4aee-899e-ea7087949eb7",
     calo_id: "0",
-    upt_id: '3200',         // UPT Bandung
-    kode_satpel: '3200.2', // POS LAYANAN: 3200.2 | DRY PORT CIKARANG (harus eksplisit .2)
+    upt_id: '3200',        // UPT Bandung
+    kode_satpel: '3200',   // Server menentukan suffix .2 dari posLayanan secara internal
     nama_pemohon: cleanCompanyName(perus.NAMA || data.nmPerusahaan),
     jenis_identitas_pemohon: "NPWP",
     nomor_identitas_pemohon: perus.ID || data.npwp,
@@ -365,7 +365,7 @@ export const bindCookieToolEvents = () => {
           const shortUrl = url.replace(/https:\/\/api[23]?\.karantinaindonesia\.go\.id\//g, '');
           const bodyStr = init?.body ? String(init.body) : '';
           liveLog(`[→ ${method}] ${shortUrl}`);
-          if (bodyStr) liveLog(`  Body: ${bodyStr.substring(0, 500)}${bodyStr.length > 500 ? '...' : ''}`);
+          if (bodyStr) liveLog(`  Body: ${bodyStr.substring(0, 5000)}${bodyStr.length > 5000 ? '...(truncated)' : ''}`);
           try {
             const res = await fetch(url, init);
             const clone = res.clone();
