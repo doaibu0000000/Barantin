@@ -592,7 +592,6 @@ export const bindCookieToolEvents = () => {
                          const submitRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ssm`, {
                             method: 'POST',
                             headers: ptkHeaders,
-                            credentials: 'include',
                             body: JSON.stringify(ptkPayload)
                          });
                          if (submitRes.ok || submitRes.status === 201) {
