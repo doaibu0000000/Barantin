@@ -98,8 +98,8 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     user_id: userData?.id || "3267",
     pengguna_jasa_id: userData?.pengguna_jasa_id || "9e7347a8-ea62-4aee-899e-ea7087949eb7",
     calo_id: "0",
-    upt_id: data.upt,
-    kode_satpel: '3200.2', // POS LAYANAN: 3200.2 | DRY PORT CIKARANG (hardcode, jangan pakai data.upt)
+    upt_id: '3200',       // UPT Bandung (hardcode, harus konsisten dgn kode_satpel)
+    kode_satpel: '3200.2', // POS LAYANAN: 3200.2 | DRY PORT CIKARANG
     nama_pemohon: perus.NAMA || data.nmPerusahaan,
     jenis_identitas_pemohon: "NPWP",
     nomor_identitas_pemohon: perus.ID || data.npwp,
@@ -640,7 +640,7 @@ export const bindCookieToolEvents = () => {
                                      // Ambil daftar pegawai untuk UPT terkait
                                      let ttdId = 2085; // Default Cahyono ID
                                      try {
-                                         const pegRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/pegawai/upt/${data.upt}`, {
+                                         const pegRes = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/pegawai/upt/3200`, {
                                             headers: { 'Authorization': `Bearer ${token}` }
                                          });
                                          if (pegRes.ok) {
@@ -700,7 +700,7 @@ export const bindCookieToolEvents = () => {
                                             // Cari ID petugas dari daftar pegawai UPT jika tersedia
                                             let petugasUpt: any[] = [];
                                             try {
-                                               const pegRes2 = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/pegawai/upt/${data.upt}`, {
+                                               const pegRes2 = await fetch(`https://api.karantinaindonesia.go.id/barantin-sys/pegawai/upt/3200`, {
                                                   headers: { 'Authorization': `Bearer ${token}` }
                                                });
                                                if (pegRes2.ok) {
