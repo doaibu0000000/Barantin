@@ -99,7 +99,7 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     pengguna_jasa_id: userData?.pengguna_jasa_id || "9e7347a8-ea62-4aee-899e-ea7087949eb7",
     calo_id: "0",
     upt_id: data.upt,
-    kode_satpel: data.upt ? data.upt + '.2' : '3200.2',
+    kode_satpel: '3200.2', // POS LAYANAN: 3200.2 | DRY PORT CIKARANG (hardcode, jangan pakai data.upt)
     nama_pemohon: perus.NAMA || data.nmPerusahaan,
     jenis_identitas_pemohon: "NPWP",
     nomor_identitas_pemohon: perus.ID || data.npwp,
@@ -187,8 +187,8 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     tgl_dok_permohonan: data.tglAju?.substring(0, 16) || "",
     is_draft: "1",
     is_verifikasi: "1",
-    petugas: userData?.petugas || "SUHERMAN",
-    nip: userData?.nip || "196702031992031001",
+    petugas: "SUHERMAN",           // PETUGAS: fixed SUHERMAN
+    nip: "196702031992031001",    // NIP SUHERMAN: fixed
     tgl_aju: data.tglAju || "",
     user_created: userData?.id || "3267",
     komoditi: komoditiArr,
