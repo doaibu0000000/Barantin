@@ -538,9 +538,12 @@ export const bindCookieToolEvents = () => {
                             try { submitData = await submitRes.json(); } catch(_e) {}
                             submitOk = true;
                          } else {
-                            const hint = submitRes.status === 401 ? ' â€” silakan Login ulang!' : '';
-                            ptkBlock += `  âœ— PTK    : GAGAL  HTTP ${submitRes.status}${hint}\n`;
-                            liveLog(`[STEP 2] âœ— GAGAL HTTP ${submitRes.status}${hint}`);
+                            let errBody = '';
+                            try { errBody = await submitRes.text(); } catch(_e) {}
+                            const hint = submitRes.status === 401 ? ' — silakan Login ulang!' : '';
+                            ptkBlock += `  ✗ PTK    : GAGAL  HTTP ${submitRes.status}${hint}\n`;
+                            liveLog(`[STEP 2] ✗ GAGAL HTTP ${submitRes.status}${hint}`);
+                            liveLog(`[STEP 2] Server response: ${errBody}`);
                          }
                       }
                       
