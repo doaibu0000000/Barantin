@@ -8,6 +8,16 @@ function uuidv4() {
   });
 }
 
+// Bersihkan nama perusahaan dari duplikat prefix "PT. PT." → "PT."
+const cleanCompanyName = (name: string): string => {
+  if (!name) return '';
+  // Hapus duplikat "PT. PT." berulang → "PT."
+  let cleaned = name.replace(/^(PT\.\s*)+/i, 'PT. ').trim();
+  // Hapus duplikat "CV. CV." berulang → "CV."
+  cleaned = cleaned.replace(/^(CV\.\s*)+/i, 'CV. ').trim();
+  return cleaned;
+};
+
 const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: string = '') => {
   const dok = xmlObj?.DOKUMEN || {};
   const header = dok.HEADER || {};
@@ -100,7 +110,7 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     calo_id: "0",
     upt_id: '3200',       // UPT Bandung (hardcode, harus konsisten dgn kode_satpel)
     kode_satpel: '3200', // POS LAYANAN: 3200.2 | DRY PORT CIKARANG (server menambahkan .2)
-    nama_pemohon: perus.NAMA || data.nmPerusahaan,
+    nama_pemohon: cleanCompanyName(perus.NAMA || data.nmPerusahaan),
     jenis_identitas_pemohon: "NPWP",
     nomor_identitas_pemohon: perus.ID || data.npwp,
     alamat_pemohon: perus.ALAMAT || "",
@@ -117,7 +127,7 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     jabatan_ttd: pjawab.JABATAN || "DIREKTUR",
     alamat_ttd: pjawab.ALAMAT || "",
     jenis_permohonan: data.jnsAju === 'EKSPOR' ? 'EX' : (data.jnsAju === 'IMPOR' ? 'IM' : 'DP'),
-    nama_pengirim: pengirim.NMPENGIRIM || perus.NAMA || "",
+    nama_pengirim: cleanCompanyName(pengirim.NMPENGIRIM || perus.NAMA || ""),
     alamat_pengirim: pengirim.ALPENGIRIM || perus.ALAMAT || "",
     telepon_pengirim: "0",
     jenis_identitas_pengirim: "NPWP",
