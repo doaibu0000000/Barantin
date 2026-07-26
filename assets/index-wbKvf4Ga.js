@@ -29,46 +29,47 @@
       </nav>
     </aside>
   `},ce=n=>{const t=document.querySelectorAll(".nav-item");t.forEach(l=>{l.addEventListener("click",i=>{i.preventDefault();const r=l.getAttribute("data-menu");t.forEach(u=>{u.classList.remove("active","md:bg-brand-accent-bg","text-brand-accent","font-semibold"),u.classList.add("text-brand-text-muted")}),l.classList.remove("text-brand-text-muted"),l.classList.add("active","md:bg-brand-accent-bg","text-brand-accent","font-semibold"),n&&r&&n(r)})}),document.querySelectorAll(".logout-btn").forEach(l=>{l.addEventListener("click",i=>{i.preventDefault(),localStorage.removeItem("isAuthenticated"),window.location.reload()})})};let zt="",dt="";function Z(){return"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(n){var t=Math.random()*16|0,e=n=="x"?t:t&3|8;return e.toString(16)})}const Dt=n=>{if(!n)return"";let t=n.replace(/^(PT\.\s*)+/i,"PT. ").trim();return t=t.replace(/^(CV\.\s*)+/i,"CV. ").trim(),t},ue=(n,t,e,l="")=>{var c,M,S,I,N;const i=(t==null?void 0:t.DOKUMEN)||{},r=i.HEADER||{},u=r.PERUSAHAAN||{},g=u.PJAWAB||{},x=r.PENGIRIM||{},d=r.PEMASOK||r.PENERIMA||{},E=((c=i.GA)==null?void 0:c.KARANTINA)||{},p=E.INSTALASI||{},y=E.PEMERIKSAAN||{},b=(((M=i.ITEMS)==null?void 0:M.BARANG)||[]).map(a=>{var v,B,A,j,s,o,T,$,w,_,P;return{id:Z(),ptk_id:"",kode_hs:a.KDHS||"",kode_hs10:a.KDHS10||"",klasifikasi_id:((B=(v=a.GA)==null?void 0:v.KARANTINA)==null?void 0:B.KLASIFIKASI)||"2C0",komoditas_id:((j=(A=a.GA)==null?void 0:A.KARANTINA)==null?void 0:j.ID_KOMODITI)||"1149",nama_umum_tercetak:a.URAIAN||"",nama_latin_tercetak:((o=(s=a.GA)==null?void 0:s.KARANTINA)==null?void 0:o.NMLATIN)||"",jenisMp:"Non Benih",jenisMpId:5,bentukMp:(($=(T=a.GA)==null?void 0:T.KARANTINA)==null?void 0:$.KLASIFIKASI)||"2C0",negaraAsalMp:a.NEGASALBRG||"ID",jantan:null,betina:null,negaraAsalMpId:99,volume_netto:parseFloat(a.NETTO)||0,volume_bruto:parseFloat(a.BRUTO)||0,satuan_bruto_id:"1356",satuan_netto_id:"1356",keterangan:"",sat_tercetak_netto:a.JNSSATUAN||"KGM",volume_lain:parseFloat(a.JMLSATUAN)||0,satuan_lain_id:1356,sat_tercetak_lain:a.JNSSATUAN||"KGM",jumlah_kemasan:parseFloat(a.JMLKEMAS)||0,kemasan_id:2,kemasan:a.JNSKEMAS||"BG",mata_uang:((w=a.KURS)==null?void 0:w.KODE)||"USD",kurs:parseFloat((_=a.KURS)==null?void 0:_.NILAI)||15e3,harga:parseFloat(a.HARGA)||0,harga_rp:(parseFloat(a.HARGA)||0)*(parseFloat((P=a.KURS)==null?void 0:P.NILAI)||15e3)*(parseFloat(a.JMLSATUAN)||0)}}),h=(((S=i.CONTLIST)==null?void 0:S.CONT)||[]).map(a=>({id:Z(),ptk_id:"",nomor:a.NOCONT||"xxxxxx",size:(a.UKCONT||"20")+" feet",ukuran_kontainer_id:"2",stuff_kontainer_id:"1",stuff:a.TPCONT||"FCL",segel:a.NOSEAL||"",tipe_kontainer_id:"1"})),f=(((I=i.DOKUMENLAMPIRAN)==null?void 0:I.DOK)||[]).map(a=>({id:Z(),ptk_id:"",jenis_dokumen_id:a.JENIS||"99",jenisDokumenUraian:"Lainnya",kategori_dokumen:"S",no_dokumen:a.NOMOR||"",instansi_penerbit:"",tanggal_dokumen:a.TANGGAL?a.TANGGAL.replace(/(\d{4})(\d{2})(\d{2})/,"$1-$2-$3"):"",negara_asal_id:"99",negaraAsalDokumen:a.NEGPENERBIT||"ID",kota_kab_asal_id:"",keterangan:"",efile:a.FILELINK||""})),m=l||Z();return b.forEach(a=>a.ptk_id=m),h.forEach(a=>a.ptk_id=m),f.forEach(a=>a.ptk_id=m),{id:m,tssm_id:n.id,no_aju:n.noReg||n.noAju,jenis_dokumen:"PTK",jenis_karantina:n.jenis_karantina==="Tumbuhan"?"T":n.jenis_karantina==="Hewan"?"H":"I",jenis_media_pembawa_id:"5",stat_pemohon:"PEMILIK",is_guest:"0",user_id:(e==null?void 0:e.id)||"3267",pengguna_jasa_id:(e==null?void 0:e.pengguna_jasa_id)||"9e7347a8-ea62-4aee-899e-ea7087949eb7",calo_id:"0",upt_id:"3200",kode_satpel:"3200",nama_pemohon:Dt(u.NAMA||n.nmPerusahaan),jenis_identitas_pemohon:"NPWP",nomor_identitas_pemohon:u.ID||n.npwp,alamat_pemohon:u.ALAMAT||"",telepon_pemohon:"0",fax_pemohon:"0",provinsi_pemohon_id:"33",kota_kab_pemohon_id:"3328",nama_cp:g.NAMA||"",alamat_cp:g.ALAMAT||"",telepon_cp:g.EMAIL||"",nama_ttd:g.NAMA||"",jenis_identitas_ttd:"LAINNYA",nomor_identitas_ttd:u.ID||n.npwp,jabatan_ttd:g.JABATAN||"DIREKTUR",alamat_ttd:g.ALAMAT||"",jenis_permohonan:n.jnsAju==="EKSPOR"?"EX":n.jnsAju==="IMPOR"?"IM":"DP",nama_pengirim:Dt(x.NMPENGIRIM||u.NAMA||""),alamat_pengirim:x.ALPENGIRIM||u.ALAMAT||"",telepon_pengirim:"0",jenis_identitas_pengirim:"NPWP",nomor_identitas_pengirim:u.ID||n.npwp,provinsi_pengirim_id:"33",kota_kab_pengirim_id:"3328",negara_pengirim_id:"99",nama_penerima:d.NMPEMASOK||d.NMPENERIMA||"",alamat_penerima:d.ALPEMASOK||d.ALAMAT||"",telepon_penerima:"",jenis_identitas_penerima:"LAINNYA",nomor_identitas_penerima:"",provinsi_penerima_id:"",kota_kab_penerima_id:"",negara_penerima_id:"186",is_from_ptk:"2",tanggal_rencana_masuk:"",negara_muat_id:"99",negara_bongkar_id:"186",negara_transit_id:"",pelabuhan_muat_id:"134",pelabuhan_bongkar_id:"53427",moda_alat_angkut_transit_id:"0",tipe_alat_angkut_transit_id:"",nama_alat_angkut_transit:"",bendera_alat_angkut_transit_id:"0",no_voyage_transit:"",call_sign_transit:"NIHIL",tanggal_rencana_tiba_transit:"",tanggal_rencana_berangkat_transit:"",moda_alat_angkut_terakhir_id:1,moda_alat_angkut_lainnya:"",tipe_alat_angkut_terakhir_id:"3",nama_alat_angkut_terakhir:"-",bendera_alat_angkut_terakhir_id:"186",no_voyage_terakhir:"-",call_sign_terakhir:"NIHIL",tanggal_rencana_tiba_terakhir:"",tanggal_rencana_berangkat_terakhir:"2026-07-27",is_transit:"0",is_kontainer:"2",sumber_mp:"",area_tangkap_id:"",mutuIkan:"",peruntukan_id:E.PERUNTUKAN||"5",peruntukan_lainnya:"",kemasan_id:"2",merk_kemasan:"560 Bag",jumlah_kemasan:"560",tanda_khusus:"",nilai_barang:E.NILAI||"0",mata_uang:"IDR",negara_asal_id:"99",negara_tujuan_id:"186",kota_kab_asal_id:"3172",kota_kab_tujuan_id:"",tingkat_pengolahan:E.TINGKATPENGOLAHAN||"2",informasi_tambahan:"",tgl_pemeriksaan:y.TGPERIKSA||"",tempat_pemeriksaan:"D",kode_gudang:null,jenis_tempat:p.JNS||"IK",nama_tempat_pemeriksaan:p.NAMA||"",alamat_tempat_pemeriksaan:p.ALAMAT||"",instalasi_karantina_id:null,status_ptk:"1",tgl_dok_permohonan:((N=n.tglAju)==null?void 0:N.substring(0,16))||"",is_draft:"1",is_verifikasi:"1",petugas:"SUHERMAN",nip:"196702031992031001",tgl_aju:n.tglAju||"",user_created:(e==null?void 0:e.id)||"3267",komoditi:b,kontainer:h,dokumen:f}},qt=()=>`
-    <div class="flex flex-col gap-2">
-      <label for="cookieContent" class="text-sm font-semibold text-white">Nomor AJU SSM / PTK</label>
-      <div class="relative">
-        <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8"></textarea>
-        
-        <!-- Loading Overlay -->
-        <div id="cookieLoader" class="absolute inset-0 bg-zinc-900/60 backdrop-blur-[2px] rounded-lg flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 z-10">
-          <div class="flex flex-col items-center gap-3">
-            <div class="w-8 h-8 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
-            <span class="text-xs font-semibold text-brand-accent tracking-widest animate-pulse">MEMPROSES...</span>
+    <div class="flex flex-col gap-3">
+      <div class="flex flex-col gap-2">
+        <label for="cookieContent" class="text-sm font-semibold text-white">Nomor AJU SSM / PTK</label>
+        <div class="relative">
+          <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8"></textarea>
+          
+          <!-- Loading Overlay -->
+          <div id="cookieLoader" class="absolute inset-0 bg-zinc-900/60 backdrop-blur-[2px] rounded-lg flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 z-10">
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-8 h-8 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
+              <span class="text-xs font-semibold text-brand-accent tracking-widest animate-pulse">MEMPROSES...</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <button type="button" id="processBtn" class="w-full mt-3 bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
-      Proses Data
-    </button>
+      <button type="button" id="processBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
+        Proses Data
+      </button>
 
-    <div class="flex flex-col relative w-full overflow-hidden rounded-xl border border-zinc-800 bg-[#0a0a0a] shadow-2xl mt-3">
-      <!-- Terminal Header -->
-      <div class="flex items-center bg-[#1c1c1c] px-4 py-3 border-b border-zinc-800">
-        <div class="flex items-center gap-2">
-          <div class="h-3 w-3 rounded-full bg-[#ff5f56]"></div>
-          <div class="h-3 w-3 rounded-full bg-[#ffbd2e]"></div>
-          <div class="h-3 w-3 rounded-full bg-[#27c93f]"></div>
-          <span class="ml-4 text-xs font-semibold text-zinc-500 tracking-widest uppercase">System Terminal</span>
+      <div class="flex flex-col relative w-full overflow-hidden rounded-xl border border-zinc-800 bg-[#0a0a0a] shadow-2xl">
+        <!-- Terminal Header -->
+        <div class="flex items-center bg-[#1c1c1c] px-4 py-3 border-b border-zinc-800">
+          <div class="flex items-center gap-2">
+            <div class="h-3 w-3 rounded-full bg-[#ff5f56]"></div>
+            <div class="h-3 w-3 rounded-full bg-[#ffbd2e]"></div>
+            <div class="h-3 w-3 rounded-full bg-[#27c93f]"></div>
+            <span class="ml-4 text-xs font-semibold text-zinc-500 tracking-widest uppercase">System Terminal</span>
+          </div>
+        </div>
+        <!-- Terminal Body -->
+        <textarea id="processingResults" placeholder="Barantin Engine initialized...&#10;> Awaiting AJU/PTK input..." class="w-full bg-transparent p-4 text-zinc-300 placeholder-zinc-600 font-mono text-sm resize-none outline-none leading-relaxed" rows="12" readonly></textarea>
+        
+        <div class="absolute bottom-4 right-4 flex gap-2">
+          <button type="button" id="copyBtn" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white rounded-lg px-4 py-2 text-xs font-semibold cursor-pointer transition-colors shadow-md flex items-center gap-2 hidden">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span id="copyText">Salin Text</span>
+          </button>
         </div>
       </div>
-      <!-- Terminal Body -->
-      <textarea id="processingResults" placeholder="Barantin Engine initialized...&#10;> Awaiting AJU/PTK input..." class="w-full bg-transparent p-4 text-zinc-300 placeholder-zinc-600 font-mono text-sm resize-none outline-none leading-relaxed" rows="12" readonly></textarea>
-      
-      <div class="absolute bottom-4 right-4 flex gap-2">
-        <button type="button" id="copyBtn" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white rounded-lg px-4 py-2 text-xs font-semibold cursor-pointer transition-colors shadow-md flex items-center gap-2 hidden">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-          <span id="copyText">Salin Text</span>
-        </button>
-      </div>
     </div>
-
   `,Jt=()=>{const n=document.getElementById("processBtn"),t=document.getElementById("cookieContent"),e=document.getElementById("processingResults"),l=document.getElementById("copyBtn"),i=document.getElementById("copyText"),r=document.getElementById("cookieLoader");t&&(t.value=zt,t.addEventListener("input",()=>{zt=t.value})),e&&(e.value=dt),l&&(dt?l.classList.remove("hidden"):l.classList.add("hidden"));const u=(g,x)=>{r&&(r.classList.remove("opacity-0","pointer-events-none"),r.classList.add("opacity-100")),setTimeout(()=>{x(),r&&(r.classList.remove("opacity-100"),r.classList.add("opacity-0","pointer-events-none"))},g)};l&&l.addEventListener("click",async()=>{const g=e.value;if(g)try{await navigator.clipboard.writeText(g);const x=i.innerText;i.innerText="Tersalin!",l.classList.replace("bg-zinc-800","bg-green-600"),l.classList.replace("hover:bg-zinc-700","hover:bg-green-500"),l.classList.replace("border-zinc-700","border-green-500"),setTimeout(()=>{i.innerText=x,l.classList.replace("bg-green-600","bg-zinc-800"),l.classList.replace("hover:bg-green-500","hover:bg-zinc-700"),l.classList.replace("border-green-500","border-zinc-700")},2e3)}catch(x){console.error("Failed to copy text: ",x)}}),t&&t.addEventListener("input",()=>{const g=t.value,x=/([a-zA-Z0-9]{26}|202[0-9]-[A-Z0-9.-]+)/g,d=g.match(x);if(d&&d.length>0){const E=d.join(`
 `);g.replace(x,"").trim().length>0&&u(600,()=>{t.value=E})}}),n&&n.addEventListener("click",async()=>{var E;const g=t.value;if(!g.trim()){e.value="Silakan masukan terlebih dahulu teks atau No SSM / PTK untuk diproses.",e.classList.add("text-red-500"),l&&l.classList.add("hidden");return}e.classList.remove("text-red-500");const x=/([a-zA-Z0-9]{26}|202[0-9]-[A-Z0-9.-]+)/g,d=g.match(x);if(d&&d.length>0){n.disabled=!0,n.textContent="Mencari Data...",e.value=`[MULAI] Ditemukan ${d.length} AJU: ${d.join(", ")}
 Sedang memproses...
