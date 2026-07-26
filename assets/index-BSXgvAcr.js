@@ -49,9 +49,9 @@
         Proses Data
       </button>
 
-      <div class="flex flex-col relative w-full overflow-hidden rounded-xl border border-zinc-800 bg-[#0a0a0a] shadow-2xl">
+      <div class="flex flex-col relative w-full overflow-hidden rounded-xl border border-zinc-700 bg-[#0a0a0a] shadow-2xl">
       <!-- Terminal Header -->
-      <div class="flex items-center bg-[#1c1c1c] px-4 py-3 border-b border-zinc-800">
+      <div class="flex items-center bg-[#1c1c1c] px-4 py-3 border-b border-zinc-700">
         <div class="flex items-center gap-2">
           <div class="h-3 w-3 rounded-full bg-[#ff5f56]"></div>
           <div class="h-3 w-3 rounded-full bg-[#ffbd2e]"></div>
