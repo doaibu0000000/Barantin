@@ -688,7 +688,8 @@ export const bindCookieToolEvents = () => {
                                      const localISOTime = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 19).replace('T', ' ');
                                      const localDateOnly = localISOTime.split(' ')[0];
                                      
-                                     // STEP 2b: Cek surtug yang sudah ada untuk PTK ini â€” cegah duplikasi
+                                     // STEP 2b: Cek surtug yang sudah ada untuk PTK ini — cegah duplikasi
+                                     // Identifikasi: Surtug 1 (Adm) = tanggal T08:00, Surtug 2 (Kes) = tanggal T09:00
                                      let existingSurtug1HeaderId = '';
                                      let existingSurtug2HeaderId = '';
                                      try {
@@ -704,29 +705,35 @@ export const bindCookieToolEvents = () => {
                                            liveLog(`[STEP 2b] Ditemukan ${existList.length} surtug untuk PTK ini`);
                                            for (const s of existList) {
                                               const hId = s.id || '';
-                                              try {
-                                                 const dRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
-                                                    method: 'POST',
-                                                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({ ptk_surtug_header_id: hId, ptk_surtug_petugas_id: "", penugasan_id: "" })
-                                                 });
-                                                 if (dRes.ok) {
-                                                    const dData = await dRes.json();
-                                                    for (const d of (dData?.data || [])) {
-                                                       for (const pn of (d.penugasan || [])) {
-                                                          if (String(pn.penugasan_id) === '1' && !existingSurtug1HeaderId) existingSurtug1HeaderId = hId;
-                                                          if (String(pn.penugasan_id) === '2' && !existingSurtug2HeaderId) existingSurtug2HeaderId = hId;
-                                                       }
-                                                    }
+                                              const tgl: string = s.tanggal || '';
+                                              liveLog(`[STEP 2b] Surtug: ${s.nomor || hId} | tanggal: ${tgl}`);
+                                              if (tgl.includes('T08:00') || tgl.includes(' 08:00') || tgl.includes('08:00:00')) {
+                                                 if (!existingSurtug1HeaderId) {
+                                                    existingSurtug1HeaderId = hId;
+                                                    liveLog(`[STEP 2b] -> Terdeteksi sebagai Surtug 1 (Adm)`);
                                                  }
-                                              } catch(_e) {}
+                                              } else if (tgl.includes('T09:00') || tgl.includes(' 09:00') || tgl.includes('09:00:00')) {
+                                                 if (!existingSurtug2HeaderId) {
+                                                    existingSurtug2HeaderId = hId;
+                                                    liveLog(`[STEP 2b] -> Terdeteksi sebagai Surtug 2 (Kes)`);
+                                                 }
+                                              } else {
+                                                 // Fallback: urutan — pertama = Adm, kedua = Kes
+                                                 if (!existingSurtug1HeaderId) {
+                                                    existingSurtug1HeaderId = hId;
+                                                    liveLog(`[STEP 2b] -> Surtug 1 (fallback urutan)`);
+                                                 } else if (!existingSurtug2HeaderId) {
+                                                    existingSurtug2HeaderId = hId;
+                                                    liveLog(`[STEP 2b] -> Surtug 2 (fallback urutan)`);
+                                                 }
+                                              }
                                            }
                                         }
                                      } catch(_e) { liveLog(`[STEP 2b] Gagal cek existing, akan buat baru`); }
                                      
-                                     if (existingSurtug1HeaderId) liveLog(`[STEP 2b] Adm & Kesesuaian sudah ada â€” skip`);
-                                     if (existingSurtug2HeaderId) liveLog(`[STEP 2b] Pemeriksaan Kesehatan sudah ada â€” skip`);
-                                     if (!existingSurtug1HeaderId && !existingSurtug2HeaderId) liveLog(`[STEP 2b] Belum ada surtug â€” akan buat semua`);
+                                     if (existingSurtug1HeaderId) liveLog(`[STEP 2b] Adm & Kesesuaian sudah ada — skip`);
+                                     if (existingSurtug2HeaderId) liveLog(`[STEP 2b] Pemeriksaan Kesehatan sudah ada — skip`);
+                                     if (!existingSurtug1HeaderId && !existingSurtug2HeaderId) liveLog(`[STEP 2b] Belum ada surtug — akan buat semua`);
                                      
                                      // 1. DokumenCek Request (Simulasi klik Buat Surat Tugas Baru)
                                      const dokumencekPayload = {
