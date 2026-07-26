@@ -240,7 +240,7 @@ export const CookieTool = () => {
         </div>
       </div>
       <!-- Terminal Body -->
-      <textarea id="processingResults" wrap="off" placeholder="Barantin Engine initialized...&#10;> Awaiting AJU/PTK input..." class="w-full whitespace-pre overflow-x-auto bg-transparent p-4 text-zinc-300 placeholder-zinc-600 font-mono text-sm resize-none outline-none leading-relaxed" rows="12" readonly></textarea>
+      <textarea id="processingResults" wrap="off" placeholder="> Menghubungkan ke server..." class="w-full whitespace-pre overflow-x-auto bg-transparent p-4 text-zinc-300 placeholder-zinc-600 font-mono text-sm resize-none outline-none leading-relaxed" rows="12" readonly></textarea>
       
     </div>
   </div>
