@@ -229,11 +229,21 @@ export const CookieTool = () => {
       Proses Data
     </button>
 
-    <div class="flex flex-col gap-2 relative">
-      <textarea id="processingResults" placeholder="Hasil pemrosesan ditampilkan di sini..." class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8" readonly></textarea>
+    <div class="flex flex-col relative w-full overflow-hidden rounded-xl border border-zinc-800 bg-[#0a0a0a] shadow-2xl mt-4">
+      <!-- Terminal Header -->
+      <div class="flex items-center bg-[#1c1c1c] px-4 py-3 border-b border-zinc-800">
+        <div class="flex items-center gap-2">
+          <div class="h-3 w-3 rounded-full bg-[#ff5f56]"></div>
+          <div class="h-3 w-3 rounded-full bg-[#ffbd2e]"></div>
+          <div class="h-3 w-3 rounded-full bg-[#27c93f]"></div>
+          <span class="ml-4 text-xs font-semibold text-zinc-500 tracking-widest uppercase">System Terminal</span>
+        </div>
+      </div>
+      <!-- Terminal Body -->
+      <textarea id="processingResults" placeholder="Nexus Engine v2.0.1 initialized...&#10;> Awaiting target URL..." class="w-full bg-transparent p-4 text-zinc-300 placeholder-zinc-600 font-mono text-sm resize-none outline-none leading-relaxed" rows="12" readonly></textarea>
       
-      <div class="flex gap-2 mt-2">
-        <button type="button" id="copyBtn" class="flex-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md flex items-center justify-center gap-2 hidden">
+      <div class="absolute bottom-4 right-4 flex gap-2">
+        <button type="button" id="copyBtn" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white rounded-lg px-4 py-2 text-xs font-semibold cursor-pointer transition-colors shadow-md flex items-center gap-2 hidden">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
           <span id="copyText">Salin Text</span>
         </button>
