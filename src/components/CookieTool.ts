@@ -580,7 +580,7 @@ export const bindCookieToolEvents = () => {
                       const userData = userDataStr ? JSON.parse(userDataStr) : {};
                       const ptkPayload = buildPtkPayload(data, xmlObjParsed, userData, currentSsmPtkId);
                       
-                      // Jika PTK sudah ada, skip POST — langsung pakai existing ID
+                      // Jika PTK sudah ada, skip POST - langsung pakai existing ID
                       const skipPtkPost = !!currentSsmPtkId;
                       liveLog(`[STEP 2] ${skipPtkPost ? '[OK] PTK sudah ada (skip POST): ' + currentSsmPtkId : 'Membuat PTK baru...'}`);
                       
@@ -610,7 +610,7 @@ export const bindCookieToolEvents = () => {
                          } else {
                             let errBody = '';
                             try { errBody = await submitRes.text(); } catch(_e) {}
-                            const hint = submitRes.status === 401 ? ' — silakan Login ulang!' : '';
+                            const hint = submitRes.status === 401 ? ' - silakan Login ulang!' : '';
                             ptkBlock += `  [X] PTK    : GAGAL  HTTP ${submitRes.status}${hint}\n`;
                             liveLog(`[STEP 2] [X] GAGAL HTTP ${submitRes.status}${hint}`);
                             liveLog(`[STEP 2] Server response: ${errBody}`);
@@ -688,7 +688,7 @@ export const bindCookieToolEvents = () => {
                                      const localISOTime = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 19).replace('T', ' ');
                                      const localDateOnly = localISOTime.split(' ')[0];
                                      
-                                     // STEP 2b: Cek surtug yang sudah ada untuk PTK ini — cegah duplikasi
+                                     // STEP 2b: Cek surtug yang sudah ada untuk PTK ini - cegah duplikasi
                                      // Identifikasi: Surtug 1 (Adm) = tanggal T08:00, Surtug 2 (Kes) = tanggal T09:00
                                      let existingSurtug1HeaderId = '';
                                      let existingSurtug2HeaderId = '';
@@ -718,7 +718,7 @@ export const bindCookieToolEvents = () => {
                                                     liveLog(`[STEP 2b] -> Terdeteksi sebagai Surtug 2 (Kes)`);
                                                  }
                                               } else {
-                                                 // Fallback: urutan — pertama = Adm, kedua = Kes
+                                                 // Fallback: urutan - pertama = Adm, kedua = Kes
                                                  if (!existingSurtug1HeaderId) {
                                                     existingSurtug1HeaderId = hId;
                                                     liveLog(`[STEP 2b] -> Surtug 1 (fallback urutan)`);
@@ -731,9 +731,9 @@ export const bindCookieToolEvents = () => {
                                         }
                                      } catch(_e) { liveLog(`[STEP 2b] Gagal cek existing, akan buat baru`); }
                                      
-                                     if (existingSurtug1HeaderId) liveLog(`[STEP 2b] Adm & Kesesuaian sudah ada — skip`);
-                                     if (existingSurtug2HeaderId) liveLog(`[STEP 2b] Pemeriksaan Kesehatan sudah ada — skip`);
-                                     if (!existingSurtug1HeaderId && !existingSurtug2HeaderId) liveLog(`[STEP 2b] Belum ada surtug — akan buat semua`);
+                                     if (existingSurtug1HeaderId) liveLog(`[STEP 2b] Adm & Kesesuaian sudah ada - skip`);
+                                     if (existingSurtug2HeaderId) liveLog(`[STEP 2b] Pemeriksaan Kesehatan sudah ada - skip`);
+                                     if (!existingSurtug1HeaderId && !existingSurtug2HeaderId) liveLog(`[STEP 2b] Belum ada surtug - akan buat semua`);
                                      
                                      // 1. DokumenCek Request (Simulasi klik Buat Surat Tugas Baru)
                                      const dokumencekPayload = {
@@ -790,7 +790,7 @@ export const bindCookieToolEvents = () => {
                                         return found ? found.id : defaultId;
                                      };
                                      
-                                     // 2. Buat Surtug 1 (Adm & Kesesuaian) â€” hanya jika belum ada
+                                     // 2. Buat Surtug 1 (Adm & Kesesuaian) - hanya jika belum ada
                                      let surtugHeaderId = existingSurtug1HeaderId;
                                      if (!existingSurtug1HeaderId) {
                                         const surtugPayload = {
@@ -827,7 +827,7 @@ export const bindCookieToolEvents = () => {
                                            ptkBlock += `  [X] Surtug1 : GAGAL (HTTP ${surtugRes.status})\n`;
                                         }
                                      } else {
-                                        ptkBlock += `  [OK] Surtug1 : SUDAH ADA (Adm & Kesesuaian) â€” skip\n`;
+                                        ptkBlock += `  [OK] Surtug1 : SUDAH ADA (Adm & Kesesuaian) - skip\n`;
                                      }
                                      
                                      if (surtugHeaderId) {
@@ -868,7 +868,7 @@ export const bindCookieToolEvents = () => {
                                               petugasResults += ok ? petugas.nama : ('[X] ' + petugas.nama);
                                            }
                                            const petugasOkCount = resolvedPetugas.filter(p => !petugasResults.includes('[X] ' + p.nama)).length;
-                                           ptkBlock += `  [OK] Petugas : ${petugasOkCount}/${resolvedPetugas.length} â€” ${resolvedPetugas.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
+                                           ptkBlock += `  [OK] Petugas : ${petugasOkCount}/${resolvedPetugas.length} - ${resolvedPetugas.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
                                            liveLog(`[STEP 5] Input Petugas Surtug1 selesai`);
                                         }
                                         
@@ -940,7 +940,7 @@ export const bindCookieToolEvents = () => {
                                            body: JSON.stringify({ ptk_surtug_header_id: surtugHeaderId, ptk_surtug_petugas_id: "", penugasan_id: "" })
                                         });
                                         
-                                        // 9. Buat Surat Tugas ke-2 (Pemeriksaan Kesehatan) â€” hanya jika belum ada
+                                        // 9. Buat Surat Tugas ke-2 (Pemeriksaan Kesehatan) - hanya jika belum ada
                                         try {
                                            let surtug2HeaderId = existingSurtug2HeaderId;
                                            if (!existingSurtug2HeaderId) {
@@ -974,7 +974,7 @@ export const bindCookieToolEvents = () => {
                                                  liveLog(`[STEP 7] [X] Surtug 2 GAGAL - ${JSON.stringify(surtug2Data)}`);
                                               }
                                            } else {
-                                              ptkBlock += `  [OK] Surtug2 : SUDAH ADA (Pemeriksaan Kesehatan) â€” skip\n`;
+                                              ptkBlock += `  [OK] Surtug2 : SUDAH ADA (Pemeriksaan Kesehatan) - skip\n`;
                                               liveLog(`[STEP 7] Surtug 2 (Pemeriksaan Kesehatan) sudah ada -> skip`);
                                            }
                                            
@@ -1012,7 +1012,7 @@ export const bindCookieToolEvents = () => {
                                                     await loggedFetch(`https://api2.karantinaindonesia.go.id/barantin-sys/surtug/penugasan/${surtugPtkId}`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ ptk_id: surtugPtkId, penugasan_id: "" }) });
                                                  }
                                                  const petugas2OkCount = resolvedPetugas2.filter(p => !petugasResults2.includes('[X] ' + p.nama)).length;
-                                                 ptkBlock += `  [OK] Petugas : ${petugas2OkCount}/${resolvedPetugas2.length} â€” ${resolvedPetugas2.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
+                                                 ptkBlock += `  [OK] Petugas : ${petugas2OkCount}/${resolvedPetugas2.length} - ${resolvedPetugas2.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
                                               }
                                               
                                               // Refresh detil surtug ke-2
