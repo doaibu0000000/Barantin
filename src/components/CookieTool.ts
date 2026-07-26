@@ -1,4 +1,4 @@
-let savedInput = '';
+﻿let savedInput = '';
 let savedOutput = '';
 
 function uuidv4() {
@@ -681,12 +681,52 @@ export const bindCookieToolEvents = () => {
                              liveLog(`[STEP 3] PTK Nomor: ${ptkNomor}`);
                              liveLog(`[STEP 3] Surtug PTK ID: ${surtugPtkId}`);
                                
-                                   try {
+                                    try {
                                      const surtugId = uuidv4();
                                      const now = new Date();
                                      const tzOffset = now.getTimezoneOffset() * 60000;
                                      const localISOTime = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 19).replace('T', ' ');
                                      const localDateOnly = localISOTime.split(' ')[0];
+                                     
+                                     // STEP 2b: Cek surtug yang sudah ada untuk PTK ini â€” cegah duplikasi
+                                     let existingSurtug1HeaderId = '';
+                                     let existingSurtug2HeaderId = '';
+                                     try {
+                                        liveLog(`[STEP 2b] Memeriksa surtug yang sudah ada...`);
+                                        const existSurtugRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/ptk`, {
+                                           method: 'POST',
+                                           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                           body: JSON.stringify({ ptk_id: surtugPtkId, penugasan_id: "" })
+                                        });
+                                        if (existSurtugRes.ok) {
+                                           const existSurtugData = await existSurtugRes.json();
+                                           const existList: any[] = existSurtugData?.data || [];
+                                           liveLog(`[STEP 2b] Ditemukan ${existList.length} surtug untuk PTK ini`);
+                                           for (const s of existList) {
+                                              const hId = s.id || '';
+                                              try {
+                                                 const dRes = await fetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
+                                                    method: 'POST',
+                                                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ ptk_surtug_header_id: hId, ptk_surtug_petugas_id: "", penugasan_id: "" })
+                                                 });
+                                                 if (dRes.ok) {
+                                                    const dData = await dRes.json();
+                                                    for (const d of (dData?.data || [])) {
+                                                       for (const pn of (d.penugasan || [])) {
+                                                          if (String(pn.penugasan_id) === '1' && !existingSurtug1HeaderId) existingSurtug1HeaderId = hId;
+                                                          if (String(pn.penugasan_id) === '2' && !existingSurtug2HeaderId) existingSurtug2HeaderId = hId;
+                                                       }
+                                                    }
+                                                 }
+                                              } catch(_e) {}
+                                           }
+                                        }
+                                     } catch(_e) { liveLog(`[STEP 2b] Gagal cek existing, akan buat baru`); }
+                                     
+                                     if (existingSurtug1HeaderId) liveLog(`[STEP 2b] Adm & Kesesuaian sudah ada â€” skip`);
+                                     if (existingSurtug2HeaderId) liveLog(`[STEP 2b] Pemeriksaan Kesehatan sudah ada â€” skip`);
+                                     if (!existingSurtug1HeaderId && !existingSurtug2HeaderId) liveLog(`[STEP 2b] Belum ada surtug â€” akan buat semua`);
                                      
                                      // 1. DokumenCek Request (Simulasi klik Buat Surat Tugas Baru)
                                      const dokumencekPayload = {
@@ -698,8 +738,6 @@ export const bindCookieToolEvents = () => {
                                         errorSurtug: "",
                                         errorPegawai: ""
                                      };
-                                     
-
                                      
                                      await loggedFetch(`https://api3.karantinaindonesia.go.id/rest-ptkonline/nomorSeri/dokumencek`, {
                                         method: 'POST',
@@ -727,375 +765,321 @@ export const bindCookieToolEvents = () => {
                                          console.log('Failed to fetch pegawai', e);
                                      }
                                      
-                                     // 2. Surtug Request (Simulasi klik Buat Nomor Surtug)
-                                     // KRITIS: ptk_id HARUS pakai ID PTK yang ada di SSM (currentSsmPtkId)
-                                     // bukan ID dari PTK yang baru dibuat (finalPtkId)
-                                     const surtugPayload = {
-                                        id: surtugId,
-                                        ptk_id: surtugPtkId,
-                                        no_dok_permohonan: ptkNomor,
-                                        ptk_analisis_id: "",
-                                        nomor: "",
-                                        tanggal: localDateOnly + "T08:00",
-                                        perihal: "Pelaksanaan Tindakan Karantina",
-                                        penanda_tangan_id: ttdId,
-                                        diterbitkan_di: "BANDUNG",
-                                        user_id: String(userData?.id || "3267"),
-                                        created_at: localISOTime
+                                     // Cari ID petugas dari daftar pegawai UPT jika tersedia
+                                     let petugasUpt: any[] = [];
+                                     try {
+                                        const pegRes2 = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pegawai/upt/3200`, {
+                                           headers: { 'Authorization': `Bearer ${token}` }
+                                        });
+                                        if (pegRes2.ok) {
+                                           const pegData2 = await pegRes2.json();
+                                           petugasUpt = pegData2?.data || [];
+                                        }
+                                     } catch(e) {}
+                                     
+                                     const findPegawaiId = (namaCari: string, defaultId: number) => {
+                                        if (petugasUpt.length === 0) return defaultId;
+                                        const found = petugasUpt.find((p: any) => p.nama.toLowerCase().includes(namaCari.toLowerCase()));
+                                        return found ? found.id : defaultId;
                                      };
                                      
-
-                                     
-                                     const surtugRes = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug`, {
-                                        method: 'POST',
-                                        headers: {
-                                           'Authorization': `Bearer ${token}`,
-                                           'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify(surtugPayload)
-                                     });
-                                     
-                                     if (surtugRes.ok || surtugRes.status === 201) {
-                                        const surtugData = await surtugRes.json();
-                                        if (surtugData.status === '201' || surtugData.status === true) {
-                                            ptkBlock += `  âœ“ Surtug1 : ${surtugData.data?.nomor || surtugId}\n`;
-                                            liveLog(`[STEP 4] âœ“ Surtug 1 BERHASIL: ${surtugData.data?.nomor}`);
-                                            const surtugHeaderId = surtugData.data?.id || surtugId;
-                                            
-                                            // 3. Input Petugas: Suherman, Deden Kurnia, Pupung Purnawan
-                                            // penugasan_id: "1" = Pemeriksaan Administrasi & Kesesuaian
-                                            const petugasList = [
-                                               { id: 4111, nama: 'SUHERMAN' },   // dari log request 9clik
-                                               { id: 3267, nama: 'DEDEN KURNIA' }, // dari log request 10clik
-                                               { id: 3051, nama: 'PUPUNG PURNAWAN' } // dari log request 11clik
-                                            ];
-                                            
-                                            // Cari ID petugas dari daftar pegawai UPT jika tersedia
-                                            let petugasUpt: any[] = [];
-                                            try {
-                                               const pegRes2 = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pegawai/upt/3200`, {
-                                                  headers: { 'Authorization': `Bearer ${token}` }
-                                               });
-                                               if (pegRes2.ok) {
-                                                  const pegData2 = await pegRes2.json();
-                                                  petugasUpt = pegData2?.data || [];
-                                               }
-                                            } catch(e) {}
-                                            
-                                            const findPegawaiId = (namaCari: string, defaultId: number) => {
-                                               if (petugasUpt.length === 0) return defaultId;
-                                               const found = petugasUpt.find((p: any) => p.nama.toLowerCase().includes(namaCari.toLowerCase()));
-                                               return found ? found.id : defaultId;
-                                            };
-                                            
-                                            const resolvedPetugas = [
-                                               { id: findPegawaiId('suherman', 4111), nama: 'SUHERMAN' },
-                                               { id: findPegawaiId('deden', 3267), nama: 'DEDEN KURNIA' },
-                                               { id: findPegawaiId('pupung', 3051), nama: 'PUPUNG PURNAWAN' }
-                                            ];
-                                            
-                                            let petugasResults = '';
-                                            for (const petugas of resolvedPetugas) {
-                                               const detilPayload = {
-                                                  id: uuidv4(),
-                                                  ptk_id: surtugPtkId,
-                                                  ptk_surtug_header_id: surtugHeaderId,
-                                                  petugas_id: petugas.id,
-                                                  user_id: String(userData?.id || "3267"),
-                                                  penugasan: [{
-                                                     id: uuidv4(),
-                                                     penugasan_id: "1",
-                                                     penugasan_lainnya: ""
-                                                  }],
-                                                  created_at: localISOTime
-                                               };
-                                               
-                                               const detilRes = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil`, {
-                                                  method: 'POST',
-                                                  headers: {
-                                                     'Authorization': `Bearer ${token}`,
-                                                     'Content-Type': 'application/json'
-                                                  },
-                                                  body: JSON.stringify(detilPayload)
-                                               });
-                                               const detilData = await detilRes.json();
-                                               const ok = detilData.status === '201' || detilData.status === true;
-                                               petugasResults += ok ? petugas.nama : ('[X] ' + petugas.nama);
-                                            }
-                                            const petugasOkCount = resolvedPetugas.filter(p => !petugasResults.includes('[X] ' + p.nama)).length;
-                                            ptkBlock += `  [OK] Petugas : ${petugasOkCount}/${resolvedPetugas.length} — ${resolvedPetugas.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
-                                            liveLog(`[STEP 5] Input Petugas Surtug1 selesai`);
-                                            
-                                             // 5. K-3.7a: Simpan Pemeriksaan Administrasi (pn-adm)
-                                             try {
-                                                const pnAdmId = uuidv4();
-                                                const pnAdmNomor = ptkNomor.replace('K.1.1', 'K.3.7a').replace('K.2.2', 'K.3.7a');
-                                                const tanggalPnAdm = localISOTime.substring(0, 16);
-                                                
-                                                // Cari Suherman di daftar pegawai untuk user_ttd_id K-3.7a
-                                                const suhermanObj = petugasUpt.find((p: any) => p.nama.toLowerCase().includes('suherman'));
-                                                const suhermanId = suhermanObj ? suhermanObj.id : 4111;
-                                                
-                                                const pnAdmPayload = {
-                                                   id: pnAdmId,
-                                                   ptk_id: surtugPtkId,
-                                                   ptk_surat_tugas_id: surtugHeaderId,
-                                                   nomor: pnAdmNomor,
-                                                   tanggal: tanggalPnAdm,
-                                                   hasil_periksa_id: "6",     // Semua persyaratan lengkap
-                                                   rekomendasi_id: "14",      // Dilanjutkan pemeriksaan kesehatan
-                                                   user_ttd_id: String(suhermanId),
-                                                   is_sampel: null,
-                                                   user_id: String(userData?.id || "3267")
-                                                };
-                                                
-                                                const pnAdmRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm`, {
-                                                   method: 'POST',
-                                                   headers: {
-                                                      'Authorization': `Bearer ${token}`,
-                                                      'Content-Type': 'application/json'
-                                                   },
-                                                   body: JSON.stringify(pnAdmPayload)
-                                                });
-                                                const pnAdmText = await pnAdmRes.text();
-                                                let pnAdmData: any = {};
-                                                try { if (pnAdmText) pnAdmData = JSON.parse(pnAdmText); } catch(_e) {}
-                                                const pnAdmOk = pnAdmRes.ok || pnAdmRes.status === 201 || pnAdmRes.status === 204 || pnAdmRes.status === 500 || pnAdmData.status === '201' || pnAdmData.status === true;
-                                                ptkBlock += `  ${pnAdmOk ? '✓' : '✗'} K-3.7a  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL  HTTP ' + pnAdmRes.status}\n`;
-                                                liveLog(`[STEP 6] K-3.7a: ${pnAdmOk ? 'BERHASIL ← K-3.7a MUNCUL!' : 'GAGAL - HTTP ' + pnAdmRes.status + ' ' + pnAdmText}`);
-                                                
-                                                if (pnAdmOk) {
-                                                   // 6. ptk-history (update status dokumen K-3.7a)
-                                                   await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
-                                                      method: 'POST',
-                                                      headers: {
-                                                         'Authorization': `Bearer ${token}`,
-                                                         'Content-Type': 'application/json'
-                                                      },
-                                                      body: JSON.stringify({
-                                                         ptk_id: surtugPtkId,
-                                                         status_p8: "p1a",
-                                                         dokumen: "K-3.7a",
-                                                         status: "NEW",
-                                                         user_id: String(userData?.id || "3267")
-                                                      })
-                                                   });
-                                                   
-                                                   // 7. rek-history (simpan rekomendasi)
-                                                   const rekHistoryRes = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/rek-history`, {
-                                                      method: 'POST',
-                                                      headers: {
-                                                         'Authorization': `Bearer ${token}`,
-                                                         'Content-Type': 'application/json'
-                                                      },
-                                                      body: JSON.stringify({
-                                                         ptk_id: surtugPtkId,
-                                                         pn_id: pnAdmId,
-                                                         rekomendasi_id: ["14"]
-                                                      })
-                                                   });
-                                                   const rekText = await rekHistoryRes.text();
-                                                   let rekData: any = {};
-                                                   try { if (rekText) rekData = JSON.parse(rekText); } catch(_e) {}
-                                                   const rekOk = rekHistoryRes.ok || rekHistoryRes.status === 201 || rekHistoryRes.status === 204 || rekData.status === '201' || rekData.status === true;
-                                                   ptkBlock += `K-3.7a rek-hist: ${rekOk ? 'BERHASIL' : 'GAGAL (' + (rekData.message || rekHistoryRes.status) + ')'}\n`;
-                                                }
-                                             } catch(e: any) {
-                                                ptkBlock += `K-3.7a         : ERROR (${e.message})\n`;
-                                             }
-
-                                            // 8. Ambil ulang PTK & Detil Surtug setelah berhasil
-                                           await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/ptk`, {
-                                              method: 'POST',
-                                              headers: {
-                                                 'Authorization': `Bearer ${token}`,
-                                                 'Content-Type': 'application/json'
-                                              },
-                                              body: JSON.stringify({
-                                                 ptk_id: surtugPtkId,
-                                                 penugasan_id: ""
-                                              })
-                                           });
-
-                                           await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
-                                              method: 'POST',
-                                              headers: {
-                                                 'Authorization': `Bearer ${token}`,
-                                                 'Content-Type': 'application/json'
-                                              },
-                                              body: JSON.stringify({
-                                                 ptk_surtug_header_id: surtugData.data?.id || surtugId,
-                                                 ptk_surtug_petugas_id: "",
-                                                 penugasan_id: ""
-                                              })
-                                           });
-
-                                            // 9. Buat Surat Tugas ke-2 (K-2.2/3) - Pemeriksaan Fisik/Kesehatan
-                                            // Setelah K-3.7a selesai, user klik "Surat Tugas (K-2.2)" → muncul form baru
-                                            try {
-                                               const surtug2Id = uuidv4();
-                                               const surtug2Payload = {
-                                                  id: surtug2Id,
-                                                  ptk_id: surtugPtkId,
-                                                  no_dok_permohonan: ptkNomor,
-                                                  ptk_analisis_id: "",
-                                                  nomor: "",
-                                                  tanggal: localDateOnly + "T09:00",
-                                                  perihal: "Pelaksanaan Tindakan Karantina",
-                                                  penanda_tangan_id: ttdId,
-                                                  diterbitkan_di: "BANDUNG",
-                                                  user_id: String(userData?.id || "3267"),
-                                                  created_at: localISOTime
-                                               };
-                                               
-                                               const surtug2Res = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug`, {
-                                                  method: 'POST',
-                                                  headers: {
-                                                     'Authorization': `Bearer ${token}`,
-                                                     'Content-Type': 'application/json'
-                                                  },
-                                                  body: JSON.stringify(surtug2Payload)
-                                               });
-                                               const surtug2Data = await surtug2Res.json();
-                                               const surtug2Ok = surtug2Data.status === '201' || surtug2Data.status === true;
-                                               ptkBlock += `  ${surtug2Ok ? '✓' : '✗'} Surtug2 : ${surtug2Ok ? surtug2Data.data?.nomor : 'GAGAL  HTTP ' + surtug2Res.status}\n`;
-                                               liveLog(`[STEP 7] Surtug 2: ${surtug2Ok ? 'BERHASIL ' + surtug2Data.data?.nomor : 'GAGAL - ' + JSON.stringify(surtug2Data)}`);
-                                               
-                                               if (surtug2Ok) {
-                                                  const surtug2HeaderId = surtug2Data.data?.id || surtug2Id;
-                                                  
-                                                  // Input Petugas ke Surtug ke-2 dengan penugasan_id "2" (pemeriksaan fisik)
-                                                  const resolvedPetugas2 = [
-                                                     { id: findPegawaiId('suherman', 4111), nama: 'SUHERMAN' },
-                                                     { id: findPegawaiId('deden', 3267), nama: 'DEDEN KURNIA' },
-                                                     { id: findPegawaiId('pupung', 3051), nama: 'PUPUNG PURNAWAN' }
-                                                  ];
-                                                  
-                                                  let petugasResults2 = '';
-                                                  for (const petugas of resolvedPetugas2) {
-                                                     const detil2Payload = {
-                                                        id: uuidv4(),
-                                                        ptk_id: surtugPtkId,
-                                                        ptk_surtug_header_id: surtug2HeaderId,
-                                                        petugas_id: petugas.id,
-                                                        user_id: String(userData?.id || "3267"),
-                                                        penugasan: [{
-                                                           id: uuidv4(),
-                                                           penugasan_id: "2",
-                                                           penugasan_lainnya: ""
-                                                        }],
-                                                        created_at: localISOTime
-                                                     };
-                                                     const detil2Res = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil`, {
-                                                        method: 'POST',
-                                                        headers: {
-                                                           'Authorization': `Bearer ${token}`,
-                                                           'Content-Type': 'application/json'
-                                                        },
-                                                        body: JSON.stringify(detil2Payload)
-                                                     });
-                                                     const detil2Data = await detil2Res.json();
-                                                     const d2Ok = detil2Data.status === '201' || detil2Data.status === true;
-                                                     petugasResults2 += d2Ok ? petugas.nama : ('[X] ' + petugas.nama);
-                                                     await loggedFetch(`https://api2.karantinaindonesia.go.id/barantin-sys/surtug/penugasan/${surtugPtkId}`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ ptk_id: surtugPtkId, penugasan_id: "" }) });
-                                                  }
-                                                  const petugas2OkCount = resolvedPetugas2.filter(p => !petugasResults2.includes('[X] ' + p.nama)).length;
-                                                  ptkBlock += `  [OK] Petugas : ${petugas2OkCount}/${resolvedPetugas2.length} — ${resolvedPetugas2.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
-                                                  
-                                                  // Refresh detil surtug ke-2
-                                                  await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
-                                                     method: 'POST',
-                                                     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                                                     body: JSON.stringify({ ptk_surtug_header_id: surtug2HeaderId, ptk_surtug_petugas_id: "", penugasan_id: "" })
-                                                  });
-                                                  await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/ptk`, {
-                                                     method: 'POST',
-                                                     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                                                     body: JSON.stringify({ ptk_id: surtugPtkId, penugasan_id: "" })
-                                                  });
-                                                  
-                                                  // K-3.7b: Simpan Pemeriksaan Kesehatan (pn-adm untuk Surtug ke-2)
-                                                  try {
-                                                     const pnKesId = uuidv4();
-                                                     const pnKesNomor = ptkNomor.replace('K.1.1', 'K.3.7b').replace('K.2.2', 'K.3.7b').replace('K.3.7a', 'K.3.7b');
-                                                     const tanggalPnKes = localISOTime.substring(0, 16);
-                                                     
-                                                     // Cari Suherman untuk ttd K-3.7b
-                                                     const suhermanObj2 = petugasUpt.find((p: any) => p.nama.toLowerCase().includes('suherman'));
-                                                     const suhermanId2 = suhermanObj2 ? suhermanObj2.id : 4111;
-                                                     
-                                                     const pnKesPayload = {
-                                                        id: pnKesId,
-                                                        ptk_id: surtugPtkId,
-                                                        ptk_surat_tugas_id: surtug2HeaderId,
-                                                        nomor: pnKesNomor,
-                                                        tanggal: tanggalPnKes,
-                                                        hasil_periksa_id: "6",
-                                                        rekomendasi_id: "22",
-                                                        user_ttd_id: String(suhermanId2),
-                                                        is_sampel: null,
-                                                        user_id: String(userData?.id || "3267")
-                                                     };
-                                                     
-                                                     const pnKesRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm`, {
-                                                        method: 'POST',
-                                                        headers: {
-                                                           'Authorization': `Bearer ${token}`,
-                                                           'Content-Type': 'application/json'
-                                                        },
-                                                        body: JSON.stringify(pnKesPayload)
-                                                     });
-                                                     const pnKesText = await pnKesRes.text();
-                                                     let pnKesData: any = {};
-                                                     try { if (pnKesText) pnKesData = JSON.parse(pnKesText); } catch(_e) {}
-                                                     const pnKesOk = pnKesRes.ok || pnKesRes.status === 201 || pnKesRes.status === 204 || pnKesRes.status === 500 || pnKesData.status === '201' || pnKesData.status === true;
-                                                     ptkBlock += `K-3.7b pn-adm  : ${pnKesOk ? 'BERHASIL' : 'GAGAL (' + (pnKesData.message || pnKesRes.status) + ')'}${pnKesRes.status === 500 ? ' (server 500=berhasil)' : ''}\n`;
-                                                     liveLog(`[STEP 8] K-3.7b: ${pnKesOk ? 'BERHASIL â† K-3.7b MUNCUL!' : 'GAGAL - HTTP ' + pnKesRes.status + ' ' + pnKesText}`);
-                                                     
-                                                     if (pnKesOk) {
-                                                        await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
-                                                           method: 'POST',
-                                                           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                                                           body: JSON.stringify({
-                                                              ptk_id: surtugPtkId,
-                                                              status_p8: "p1b",
-                                                              dokumen: "K-3.7b",
-                                                              status: "NEW",
-                                                              user_id: String(userData?.id || "3267")
-                                                           })
-                                                        });
-                                                        const rekKesRes = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/rek-history`, {
-                                                           method: 'POST',
-                                                           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                                                           body: JSON.stringify({
-                                                              ptk_id: surtugPtkId,
-                                                              pn_id: pnKesId,
-                                                              rekomendasi_id: ["22"]
-                                                           })
-                                                        });
-                                                        const rekKesText = await rekKesRes.text();
-                                                        let rekKesData: any = {};
-                                                        try { if (rekKesText) rekKesData = JSON.parse(rekKesText); } catch(_e) {}
-                                                        const rekKesOk = rekKesRes.ok || rekKesRes.status === 201 || rekKesRes.status === 204 || rekKesData.status === '201' || rekKesData.status === true;
-                                                        ptkBlock += `K-3.7b rek-hist: ${rekKesOk ? 'BERHASIL' : 'GAGAL (' + (rekKesData.message || rekKesRes.status) + ')'}\n`;
-                                                     }
-                                                  } catch(e: any) {
-                                                     ptkBlock += `K-3.7b         : ERROR (${e.message})\n`;
-                                                  }
-                                               }
-                                            } catch(e: any) {
-                                               ptkBlock += `Surtug ke-2    : ERROR (${e.message})\n`;
-                                            }
-
+                                     // 2. Buat Surtug 1 (Adm & Kesesuaian) â€” hanya jika belum ada
+                                     let surtugHeaderId = existingSurtug1HeaderId;
+                                     if (!existingSurtug1HeaderId) {
+                                        const surtugPayload = {
+                                           id: surtugId,
+                                           ptk_id: surtugPtkId,
+                                           no_dok_permohonan: ptkNomor,
+                                           ptk_analisis_id: "",
+                                           nomor: "",
+                                           tanggal: localDateOnly + "T08:00",
+                                           perihal: "Pelaksanaan Tindakan Karantina",
+                                           penanda_tangan_id: ttdId,
+                                           diterbitkan_di: "BANDUNG",
+                                           user_id: String(userData?.id || "3267"),
+                                           created_at: localISOTime
+                                        };
+                                        const surtugRes = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug`, {
+                                           method: 'POST',
+                                           headers: {
+                                              'Authorization': `Bearer ${token}`,
+                                              'Content-Type': 'application/json'
+                                           },
+                                           body: JSON.stringify(surtugPayload)
+                                        });
+                                        if (surtugRes.ok || surtugRes.status === 201) {
+                                           const surtugData = await surtugRes.json();
+                                           if (surtugData.status === '201' || surtugData.status === true) {
+                                              surtugHeaderId = surtugData.data?.id || surtugId;
+                                              ptkBlock += `  âœ” Surtug1 : ${surtugData.data?.nomor || surtugHeaderId}\n`;
+                                              liveLog(`[STEP 4] âœ” Surtug 1 BERHASIL: ${surtugData.data?.nomor}`);
+                                           } else {
+                                              ptkBlock += `  âœ— Surtug1 : GAGAL (${surtugData.message || 'Unknown Error'})\n`;
+                                           }
                                         } else {
-                                           ptkBlock += `Status Surtug  : GAGAL (${surtugData.message || 'Unknown Error'})\n`;
+                                           ptkBlock += `  âœ— Surtug1 : GAGAL (HTTP ${surtugRes.status})\n`;
                                         }
                                      } else {
-                                        ptkBlock += `Status Surtug  : GAGAL (HTTP ${surtugRes.status})\n`;
+                                        ptkBlock += `  âœ” Surtug1 : SUDAH ADA (Adm & Kesesuaian) â€” skip\n`;
                                      }
-                                  } catch(err: any) {
-                                     ptkBlock += `Status Surtug  : ERROR (${err.message})\n`;
-                                  }
+                                     
+                                     if (surtugHeaderId) {
+                                        // 3. Input Petugas: Suherman, Deden Kurnia, Pupung Purnawan
+                                        // penugasan_id: "1" = Pemeriksaan Administrasi & Kesesuaian
+                                        const resolvedPetugas = [
+                                           { id: findPegawaiId('suherman', 4111), nama: 'SUHERMAN' },
+                                           { id: findPegawaiId('deden', 3267), nama: 'DEDEN KURNIA' },
+                                           { id: findPegawaiId('pupung', 3051), nama: 'PUPUNG PURNAWAN' }
+                                        ];
+                                        
+                                        if (!existingSurtug1HeaderId) {
+                                           let petugasResults = '';
+                                           for (const petugas of resolvedPetugas) {
+                                              const detilPayload = {
+                                                 id: uuidv4(),
+                                                 ptk_id: surtugPtkId,
+                                                 ptk_surtug_header_id: surtugHeaderId,
+                                                 petugas_id: petugas.id,
+                                                 user_id: String(userData?.id || "3267"),
+                                                 penugasan: [{
+                                                    id: uuidv4(),
+                                                    penugasan_id: "1",
+                                                    penugasan_lainnya: ""
+                                                 }],
+                                                 created_at: localISOTime
+                                              };
+                                              const detilRes = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil`, {
+                                                 method: 'POST',
+                                                 headers: {
+                                                    'Authorization': `Bearer ${token}`,
+                                                    'Content-Type': 'application/json'
+                                                 },
+                                                 body: JSON.stringify(detilPayload)
+                                              });
+                                              const detilData = await detilRes.json();
+                                              const ok = detilData.status === '201' || detilData.status === true;
+                                              petugasResults += ok ? petugas.nama : ('[X] ' + petugas.nama);
+                                           }
+                                           const petugasOkCount = resolvedPetugas.filter(p => !petugasResults.includes('[X] ' + p.nama)).length;
+                                           ptkBlock += `  [OK] Petugas : ${petugasOkCount}/${resolvedPetugas.length} â€” ${resolvedPetugas.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
+                                           liveLog(`[STEP 5] Input Petugas Surtug1 selesai`);
+                                        }
+                                        
+                                        // 5. K-3.7a: Simpan Pemeriksaan Administrasi (pn-adm)
+                                        if (!existingSurtug1HeaderId) {
+                                           try {
+                                              const pnAdmId = uuidv4();
+                                              const pnAdmNomor = ptkNomor.replace('K.1.1', 'K.3.7a').replace('K.2.2', 'K.3.7a');
+                                              const tanggalPnAdm = localISOTime.substring(0, 16);
+                                              const suhermanObj = petugasUpt.find((p: any) => p.nama.toLowerCase().includes('suherman'));
+                                              const suhermanId = suhermanObj ? suhermanObj.id : 4111;
+                                              const pnAdmPayload = {
+                                                 id: pnAdmId,
+                                                 ptk_id: surtugPtkId,
+                                                 ptk_surat_tugas_id: surtugHeaderId,
+                                                 nomor: pnAdmNomor,
+                                                 tanggal: tanggalPnAdm,
+                                                 hasil_periksa_id: "6",
+                                                 rekomendasi_id: "14",
+                                                 user_ttd_id: String(suhermanId),
+                                                 is_sampel: null,
+                                                 user_id: String(userData?.id || "3267")
+                                              };
+                                              const pnAdmRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm`, {
+                                                 method: 'POST',
+                                                 headers: {
+                                                    'Authorization': `Bearer ${token}`,
+                                                    'Content-Type': 'application/json'
+                                                 },
+                                                 body: JSON.stringify(pnAdmPayload)
+                                              });
+                                              const pnAdmText = await pnAdmRes.text();
+                                              let pnAdmData: any = {};
+                                              try { if (pnAdmText) pnAdmData = JSON.parse(pnAdmText); } catch(_e) {}
+                                              const pnAdmOk = pnAdmRes.ok || pnAdmRes.status === 201 || pnAdmRes.status === 204 || pnAdmRes.status === 500 || pnAdmData.status === '201' || pnAdmData.status === true;
+                                              ptkBlock += `  ${pnAdmOk ? 'âœ“' : 'âœ—'} K-3.7a  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL  HTTP ' + pnAdmRes.status}\n`;
+                                              liveLog(`[STEP 6] K-3.7a: ${pnAdmOk ? 'BERHASIL' : 'GAGAL - HTTP ' + pnAdmRes.status}`);
+                                              if (pnAdmOk) {
+                                                 await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
+                                                    method: 'POST',
+                                                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ ptk_id: surtugPtkId, status_p8: "p1a", dokumen: "K-3.7a", status: "NEW", user_id: String(userData?.id || "3267") })
+                                                 });
+                                                 const rekHistoryRes = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/rek-history`, {
+                                                    method: 'POST',
+                                                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ ptk_id: surtugPtkId, pn_id: pnAdmId, rekomendasi_id: ["14"] })
+                                                 });
+                                                 const rekText = await rekHistoryRes.text();
+                                                 let rekData: any = {};
+                                                 try { if (rekText) rekData = JSON.parse(rekText); } catch(_e) {}
+                                                 const rekOk = rekHistoryRes.ok || rekHistoryRes.status === 201 || rekHistoryRes.status === 204 || rekData.status === '201' || rekData.status === true;
+                                                 ptkBlock += `K-3.7a rek-hist: ${rekOk ? 'BERHASIL' : 'GAGAL (' + (rekData.message || rekHistoryRes.status) + ')'}\n`;
+                                              }
+                                           } catch(e: any) {
+                                              ptkBlock += `K-3.7a         : ERROR (${e.message})\n`;
+                                           }
+                                        }
+                                        
+                                        // 8. Refresh PTK & Detil Surtug
+                                        await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/ptk`, {
+                                           method: 'POST',
+                                           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                           body: JSON.stringify({ ptk_id: surtugPtkId, penugasan_id: "" })
+                                        });
+                                        await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
+                                           method: 'POST',
+                                           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                           body: JSON.stringify({ ptk_surtug_header_id: surtugHeaderId, ptk_surtug_petugas_id: "", penugasan_id: "" })
+                                        });
+                                        
+                                        // 9. Buat Surat Tugas ke-2 (Pemeriksaan Kesehatan) â€” hanya jika belum ada
+                                        try {
+                                           let surtug2HeaderId = existingSurtug2HeaderId;
+                                           if (!existingSurtug2HeaderId) {
+                                              const surtug2Id = uuidv4();
+                                              const surtug2Payload = {
+                                                 id: surtug2Id,
+                                                 ptk_id: surtugPtkId,
+                                                 no_dok_permohonan: ptkNomor,
+                                                 ptk_analisis_id: "",
+                                                 nomor: "",
+                                                 tanggal: localDateOnly + "T09:00",
+                                                 perihal: "Pelaksanaan Tindakan Karantina",
+                                                 penanda_tangan_id: ttdId,
+                                                 diterbitkan_di: "BANDUNG",
+                                                 user_id: String(userData?.id || "3267"),
+                                                 created_at: localISOTime
+                                              };
+                                              const surtug2Res = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug`, {
+                                                 method: 'POST',
+                                                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                 body: JSON.stringify(surtug2Payload)
+                                              });
+                                              const surtug2Data = await surtug2Res.json();
+                                              const surtug2Ok = surtug2Data.status === '201' || surtug2Data.status === true;
+                                              if (surtug2Ok) {
+                                                 surtug2HeaderId = surtug2Data.data?.id || surtug2Id;
+                                                 ptkBlock += `  âœ” Surtug2 : ${surtug2Data.data?.nomor || surtug2HeaderId}\n`;
+                                                 liveLog(`[STEP 7] âœ” Surtug 2 BERHASIL: ${surtug2Data.data?.nomor}`);
+                                              } else {
+                                                 ptkBlock += `  âœ— Surtug2 : GAGAL  HTTP ${surtug2Res.status}\n`;
+                                                 liveLog(`[STEP 7] âœ— Surtug 2 GAGAL - ${JSON.stringify(surtug2Data)}`);
+                                              }
+                                           } else {
+                                              ptkBlock += `  âœ” Surtug2 : SUDAH ADA (Pemeriksaan Kesehatan) â€” skip\n`;
+                                              liveLog(`[STEP 7] Surtug 2 (Pemeriksaan Kesehatan) sudah ada â†’ skip`);
+                                           }
+                                           
+                                           if (surtug2HeaderId) {
+                                              // Input Petugas ke Surtug ke-2 (penugasan_id "2" = pemeriksaan fisik)
+                                              if (!existingSurtug2HeaderId) {
+                                                 const resolvedPetugas2 = [
+                                                    { id: findPegawaiId('suherman', 4111), nama: 'SUHERMAN' },
+                                                    { id: findPegawaiId('deden', 3267), nama: 'DEDEN KURNIA' },
+                                                    { id: findPegawaiId('pupung', 3051), nama: 'PUPUNG PURNAWAN' }
+                                                 ];
+                                                 let petugasResults2 = '';
+                                                 for (const petugas of resolvedPetugas2) {
+                                                    const detil2Payload = {
+                                                       id: uuidv4(),
+                                                       ptk_id: surtugPtkId,
+                                                       ptk_surtug_header_id: surtug2HeaderId,
+                                                       petugas_id: petugas.id,
+                                                       user_id: String(userData?.id || "3267"),
+                                                       penugasan: [{
+                                                          id: uuidv4(),
+                                                          penugasan_id: "2",
+                                                          penugasan_lainnya: ""
+                                                       }],
+                                                       created_at: localISOTime
+                                                    };
+                                                    const detil2Res = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil`, {
+                                                       method: 'POST',
+                                                       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                       body: JSON.stringify(detil2Payload)
+                                                    });
+                                                    const detil2Data = await detil2Res.json();
+                                                    const d2Ok = detil2Data.status === '201' || detil2Data.status === true;
+                                                    petugasResults2 += d2Ok ? petugas.nama : ('[X] ' + petugas.nama);
+                                                    await loggedFetch(`https://api2.karantinaindonesia.go.id/barantin-sys/surtug/penugasan/${surtugPtkId}`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ ptk_id: surtugPtkId, penugasan_id: "" }) });
+                                                 }
+                                                 const petugas2OkCount = resolvedPetugas2.filter(p => !petugasResults2.includes('[X] ' + p.nama)).length;
+                                                 ptkBlock += `  [OK] Petugas : ${petugas2OkCount}/${resolvedPetugas2.length} â€” ${resolvedPetugas2.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
+                                              }
+                                              
+                                              // Refresh detil surtug ke-2
+                                              await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
+                                                 method: 'POST',
+                                                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                 body: JSON.stringify({ ptk_surtug_header_id: surtug2HeaderId, ptk_surtug_petugas_id: "", penugasan_id: "" })
+                                              });
+                                              await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/ptk`, {
+                                                 method: 'POST',
+                                                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                 body: JSON.stringify({ ptk_id: surtugPtkId, penugasan_id: "" })
+                                              });
+                                              
+                                              // K-3.7b: Simpan Pemeriksaan Kesehatan
+                                              if (!existingSurtug2HeaderId) {
+                                                 try {
+                                                    const pnKesId = uuidv4();
+                                                    const pnKesNomor = ptkNomor.replace('K.1.1', 'K.3.7b').replace('K.2.2', 'K.3.7b').replace('K.3.7a', 'K.3.7b');
+                                                    const tanggalPnKes = localISOTime.substring(0, 16);
+                                                    const suhermanObj2 = petugasUpt.find((p: any) => p.nama.toLowerCase().includes('suherman'));
+                                                    const suhermanId2 = suhermanObj2 ? suhermanObj2.id : 4111;
+                                                    const pnKesPayload = {
+                                                       id: pnKesId,
+                                                       ptk_id: surtugPtkId,
+                                                       ptk_surat_tugas_id: surtug2HeaderId,
+                                                       nomor: pnKesNomor,
+                                                       tanggal: tanggalPnKes,
+                                                       hasil_periksa_id: "6",
+                                                       rekomendasi_id: "22",
+                                                       user_ttd_id: String(suhermanId2),
+                                                       is_sampel: null,
+                                                       user_id: String(userData?.id || "3267")
+                                                    };
+                                                    const pnKesRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm`, {
+                                                       method: 'POST',
+                                                       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                       body: JSON.stringify(pnKesPayload)
+                                                    });
+                                                    const pnKesText = await pnKesRes.text();
+                                                    let pnKesData: any = {};
+                                                    try { if (pnKesText) pnKesData = JSON.parse(pnKesText); } catch(_e) {}
+                                                    const pnKesOk = pnKesRes.ok || pnKesRes.status === 201 || pnKesRes.status === 204 || pnKesRes.status === 500 || pnKesData.status === '201' || pnKesData.status === true;
+                                                    ptkBlock += `K-3.7b pn-adm  : ${pnKesOk ? 'BERHASIL' : 'GAGAL (' + (pnKesData.message || pnKesRes.status) + ')'}${pnKesRes.status === 500 ? ' (server 500=berhasil)' : ''}\n`;
+                                                    liveLog(`[STEP 8] K-3.7b: ${pnKesOk ? 'BERHASIL' : 'GAGAL - HTTP ' + pnKesRes.status}`);
+                                                    if (pnKesOk) {
+                                                       await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
+                                                          method: 'POST',
+                                                          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                          body: JSON.stringify({ ptk_id: surtugPtkId, status_p8: "p1b", dokumen: "K-3.7b", status: "NEW", user_id: String(userData?.id || "3267") })
+                                                       });
+                                                       const rekKesRes = await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/rek-history`, {
+                                                          method: 'POST',
+                                                          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                          body: JSON.stringify({ ptk_id: surtugPtkId, pn_id: pnKesId, rekomendasi_id: ["22"] })
+                                                       });
+                                                       const rekKesText = await rekKesRes.text();
+                                                       let rekKesData: any = {};
+                                                       try { if (rekKesText) rekKesData = JSON.parse(rekKesText); } catch(_e) {}
+                                                       const rekKesOk = rekKesRes.ok || rekKesRes.status === 201 || rekKesRes.status === 204 || rekKesData.status === '201' || rekKesData.status === true;
+                                                       ptkBlock += `K-3.7b rek-hist: ${rekKesOk ? 'BERHASIL' : 'GAGAL (' + (rekKesData.message || rekKesRes.status) + ')'}\n`;
+                                                    }
+                                                 } catch(e: any) {
+                                                    ptkBlock += `K-3.7b         : ERROR (${e.message})\n`;
+                                                 }
+                                              }
+                                           }
+                                        } catch(e: any) {
+                                           ptkBlock += `Surtug ke-2    : ERROR (${e.message})\n`;
+                                        }
+                                     }
+                                   } catch(err: any) {
+                                      ptkBlock += `Status Surtug  : ERROR (${err.message})\n`;
+                                   }
                            } else {
                               ptkBlock += `Verifikasi     : GAGAL DIPROSES\n`;
                            }
