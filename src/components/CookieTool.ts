@@ -240,7 +240,7 @@ export const CookieTool = () => {
         </div>
       </div>
       <!-- Terminal Body -->
-      <textarea id="processingResults" placeholder="Nexus Engine v2.0.1 initialized...&#10;> Awaiting target URL..." class="w-full bg-transparent p-4 text-zinc-300 placeholder-zinc-600 font-mono text-sm resize-none outline-none leading-relaxed" rows="12" readonly></textarea>
+      <textarea id="processingResults" placeholder="Barantin Engine initialized...&#10;> Awaiting AJU/PTK input..." class="w-full bg-transparent p-4 text-zinc-300 placeholder-zinc-600 font-mono text-sm resize-none outline-none leading-relaxed" rows="12" readonly></textarea>
       
       <div class="absolute bottom-4 right-4 flex gap-2">
         <button type="button" id="copyBtn" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white rounded-lg px-4 py-2 text-xs font-semibold cursor-pointer transition-colors shadow-md flex items-center gap-2 hidden">
