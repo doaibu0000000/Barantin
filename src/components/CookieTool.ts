@@ -1,4 +1,4 @@
-﻿let savedInput = '';
+let savedInput = '';
 let savedOutput = '';
 
 function uuidv4() {
@@ -356,7 +356,7 @@ export const bindCookieToolEvents = () => {
       if (matches && matches.length > 0) {
         processBtn.disabled = true;
         processBtn.textContent = 'Mencari Data...';
-        processingResults.value = `[MULAI] Ditemukan ${matches.length} AJU: ${matches.join(', ')}\nSedang memproses...\n`;
+        processingResults.value = `[MULAI] Ditemukan ${matches.length} AJU: ${matches.join(', ')}\n`;
         savedOutput = processingResults.value;
         
         // Helper: live update output
@@ -494,7 +494,6 @@ export const bindCookieToolEvents = () => {
 
         const token = await getToken(); // Ambil token sekali di luar loop untuk mempercepat
         const appsCookies = await getAppsCookies(); // Cookie posLayanan untuk suffix nomor PTK
-        liveLog(`[INFO] posLayanan cookie: ${appsCookies.match(/posLayanan=([^;]+)/)?.[1] || 'tidak ditemukan'}`);
         
         const fetchPromises = matches.map(async (aju) => {
           let outputBlock = '';
