@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   processBtn.addEventListener('click', () => {
     const inputCookies = cookieContent.value;
     const shouldExtractUid = extractUidToggle.checked;
-    
+
     if (!inputCookies.trim()) {
       processingResults.value = "Please enter some cookies to process.";
       return;
@@ -20,10 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let result = "Processing...\n\n";
     result += `Extract UID Option: ${shouldExtractUid ? 'Enabled' : 'Disabled'}\n\n`;
     result += `Input Length: ${inputCookies.length} characters.\n`;
-    
+
     // TODO: Add actual cookie processing logic here
     result += "\n(Cookie parsing logic goes here)";
-    
     processingResults.value = result;
   });
 
