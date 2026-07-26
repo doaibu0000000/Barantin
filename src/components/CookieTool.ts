@@ -509,7 +509,7 @@ export const bindCookieToolEvents = () => {
           let currentSsmPtk = '';
           let currentSsmPtkId = '';
           
-          liveLog(`\n[STEP 1] Mencari AJU: ${aju}...`);
+          liveLog(`[STEP 1] Mencari AJU: ${aju}...`);
           
           const [dataAju, dataReg] = await Promise.all([
             fetchAju(aju, 'noAju'),
