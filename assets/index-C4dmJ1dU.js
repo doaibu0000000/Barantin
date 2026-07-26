@@ -44,12 +44,11 @@
       </div>
     </div>
 
-    <br>
-    <button type="button" id="processBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
+    <button type="button" id="processBtn" class="w-full mt-3 bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
       Proses Data
     </button>
 
-    <div class="flex flex-col relative w-full overflow-hidden rounded-xl border border-zinc-800 bg-[#0a0a0a] shadow-2xl mt-4">
+    <div class="flex flex-col relative w-full overflow-hidden rounded-xl border border-zinc-800 bg-[#0a0a0a] shadow-2xl mt-3">
       <!-- Terminal Header -->
       <div class="flex items-center bg-[#1c1c1c] px-4 py-3 border-b border-zinc-800">
         <div class="flex items-center gap-2">
