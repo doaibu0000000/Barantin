@@ -209,26 +209,27 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
 
 export const CookieTool = () => {
   return `
-    <div class="flex flex-col gap-2">
-      <label for="cookieContent" class="text-sm font-semibold text-white">Nomor AJU SSM / PTK</label>
-      <div class="relative">
-        <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8"></textarea>
-        
-        <!-- Loading Overlay -->
-        <div id="cookieLoader" class="absolute inset-0 bg-zinc-900/60 backdrop-blur-[2px] rounded-lg flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 z-10">
-          <div class="flex flex-col items-center gap-3">
-            <div class="w-8 h-8 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
-            <span class="text-xs font-semibold text-brand-accent tracking-widest animate-pulse">MEMPROSES...</span>
+    <div class="flex flex-col gap-3">
+      <div class="flex flex-col gap-2">
+        <label for="cookieContent" class="text-sm font-semibold text-white">Nomor AJU SSM / PTK</label>
+        <div class="relative">
+          <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8"></textarea>
+          
+          <!-- Loading Overlay -->
+          <div id="cookieLoader" class="absolute inset-0 bg-zinc-900/60 backdrop-blur-[2px] rounded-lg flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 z-10">
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-8 h-8 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
+              <span class="text-xs font-semibold text-brand-accent tracking-widest animate-pulse">MEMPROSES...</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <button type="button" id="processBtn" class="mt-3 w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
-      Proses Data
-    </button>
+      <button type="button" id="processBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
+        Proses Data
+      </button>
 
-    <div class="flex flex-col relative w-full overflow-hidden rounded-xl border border-zinc-800 bg-[#0a0a0a] shadow-2xl mt-3">
+      <div class="flex flex-col relative w-full overflow-hidden rounded-xl border border-zinc-800 bg-[#0a0a0a] shadow-2xl">
       <!-- Terminal Header -->
       <div class="flex items-center bg-[#1c1c1c] px-4 py-3 border-b border-zinc-800">
         <div class="flex items-center gap-2">
@@ -248,7 +249,7 @@ export const CookieTool = () => {
         </button>
       </div>
     </div>
-
+  </div>
   `;
 };
 
