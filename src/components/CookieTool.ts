@@ -374,17 +374,26 @@ export const bindCookieToolEvents = () => {
           const method = (init?.method || 'GET').toUpperCase();
           const shortUrl = url.replace(/https:\/\/api[23]?\.karantinaindonesia\.go\.id\//g, '');
           const bodyStr = init?.body ? String(init.body) : '';
-          liveLog(`[-> ${method}] ${shortUrl}`);
-          if (bodyStr) liveLog(`  Body: ${bodyStr.substring(0, 5000)}${bodyStr.length > 5000 ? '...(truncated)' : ''}`);
+          
+          const methodPadded = `[-> ${method}]`.padEnd(10, ' ');
+          let reqLog = `${methodPadded} ${shortUrl}`;
+          if (bodyStr) reqLog += ` | Body: ${bodyStr.substring(0, 5000)}${bodyStr.length > 5000 ? '...(truncated)' : ''}`;
+          liveLog(reqLog);
+
           try {
             const res = await fetch(url, init);
             const clone = res.clone();
             const resText = await clone.text().catch(() => '');
-            liveLog(`[<- ${res.status}] ${shortUrl}`);
-            liveLog(`  Resp: ${resText.substring(0, 500)}${resText.length > 500 ? '...' : ''}`);
+            
+            const statusPadded = `[<- ${res.status}]`.padEnd(10, ' ');
+            let resLog = `${statusPadded} ${shortUrl}`;
+            resLog += ` | Resp: ${resText.substring(0, 500)}${resText.length > 500 ? '...' : ''}`;
+            liveLog(resLog);
+            
             return res;
           } catch (err: any) {
-            liveLog(`[<- ERR] ${shortUrl}: ${err.message}`);
+            const errPadded = `[<- ERR]`.padEnd(10, ' ');
+            liveLog(`${errPadded} ${shortUrl} | ERROR: ${err.message}`);
             throw err;
           }
         };
