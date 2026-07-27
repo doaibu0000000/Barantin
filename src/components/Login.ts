@@ -86,18 +86,26 @@ const preloadDdddOcr = async () => {
   if (preloadStarted) return;
   preloadStarted = true;
 
-  // Mendapatkan base URL untuk GitHub Pages (biasanya '/Barantin/' atau '/')
-  const baseUrl = (import.meta as any).env?.BASE_URL || './';
+  // Gunakan absolute path agar tidak salah load saat URL tidak memiliki trailing slash (seperti saat buka web dari shortcut/PWA)
+  const baseUrl = (import.meta as any).env?.DEV ? '/' : '/Barantin/';
 
   if (!(window as any).ort) {
     const s = document.createElement('script');
     s.src = `${baseUrl}ort/ort.min.js`; // Load dari file lokal di dalam repo
     document.head.appendChild(s);
-    await new Promise(r => { s.onload = r; });
+    await new Promise((resolve, reject) => { 
+      s.onload = resolve; 
+      s.onerror = () => {
+        console.error('Gagal memuat ort.min.js');
+        reject(new Error('Gagal memuat ort.min.js'));
+      };
+    }).catch(e => console.error(e));
   }
-  ortReady = true;
+  ortReady = !!(window as any).ort;
   
-  (window as any).ort.env.wasm.wasmPaths = `${baseUrl}ort/`; // Set Wasm path ke direktori lokal
+  if (ortReady) {
+    (window as any).ort.env.wasm.wasmPaths = `${baseUrl}ort/`; // Set Wasm path ke direktori lokal
+  }
   
   try {
     // Load model ddddocr dari dalam repo
