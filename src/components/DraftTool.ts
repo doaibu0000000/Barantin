@@ -156,25 +156,27 @@ export const bindDraftToolEvents = () => {
   // ============================================================
   if (ktNumber) {
     let ktDebounceTimer: ReturnType<typeof setTimeout>;
-    let lastKtRaw = '';
 
     ktNumber.addEventListener('input', () => {
-      let rawVal = ktNumber.value.replace(/\D/g, '');
-      if (rawVal.length > 6) rawVal = rawVal.slice(0, 6);
-
-      if (rawVal === lastKtRaw) return;
-      lastKtRaw = rawVal;
+      const currentVal = ktNumber.value;
 
       clearTimeout(ktDebounceTimer);
 
-      if (rawVal.length > 0) {
+      // Jika sudah dalam format lengkap (2026-...-XXXXXX), tidak perlu diubah
+      const fullFormatRegex = /^2026-[A-Z0-9.\-]+-\d{4,6}(\n2026-[A-Z0-9.\-]+-\d{4,6})*$/i;
+      if (fullFormatRegex.test(currentVal.trim())) {
+        return; // sudah benar, jangan ubah apapun
+      }
+
+      // Jika hanya angka (1-6 digit), format otomatis setelah debounce
+      const onlyDigits = currentVal.trim().replace(/\D/g, '');
+      if (onlyDigits.length > 0 && onlyDigits.length <= 6 && /^\d+$/.test(currentVal.trim())) {
         ktDebounceTimer = setTimeout(() => {
-          const padded = rawVal.padStart(6, '0');
+          const padded = onlyDigits.padStart(6, '0');
           showLoader(ktLoader, 400, () => {
             ktNumber.value = `2026-T1.0-3200.2-K.1.1-${padded}`;
-            lastKtRaw = ''; // reset agar tidak trigger ulang
           });
-        }, 400);
+        }, 500);
       }
     });
   }
