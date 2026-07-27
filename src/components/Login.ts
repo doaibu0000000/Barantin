@@ -111,8 +111,7 @@ const preloadDdddOcr = async () => {
     // Load model ddddocr dari dalam repo
     if (!ddddOcrSession) {
       const options = {
-        executionProviders: ['wasm'],
-        graphOptimizationLevel: 'none' // 'none' mempercepat waktu loading awal di HP
+        executionProviders: ['wasm']
       };
       ddddOcrSession = await (window as any).ort.InferenceSession.create(`${baseUrl}ddddocr.onnx`, options);
     }
