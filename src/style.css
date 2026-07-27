@@ -17,8 +17,13 @@ body {
 }
 
 @media (max-width: 767px) {
+  html {
+    overflow: hidden;
+    height: 100%;
+  }
   body {
-    @apply h-screen overflow-hidden fixed inset-0;
+    @apply overflow-hidden fixed inset-0 bg-brand-bg text-brand-text font-sans;
+    height: 100%;
   }
 }
 
