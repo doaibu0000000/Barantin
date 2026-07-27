@@ -77,6 +77,39 @@ export const bindDraftToolEvents = () => {
   const processDraftBtn = document.getElementById('processDraftBtn') as HTMLButtonElement;
   const draftResults = document.getElementById('draftResults') as HTMLTextAreaElement;
 
+  // Helper: format apapun menjadi nomor KT baku
+  // Ekstrak 6 digit terakhir → rebuild dengan tahun sekarang
+  const formatNomorKT = (input: string): string => {
+    const tahun = new Date().getFullYear();
+    const template = `${tahun}-T1.0-3200.2-K.1.1`;
+
+    // Ambil 6 digit terakhir dari input (nomor urut)
+    // Contoh: 2026-T1.0-3200.2-K.T.1-001894 → 001894 → 001894
+    const digitMatch = input.trim().match(/(\d{1,6})\s*$/);
+    if (digitMatch) {
+      const padded = digitMatch[1].padStart(6, '0');
+      return `${template}-${padded}`;
+    }
+    // Jika tidak ada digit, kembalikan input apa adanya
+    return input.trim();
+  };
+
+  // Helper banyak baris: tiap baris diformat
+  const formatBanyakNomorKT = (input: string): string => {
+    const tahun = new Date().getFullYear();
+    const template = `${tahun}-T1.0-3200.2-K.1.1`;
+    const lines = input.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    return lines.map(line => {
+      // Cari kelompok digit (terutama di akhir baris)
+      const digitMatch = line.match(/(\d{1,6})\s*$/);
+      if (digitMatch) {
+        const padded = digitMatch[1].padStart(6, '0');
+        return `${template}-${padded}`;
+      }
+      return line;
+    }).join('\n');
+  };
+
   const showLoader = (loaderEl: HTMLElement | null, duration: number, callback: () => void) => {
     if (loaderEl) {
       loaderEl.classList.remove('opacity-0', 'pointer-events-none');
@@ -152,32 +185,37 @@ export const bindDraftToolEvents = () => {
   tabKt?.addEventListener('click', () => switchTab('kt'));
 
   // ============================================================
-  // Tab No KT: input nomor singkat -> format otomatis seperti Surtu 2
+  // Tab No KT: format otomatis - ekstrak 6 digit terakhir, rebuild dengan template baku
   // ============================================================
   if (ktNumber) {
     let ktDebounceTimer: ReturnType<typeof setTimeout>;
 
     ktNumber.addEventListener('input', () => {
       const currentVal = ktNumber.value;
-
       clearTimeout(ktDebounceTimer);
 
-      // Jika sudah dalam format lengkap (2026-...-XXXXXX), tidak perlu diubah
-      const fullFormatRegex = /^2026-[A-Z0-9.\-]+-\d{4,6}(\n2026-[A-Z0-9.\-]+-\d{4,6})*$/i;
-      if (fullFormatRegex.test(currentVal.trim())) {
-        return; // sudah benar, jangan ubah apapun
+      if (!currentVal.trim()) return;
+
+      // Cek apakah sudah PERSIS format yang benar
+      const tahun = new Date().getFullYear();
+      const correctFormatRegex = new RegExp(`^${tahun}-T1\.0-3200\.2-K\.1\.1-\\d{6}(\\n${tahun}-T1\.0-3200\.2-K\.1\.1-\\d{6})*$`);
+      if (correctFormatRegex.test(currentVal.trim())) {
+        return; // sudah benar sempurna, tidak perlu ubah
       }
 
-      // Jika hanya angka (1-6 digit), format otomatis setelah debounce
-      const onlyDigits = currentVal.trim().replace(/\D/g, '');
-      if (onlyDigits.length > 0 && onlyDigits.length <= 6 && /^\d+$/.test(currentVal.trim())) {
-        ktDebounceTimer = setTimeout(() => {
-          const padded = onlyDigits.padStart(6, '0');
+      // Input apapun: format ulang setelah 500ms debounce
+      ktDebounceTimer = setTimeout(() => {
+        const lines = currentVal.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        // Hanya proses jika ada konten
+        if (lines.length === 0) return;
+
+        const formatted = formatBanyakNomorKT(currentVal);
+        if (formatted !== currentVal.trim()) {
           showLoader(ktLoader, 400, () => {
-            ktNumber.value = `2026-T1.0-3200.2-K.1.1-${padded}`;
+            ktNumber.value = formatted;
           });
-        }, 500);
-      }
+        }
+      }, 500);
     });
   }
 
@@ -295,7 +333,7 @@ export const bindDraftToolEvents = () => {
         resultText = `File PDF yang dipilih: ${file.name}`;
 
       } else if (activeTab === 'kt') {
-        // Tab No KT: ambil nilai dari ktNumber, format jika belum
+        // Tab No KT: selalu format ulang dengan template baku
         let rawKt = ktNumber?.value?.trim() || '';
         if (!rawKt) {
           draftResults.value = "Silakan masukkan No KT terlebih dahulu.";
@@ -303,6 +341,9 @@ export const bindDraftToolEvents = () => {
           return;
         }
         draftResults.classList.remove('text-red-500');
+        const finalKtFormatted = formatBanyakNomorKT(rawKt);
+        if (ktNumber) ktNumber.value = finalKtFormatted;
+        resultText = `Nomor KT:\n${finalKtFormatted}`;
 
         // Jika sudah dalam format lengkap, gunakan langsung
         const regexFull = /2026-[A-Z0-9\.-]{10,30}-\d{4,6}/gi;
