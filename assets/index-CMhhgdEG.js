@@ -259,9 +259,9 @@ ${b}
 
 Done`,L+=`
 [${new Date().toLocaleTimeString()}] Selesai memformat. Buka tab 'Hasil' untuk melihat.`,u("hasil")}}),j&&Q&&j.addEventListener("click",()=>{const p=Q.value.trim();p&&navigator.clipboard.writeText(p).then(()=>{const h=j.innerHTML;j.innerHTML='<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Tersalin!',j.classList.add("bg-green-600","hover:bg-green-500"),j.classList.remove("bg-zinc-700","hover:bg-zinc-600"),setTimeout(()=>{j.innerHTML=h,j.classList.remove("bg-green-600","hover:bg-green-500"),j.classList.add("bg-zinc-700","hover:bg-zinc-600")},2e3)}).catch(h=>{console.error("Failed to copy text: ",h)})})},PengaturanTool=()=>`
-    <div class="flex flex-col h-full w-full relative">
+    <div class="flex flex-col w-full relative">
       <!-- Main Settings Menu -->
-      <div id="settingsMainScreen" class="flex flex-col gap-2 h-full text-white max-w-2xl w-full overflow-y-auto transition-opacity duration-300">
+      <div id="settingsMainScreen" class="flex flex-col gap-2 text-white max-w-2xl w-full transition-opacity duration-300">
 
 
         <button type="button" id="btnMenuProviders" class="flex items-center justify-between bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-zinc-700/50 p-4 rounded-xl shadow-md transition-colors w-full text-left group">
@@ -388,11 +388,11 @@ Done`,L+=`
     <div class="flex flex-col md:flex-row items-start gap-4 md:gap-4 w-full max-w-[1600px] mx-auto p-4 md:p-6 h-[100dvh] pb-[90px] md:pb-6">
       ${Sidebar(V)}
       
-      <main id="mainContent" class="${V==="Settings"?"w-full md:w-fit md:min-w-[500px] mt-auto md:mt-0 max-h-full min-h-0 overflow-y-auto":"w-full h-full flex-1 min-h-0 overflow-hidden"} bg-brand-panel border border-white/5 rounded-xl p-3 md:p-5 flex flex-col gap-3 shadow-2xl">
+      <main id="mainContent" class="${V==="Settings"?"w-full md:w-fit md:min-w-[500px]":"w-full h-full flex-1 min-h-0 overflow-hidden"} bg-brand-panel border border-white/5 rounded-xl p-3 md:p-5 flex flex-col gap-3 shadow-2xl">
         ${l}
       </main>
     </div>
-  `},bindAppEvents=()=>{const V=document.getElementById("mainContent");let l=localStorage.getItem("activeMenu")||"Surtu 2";l==="Profile"&&(l="Surtu 2"),bindSidebarEvents(U=>{localStorage.setItem("activeMenu",U),V&&(U==="Settings"?V.className="w-full md:w-fit md:min-w-[500px] mt-auto md:mt-0 max-h-full min-h-0 overflow-y-auto bg-brand-panel border border-white/5 rounded-xl p-3 md:p-5 flex flex-col gap-3 shadow-2xl":V.className="w-full h-full bg-brand-panel border border-white/5 rounded-xl flex-1 p-3 md:p-5 flex flex-col gap-3 shadow-2xl min-h-0 overflow-hidden",U==="Draft"?(V.innerHTML=DraftTool(),bindDraftToolEvents()):U==="Revisi"?(V.innerHTML=RevisiTool(),bindRevisiToolEvents()):U==="Surtu 2"?(V.innerHTML=CookieTool(),bindCookieToolEvents()):U==="Settings"?(V.innerHTML=PengaturanTool(),bindPengaturanToolEvents()):V.innerHTML=`<div class="text-white text-center mt-10">Fitur ${U} belum tersedia</div>`)}),l==="Draft"?bindDraftToolEvents():l==="Revisi"?bindRevisiToolEvents():l==="Surtu 2"?bindCookieToolEvents():l==="Settings"&&bindPengaturanToolEvents()},Login=()=>`
+  `},bindAppEvents=()=>{const V=document.getElementById("mainContent");let l=localStorage.getItem("activeMenu")||"Surtu 2";l==="Profile"&&(l="Surtu 2"),bindSidebarEvents(U=>{localStorage.setItem("activeMenu",U),V&&(U==="Settings"?V.className="w-full md:w-fit md:min-w-[500px] bg-brand-panel border border-white/5 rounded-xl p-3 md:p-5 flex flex-col gap-3 shadow-2xl":V.className="w-full h-full bg-brand-panel border border-white/5 rounded-xl flex-1 p-3 md:p-5 flex flex-col gap-3 shadow-2xl min-h-0 overflow-hidden",U==="Draft"?(V.innerHTML=DraftTool(),bindDraftToolEvents()):U==="Revisi"?(V.innerHTML=RevisiTool(),bindRevisiToolEvents()):U==="Surtu 2"?(V.innerHTML=CookieTool(),bindCookieToolEvents()):U==="Settings"?(V.innerHTML=PengaturanTool(),bindPengaturanToolEvents()):V.innerHTML=`<div class="text-white text-center mt-10">Fitur ${U} belum tersedia</div>`)}),l==="Draft"?bindDraftToolEvents():l==="Revisi"?bindRevisiToolEvents():l==="Surtu 2"?bindCookieToolEvents():l==="Settings"&&bindPengaturanToolEvents()},Login=()=>`
     <div class="flex items-center justify-center min-h-screen bg-[#3b3b3b] w-full p-4">
       <div class="w-full max-w-md bg-brand-panel border border-white/5 rounded-2xl p-8 shadow-2xl flex flex-col gap-4">
         
