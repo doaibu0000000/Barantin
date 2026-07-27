@@ -118,12 +118,13 @@ const preloadDdddOcr = async () => {
 
   try {
     if (!ddddOcrSession) {
-      const baseUrl = '/Barantin/';
+      // Auto-detect base URL: lokal (localhost) = '/', GitHub Pages = '/Barantin/'
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const baseUrl = isLocalhost ? '/' : '/Barantin/';
       ddddOcrSession = await ort.InferenceSession.create(`${baseUrl}ddddocr.onnx`, {
         executionProviders: ['wasm']
       });
-      console.log('[OCR] Model ddddocr berhasil dimuat!');
-    }
+      console.log('[OCR] Model ddddocr berhasil dimuat dari: ' + baseUrl);
   } catch (e) { 
     console.error('[OCR] Gagal meload model ddddocr:', e);
     ddddOcrSession = null;
