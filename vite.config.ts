@@ -12,7 +12,8 @@ export default defineConfig(({ command }) => ({
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,onnx}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,onnx}'],
+        maximumFileSizeToCacheInBytes: 50 * 1024 * 1024, // 50 MB
       },
       manifest: {
         name: 'Barantin',

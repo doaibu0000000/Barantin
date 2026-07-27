@@ -97,7 +97,6 @@ const preloadDdddOcr = async () => {
   }
   ortReady = true;
   
-  (window as any).ort.env.wasm.numThreads = Math.min(4, navigator.hardwareConcurrency || 1);
   (window as any).ort.env.wasm.wasmPaths = `${baseUrl}ort/`; // Set Wasm path ke direktori lokal
   
   try {
@@ -105,7 +104,7 @@ const preloadDdddOcr = async () => {
     if (!ddddOcrSession) {
       const options = {
         executionProviders: ['wasm'],
-        graphOptimizationLevel: 'all'
+        graphOptimizationLevel: 'none' // 'none' mempercepat waktu loading awal di HP
       };
       ddddOcrSession = await (window as any).ort.InferenceSession.create(`${baseUrl}ddddocr.onnx`, options);
     }
