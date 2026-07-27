@@ -86,25 +86,28 @@ const preloadDdddOcr = async () => {
   if (preloadStarted) return;
   preloadStarted = true;
 
+  // Mendapatkan base URL untuk GitHub Pages (biasanya '/Barantin/' atau '/')
+  const baseUrl = (import.meta as any).env?.BASE_URL || './';
+
   if (!(window as any).ort) {
     const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/ort.min.js';
+    s.src = `${baseUrl}ort/ort.min.js`; // Load dari file lokal di dalam repo
     document.head.appendChild(s);
     await new Promise(r => { s.onload = r; });
   }
   ortReady = true;
   
   (window as any).ort.env.wasm.numThreads = Math.min(4, navigator.hardwareConcurrency || 1);
-  (window as any).ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/';
+  (window as any).ort.env.wasm.wasmPaths = `${baseUrl}ort/`; // Set Wasm path ke direktori lokal
   
   try {
-    // Load model ddddocr
+    // Load model ddddocr dari dalam repo
     if (!ddddOcrSession) {
       const options = {
         executionProviders: ['wasm'],
         graphOptimizationLevel: 'all'
       };
-      ddddOcrSession = await (window as any).ort.InferenceSession.create('/Barantin/ddddocr.onnx', options);
+      ddddOcrSession = await (window as any).ort.InferenceSession.create(`${baseUrl}ddddocr.onnx`, options);
     }
   } catch (e) { console.error('Gagal meload model ddddocr', e); }
 };

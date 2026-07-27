@@ -12,6 +12,7 @@ export default defineConfig(({ command }) => ({
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,onnx}']
       },
       manifest: {
         name: 'Barantin',
