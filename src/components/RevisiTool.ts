@@ -2,7 +2,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 
 export const RevisiTool = () => {
   return `
-    <div class="flex flex-col gap-3 h-full">
+    <div class="flex flex-col gap-3 flex-1 min-h-0 w-full">
       <div class="flex flex-col gap-2">
         <div class="flex flex-row items-center justify-between w-full gap-3">
         <div class="flex flex-row items-center gap-3 flex-1 min-w-0">
