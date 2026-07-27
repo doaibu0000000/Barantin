@@ -28,7 +28,7 @@ export const App = () => {
     <div class="flex flex-col md:flex-row items-start gap-4 md:gap-4 w-full max-w-[1600px] mx-auto p-4 md:p-6 h-[100dvh] pb-[90px] md:pb-6">
       ${Sidebar(activeMenu)}
       
-      <main id="mainContent" class="${activeMenu === 'Settings' ? 'w-full md:w-fit md:min-w-[500px] mt-auto md:mt-0 max-h-full min-h-0 overflow-y-auto' : 'w-full h-full flex-1 min-h-0 overflow-hidden'} bg-brand-panel border border-white/5 rounded-xl p-3 md:p-5 flex flex-col gap-3 shadow-2xl">
+      <main id="mainContent" class="${activeMenu === 'Settings' ? 'w-full md:w-fit md:min-w-[500px]' : 'w-full h-full flex-1 min-h-0 overflow-hidden'} bg-brand-panel border border-white/5 rounded-xl p-3 md:p-5 flex flex-col gap-3 shadow-2xl">
         ${initialContent}
       </main>
     </div>
@@ -47,7 +47,7 @@ export const bindAppEvents = () => {
     if (!mainContent) return;
 
     if (menuId === 'Settings') {
-      mainContent.className = "w-full md:w-fit md:min-w-[500px] mt-auto md:mt-0 max-h-full min-h-0 overflow-y-auto bg-brand-panel border border-white/5 rounded-xl p-3 md:p-5 flex flex-col gap-3 shadow-2xl";
+      mainContent.className = "w-full md:w-fit md:min-w-[500px] bg-brand-panel border border-white/5 rounded-xl p-3 md:p-5 flex flex-col gap-3 shadow-2xl";
     } else {
       mainContent.className = "w-full h-full bg-brand-panel border border-white/5 rounded-xl flex-1 p-3 md:p-5 flex flex-col gap-3 shadow-2xl min-h-0 overflow-hidden";
     }

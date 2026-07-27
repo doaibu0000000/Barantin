@@ -1,8 +1,8 @@
 export const PengaturanTool = () => {
   return `
-    <div class="flex flex-col h-full w-full relative">
+    <div class="flex flex-col w-full relative">
       <!-- Main Settings Menu -->
-      <div id="settingsMainScreen" class="flex flex-col gap-2 h-full text-white max-w-2xl w-full overflow-y-auto transition-opacity duration-300">
+      <div id="settingsMainScreen" class="flex flex-col gap-2 text-white max-w-2xl w-full transition-opacity duration-300">
 
 
         <button type="button" id="btnMenuProviders" class="flex items-center justify-between bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-zinc-700/50 p-4 rounded-xl shadow-md transition-colors w-full text-left group">
