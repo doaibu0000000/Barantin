@@ -345,36 +345,6 @@ export const bindDraftToolEvents = () => {
         if (ktNumber) ktNumber.value = finalKtFormatted;
         resultText = `Nomor KT:\n${finalKtFormatted}`;
 
-        // Jika sudah dalam format lengkap, gunakan langsung
-        const regexFull = /2026-[A-Z0-9\.-]{10,30}-\d{4,6}/gi;
-        const matchesFull = rawKt.match(regexFull);
-        let finalKt = rawKt;
-
-        if (matchesFull && matchesFull.length > 0) {
-          finalKt = matchesFull.map(m => {
-            const mUpper = m.toUpperCase();
-            const digitMatch = mUpper.match(/\d{4,6}$/);
-            if (digitMatch) {
-              const padded = digitMatch[0].padStart(6, '0');
-              return `2026-T1.0-3200.2-K.1.1-${padded}`;
-            }
-            return mUpper;
-          }).join('\n');
-        } else {
-          // Cari angka dari input
-          const digitGroups = rawKt.match(/\b\d{1,6}\b/g);
-          if (digitGroups) {
-            const candidate = digitGroups.reverse().find(g => g.length >= 1 && g.length <= 6) || digitGroups[0];
-            if (candidate) {
-              const padded = candidate.padStart(6, '0');
-              finalKt = `2026-T1.0-3200.2-K.1.1-${padded}`;
-            }
-          }
-        }
-
-        if (ktNumber) ktNumber.value = finalKt;
-        resultText = `Nomor KT:\n${finalKt}`;
-
       } else {
         // Tab No Dokumen
         let rawNumber = docNumber.value.trim();
