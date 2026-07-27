@@ -12,8 +12,13 @@
   --color-brand-text-muted: #909296;
 }
 
+html, body, #app {
+  height: 100%;
+}
+
 body {
-  @apply bg-brand-bg text-brand-text font-sans min-h-screen;
+  @apply bg-brand-bg text-brand-text font-sans;
+  min-height: 100%;
 }
 
 @media (max-width: 767px) {
