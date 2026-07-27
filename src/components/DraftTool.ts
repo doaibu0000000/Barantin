@@ -41,8 +41,18 @@ export const DraftTool = () => {
         </button>
       </div>
 
-      <div class="flex flex-col gap-2 mt-4">
-        <textarea id="draftResults" placeholder="Hasil pemrosesan ditampilkan di sini..." class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors h-32" readonly></textarea>
+      <div class="flex flex-col relative w-full overflow-hidden rounded-xl border border-zinc-700 bg-[#0a0a0a] shadow-2xl mt-4">
+        <!-- Terminal Header -->
+        <div class="flex items-center bg-[#1c1c1c] px-4 py-3 border-b border-zinc-700">
+          <div class="flex items-center gap-2">
+            <div class="h-3 w-3 rounded-full bg-[#ff5f56]"></div>
+            <div class="h-3 w-3 rounded-full bg-[#ffbd2e]"></div>
+            <div class="h-3 w-3 rounded-full bg-[#27c93f]"></div>
+            <span class="ml-4 text-xs font-semibold text-zinc-500 tracking-widest uppercase">System Terminal</span>
+          </div>
+        </div>
+        <!-- Terminal Body -->
+        <textarea id="draftResults" wrap="off" placeholder="> Hasil pemrosesan ditampilkan di sini..." class="w-full whitespace-pre overflow-x-auto bg-transparent p-4 text-zinc-300 placeholder-zinc-600 font-mono text-sm resize-none outline-none leading-relaxed h-48" readonly></textarea>
       </div>
     </div>
   `;
