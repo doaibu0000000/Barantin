@@ -71,6 +71,47 @@ export const Login = () => {
   `;
 };
 
+// --- ddddocr murni di Browser via ONNX Runtime Web ---
+const charsetMap: Record<number, string> = {
+  0: '', 78: '2', 409: '7', 2879: '9', 4410: '1', 
+  5806: '4', 5961: '6', 6749: '0', 6977: '5', 6979: '8', 7721: '3'
+};
+const allowedIndices = Object.keys(charsetMap).map(Number);
+
+let ortReady = false;
+let ddddOcrSession: any = null;
+let preloadStarted = false;
+
+const preloadDdddOcr = async () => {
+  if (preloadStarted) return;
+  preloadStarted = true;
+
+  if (!(window as any).ort) {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/ort.min.js';
+    document.head.appendChild(s);
+    await new Promise(r => { s.onload = r; });
+  }
+  ortReady = true;
+  
+  (window as any).ort.env.wasm.numThreads = Math.min(4, navigator.hardwareConcurrency || 1);
+  (window as any).ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/';
+  
+  try {
+    // Load model ddddocr
+    if (!ddddOcrSession) {
+      const options = {
+        executionProviders: ['wasm'],
+        graphOptimizationLevel: 'all'
+      };
+      ddddOcrSession = await (window as any).ort.InferenceSession.create('/Barantin/ddddocr.onnx', options);
+    }
+  } catch (e) { console.error('Gagal meload model ddddocr', e); }
+};
+
+// Start preloading immediately
+preloadDdddOcr();
+
 export const bindLoginEvents = (onSuccess: () => void) => {
   const loginSubmitBtn = document.getElementById('loginSubmitBtn') as HTMLButtonElement;
   const loginError = document.getElementById('loginError');
@@ -102,34 +143,6 @@ export const bindLoginEvents = (onSuccess: () => void) => {
       return JSON.parse(atob(pad));
     } catch { return null; }
   };
-
-  // --- ddddocr murni di Browser via ONNX Runtime Web ---
-  const charsetMap: Record<number, string> = {
-    0: '', 78: '2', 409: '7', 2879: '9', 4410: '1', 
-    5806: '4', 5961: '6', 6749: '0', 6977: '5', 6979: '8', 7721: '3'
-  };
-  const allowedIndices = Object.keys(charsetMap).map(Number);
-
-  let ortReady = false;
-  let ddddOcrSession: any = null;
-
-  const preloadDdddOcr = async () => {
-    if (!(window as any).ort) {
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/ort.min.js';
-      document.head.appendChild(s);
-      await new Promise(r => { s.onload = r; });
-    }
-    ortReady = true;
-    (window as any).ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/';
-    try {
-      // Load model ddddocr (sudah dipush ke folder public/)
-      if (!ddddOcrSession) {
-        ddddOcrSession = await (window as any).ort.InferenceSession.create('/Barantin/ddddocr.onnx');
-      }
-    } catch (e) { console.error('Gagal meload model ddddocr', e); }
-  };
-  preloadDdddOcr();
 
   const preprocessForDdddOcr = (imgSrc: string): Promise<{ data: Float32Array, width: number }> => {
     return new Promise((resolve) => {
@@ -169,8 +182,9 @@ export const bindLoginEvents = (onSuccess: () => void) => {
   const solveCaptchaOCR = async (imgSrc: string): Promise<string> => {
     try {
       let waited = 0;
-      while ((!ortReady || !ddddOcrSession) && waited < 100) {
-        await new Promise(r => setTimeout(r, 100));
+      // Tingkatkan waktu tunggu hingga 15 detik (750 * 20ms = 15000ms) untuk koneksi lambat
+      while ((!ortReady || !ddddOcrSession) && waited < 750) {
+        await new Promise(r => setTimeout(r, 20));
         waited++;
       }
       if (!ddddOcrSession) return '';
@@ -251,17 +265,40 @@ export const bindLoginEvents = (onSuccess: () => void) => {
 
             if (jwtText && captchaInputEl) {
               // Dapat dari JWT — instant!
-              captchaInputEl.value = jwtText;
+              if (captchaInputEl.value === '') {
+                captchaInputEl.value = jwtText;
+                if (captchaHintEl) { captchaHintEl.textContent = `Terisi otomatis: ${jwtText}`; captchaHintEl.style.display = 'block'; }
+              }
               if (captchaLoadingEl) captchaLoadingEl.style.display = 'none';
-              if (captchaHintEl) { captchaHintEl.textContent = `Terisi otomatis: ${jwtText}`; captchaHintEl.style.display = 'block'; }
             } else {
               // Coba 2: OCR via Tesseract.js (browser-native, tidak butuh server)
-              if (captchaLoadingEl) { captchaLoadingEl.textContent = 'Membaca...'; captchaLoadingEl.style.display = 'inline'; }
+              if (captchaLoadingEl) { captchaLoadingEl.style.display = 'none'; }
+              
+              if (captchaHintEl && captchaInputEl && captchaInputEl.value === '') { 
+                captchaHintEl.textContent = 'Menyiapkan AI untuk baca otomatis...'; 
+                captchaHintEl.style.display = 'block';
+              }
+              
               const solved = await solveCaptchaOCR(imgSrc);
-              if (captchaLoadingEl) captchaLoadingEl.style.display = 'none';
+              
               if (solved && captchaInputEl) {
-                captchaInputEl.value = solved;
-                if (captchaHintEl) { captchaHintEl.textContent = `Terisi otomatis: ${solved}`; captchaHintEl.style.display = 'block'; }
+                // Hanya override jika user belum mengetik sendiri
+                if (captchaInputEl.value === '') {
+                  captchaInputEl.value = solved;
+                  if (captchaHintEl) { 
+                    captchaHintEl.textContent = `Terisi otomatis: ${solved}`; 
+                    captchaHintEl.style.display = 'block'; 
+                  }
+                } else {
+                  // User sudah mengetik sendiri, sembunyikan hint
+                  if (captchaHintEl && captchaHintEl.textContent === 'Menyiapkan AI untuk baca otomatis...') {
+                    captchaHintEl.style.display = 'none';
+                  }
+                }
+              } else {
+                if (captchaHintEl && captchaHintEl.textContent === 'Menyiapkan AI untuk baca otomatis...') { 
+                  captchaHintEl.style.display = 'none'; 
+                }
               }
             } // end else (OCR fallback)
           }; // end onload

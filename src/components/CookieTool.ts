@@ -383,9 +383,22 @@ export const bindCookieToolEvents = () => {
             let resLog = `${statusPadded} ${shortUrl}`;
             resLog += ` | Resp: ${resText.substring(0, 500)}${resText.length > 500 ? '...' : ''}`;
             liveLog(resLog);
+
+            // Jika token expired (401) dari endpoint yang memerlukan auth -> langsung logout
+            if (res.status === 401 && url.includes('karantinaindonesia.go.id')) {
+              liveLog(`[AUTH] ⚠ Token expired! Sesi berakhir - mengalihkan ke halaman login...`);
+              // Beri sedikit jeda agar log terakhir terlihat sebelum redirect
+              setTimeout(() => {
+                if (typeof (window as any).handleSessionExpired === 'function') {
+                  (window as any).handleSessionExpired();
+                }
+              }, 800);
+              throw new Error('TOKEN_EXPIRED_401');
+            }
             
             return res;
           } catch (err: any) {
+            if (err.message === 'TOKEN_EXPIRED_401') throw err; // re-throw tanpa log ulang
             const errPadded = `[<- ERR]`;
             liveLog(`${errPadded} ${shortUrl} | ERROR: ${err.message}`);
             throw err;
@@ -1078,15 +1091,18 @@ export const bindCookieToolEvents = () => {
                                                        ptkBlock += `K-3.7b rek-hist: ${rekKesOk ? 'BERHASIL' : 'GAGAL (' + (rekKesData.message || rekKesRes.status) + ')'}\n`;
                                                     }
                                                  } catch(e: any) {
+                                                    if (e.message === 'TOKEN_EXPIRED_401') throw e;
                                                     ptkBlock += `K-3.7b         : ERROR (${e.message})\n`;
                                                  }
                                               }
                                            }
                                         } catch(e: any) {
+                                           if (e.message === 'TOKEN_EXPIRED_401') throw e;
                                            ptkBlock += `Surtug ke-2    : ERROR (${e.message})\n`;
                                         }
                                      }
                                    } catch(err: any) {
+                                      if (err.message === 'TOKEN_EXPIRED_401') throw err;
                                       ptkBlock += `Status Surtug  : ERROR (${err.message})\n`;
                                    }
                            } else {
@@ -1098,9 +1114,10 @@ export const bindCookieToolEvents = () => {
                       } else {
                          ptkBlock += `Status PTK     : GAGAL (lihat log di atas)\n`;
                       }
-                  } catch (err: any) {
+                   } catch (err: any) {
+                     if (err.message === 'TOKEN_EXPIRED_401') throw err;
                      ptkBlock += `Status PTK     : ERROR (${err.message})\n`;
-                  }
+                   }
                }
             }
             
@@ -1114,7 +1131,17 @@ export const bindCookieToolEvents = () => {
           return outputBlock;
         });
         
-        const resultsArray = await Promise.all(fetchPromises);
+        let resultsArray: string[] = [];
+        try {
+          resultsArray = await Promise.all(fetchPromises);
+        } catch (err: any) {
+          if (err.message === 'TOKEN_EXPIRED_401') {
+            // Proses berhenti - handleSessionExpired sudah dijadwalkan (setTimeout 800ms)
+            // Jangan reset tombol atau tampilkan summary
+            return;
+          }
+          throw err;
+        }
         finalOutput = resultsArray.join('');
         
         // Gabungkan live log (dari loggedFetch) + final summary
