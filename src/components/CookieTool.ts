@@ -212,15 +212,15 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
 export const CookieTool = () => {
   return `
     <div class="flex flex-col gap-3 flex-1 min-h-0 w-full h-full">
-      <div class="flex flex-col gap-2">
-        <div class="flex flex-row items-center justify-between">
+      <div class="flex flex-col gap-2 flex-1 md:flex-none min-h-0">
+        <div class="flex flex-row items-center justify-between shrink-0">
           <label for="cookieContent" class="text-sm font-semibold text-white">Nomor AJU SSM / PTK</label>
           <button type="button" id="processBtn" class="bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-bold cursor-pointer transition-all shadow-md shrink-0 whitespace-nowrap h-[36px] md:h-[38px]">
             Proses Data
           </button>
         </div>
-        <div class="relative">
-          <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full h-20 md:h-auto block bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="4"></textarea>
+        <div class="relative flex-1 min-h-0 flex flex-col md:block">
+          <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full h-full md:h-auto flex-1 block bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="4"></textarea>
           
           <!-- Loading Overlay -->
           <div id="cookieLoader" class="absolute inset-0 bg-zinc-900/60 backdrop-blur-[2px] rounded-lg flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 z-10">
