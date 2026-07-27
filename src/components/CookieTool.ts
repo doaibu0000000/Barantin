@@ -1,5 +1,7 @@
 let savedInput = '';
-let savedOutput = '';
+let savedLogContent = '> Menghubungkan ke server...\n';
+let savedHasilContent = 'Belum ada hasil yang diproses.';
+let savedActiveTab = 'log';
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -209,9 +211,14 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
 
 export const CookieTool = () => {
   return `
-    <div class="flex flex-col gap-3">
+    <div class="flex flex-col gap-3 h-full">
       <div class="flex flex-col gap-2">
-        <label for="cookieContent" class="text-sm font-semibold text-white">Nomor AJU SSM / PTK</label>
+        <div class="flex flex-row items-center justify-between">
+          <label for="cookieContent" class="text-sm font-semibold text-white">Nomor AJU SSM / PTK</label>
+          <button type="button" id="processBtn" class="bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-bold cursor-pointer transition-all shadow-md shrink-0 whitespace-nowrap h-[36px] md:h-[38px]">
+            Proses Data
+          </button>
+        </div>
         <div class="relative">
           <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full h-28 md:h-auto block bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="8"></textarea>
           
@@ -225,22 +232,21 @@ export const CookieTool = () => {
         </div>
       </div>
 
-      <button type="button" id="processBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
-        Proses Data
-      </button>
-
-      <div class="flex flex-col relative w-full overflow-hidden rounded-xl border border-zinc-700 bg-[#0a0a0a] shadow-2xl">
+      <div class="flex flex-col relative w-full overflow-hidden rounded-xl border border-zinc-700 bg-[#0a0a0a] shadow-2xl flex-1 min-h-0">
       <!-- Terminal Header -->
-      <div class="flex items-center bg-[#1c1c1c] px-4 py-3 border-b border-zinc-700">
+      <div class="flex items-center justify-between bg-[#1c1c1c] px-4 py-2 border-b border-zinc-700">
         <div class="flex items-center gap-2">
           <div class="h-3 w-3 rounded-full bg-[#ff5f56]"></div>
           <div class="h-3 w-3 rounded-full bg-[#ffbd2e]"></div>
           <div class="h-3 w-3 rounded-full bg-[#27c93f]"></div>
-          <span class="ml-4 text-xs font-semibold text-zinc-500 tracking-widest uppercase">System Terminal</span>
+          <span class="ml-4 text-xs font-semibold text-zinc-500 tracking-widest uppercase"><span class="hidden md:inline">System </span>Terminal</span>
+        </div>
+        <div class="flex w-fit bg-[#0a0a0a] border border-zinc-700 p-0.5 rounded-md">
+          <button type="button" id="cookieTermTabLog" class="px-3 py-0.5 text-[10px] font-bold rounded text-zinc-500 hover:text-white transition-all uppercase tracking-wider">Log</button>
+          <button type="button" id="cookieTermTabHasil" class="px-3 py-0.5 text-[10px] font-bold rounded text-zinc-500 hover:text-white transition-all uppercase tracking-wider">Hasil</button>
         </div>
       </div>
-      <!-- Terminal Body -->
-      <textarea id="processingResults" wrap="off" placeholder="> Menghubungkan ke server..." class="w-full whitespace-pre overflow-x-auto bg-transparent p-4 text-zinc-300 placeholder-zinc-600 font-mono text-sm resize-none outline-none leading-relaxed" rows="12" readonly></textarea>
+      <textarea id="processingResults" wrap="off" placeholder="> Menghubungkan ke server..." class="w-full h-full flex-1 whitespace-pre overflow-x-auto bg-transparent px-2 py-3 md:px-2 md:py-4 text-zinc-300 placeholder-zinc-600 font-mono text-[11px] md:text-xs resize-none outline-none leading-tight md:leading-tight" readonly></textarea>
       
     </div>
   </div>
@@ -262,12 +268,61 @@ export const bindCookieToolEvents = () => {
     });
   }
 
-  if (processingResults) {
-    processingResults.value = savedOutput;
+  const cookieTermTabLog = document.getElementById('cookieTermTabLog');
+  const cookieTermTabHasil = document.getElementById('cookieTermTabHasil');
+
+  const updateTerminalView = () => {
+    if (!processingResults) return;
+    processingResults.value = savedActiveTab === 'log' ? savedLogContent : savedHasilContent;
+    if (savedActiveTab === 'log') {
+      setTimeout(() => {
+        processingResults.scrollTop = processingResults.scrollHeight;
+      }, 0);
+    }
+  };
+
+  const switchTermTab = (tab: string) => {
+    savedActiveTab = tab;
+    if (tab === 'log') {
+      cookieTermTabLog?.classList.add('bg-zinc-700', 'text-white');
+      cookieTermTabLog?.classList.remove('text-zinc-500', 'hover:text-white');
+      cookieTermTabHasil?.classList.remove('bg-zinc-700', 'text-white');
+      cookieTermTabHasil?.classList.add('text-zinc-500', 'hover:text-white');
+      
+      // Styling khusus LOG
+      if (processingResults) {
+        processingResults.classList.remove('p-3', 'text-brand-text', 'text-sm', 'leading-normal', 'bg-brand-input');
+        processingResults.classList.add('px-2', 'py-3', 'md:px-2', 'md:py-4', 'text-zinc-300', 'text-[11px]', 'md:text-xs', 'leading-tight', 'md:leading-tight', 'bg-transparent');
+      }
+    } else {
+      cookieTermTabHasil?.classList.add('bg-zinc-700', 'text-white');
+      cookieTermTabHasil?.classList.remove('text-zinc-500', 'hover:text-white');
+      cookieTermTabLog?.classList.remove('bg-zinc-700', 'text-white');
+      cookieTermTabLog?.classList.add('text-zinc-500', 'hover:text-white');
+      
+      // Styling khusus HASIL (menyerupai input form di atas)
+      if (processingResults) {
+        processingResults.classList.remove('px-2', 'py-3', 'md:px-2', 'md:py-4', 'text-zinc-300', 'text-[11px]', 'md:text-xs', 'leading-tight', 'md:leading-tight', 'bg-transparent');
+        processingResults.classList.add('p-3', 'text-brand-text', 'text-sm', 'leading-normal', 'bg-brand-input');
+      }
+    }
+    updateTerminalView();
+  };
+
+  if (cookieTermTabLog) {
+    cookieTermTabLog.addEventListener('click', () => switchTermTab('log'));
+  }
+  if (cookieTermTabHasil) {
+    cookieTermTabHasil.addEventListener('click', () => switchTermTab('hasil'));
   }
 
+  // Initialize terminal view
+  updateTerminalView();
+  switchTermTab(savedActiveTab);
+
   if (copyBtn) {
-    if (savedOutput) copyBtn.classList.remove('hidden');
+    const isDefault = savedLogContent === '> Menghubungkan ke server...\n';
+    if (!isDefault) copyBtn.classList.remove('hidden');
     else copyBtn.classList.add('hidden');
   }
 
@@ -350,14 +405,14 @@ export const bindCookieToolEvents = () => {
       if (matches && matches.length > 0) {
         processBtn.disabled = true;
         processBtn.textContent = 'Mencari Data...';
-        processingResults.value = `[MULAI] Ditemukan ${matches.length} AJU: ${matches.join(', ')}\n`;
-        savedOutput = processingResults.value;
+        savedLogContent = `[MULAI] Ditemukan ${matches.length} AJU: ${matches.join(', ')}\n`;
+        savedHasilContent = 'Sedang memproses...';
+        switchTermTab('log');
         
         // Helper: live update output
         const liveLog = (text: string) => {
-          processingResults.value += text + '\n';
-          savedOutput = processingResults.value;
-          processingResults.scrollTop = processingResults.scrollHeight;
+          savedLogContent += text + '\n';
+          updateTerminalView();
         };
         
         let finalOutput = '';
@@ -1144,17 +1199,23 @@ export const bindCookieToolEvents = () => {
         }
         finalOutput = resultsArray.join('');
         
-        // Gabungkan live log (dari loggedFetch) + final summary
-        const liveLogContent = savedOutput ? savedOutput.trim() + '\n\n' : '';
-        processingResults.value = liveLogContent + finalOutput.trim();
-        savedOutput = processingResults.value;
+        // Simpan log akhir
+        savedLogContent += '\n[SELESAI] Data berhasil diproses.\n';
+        
+        // Masukkan ringkasan (summary) ke tab Hasil
+        savedHasilContent = matches.join('\n') + '\nDone';
+        
+        // Perbarui tampilan terminal
+        updateTerminalView();
+        
         processBtn.disabled = false;
         processBtn.textContent = 'Proses Data';
         
         if (copyBtn) copyBtn.classList.remove('hidden');
       } else {
-        processingResults.value = "Tidak ditemukan Nomor AJU SSM / PTK (26 karakter) yang valid pada teks.";
-        savedOutput = processingResults.value;
+        savedLogContent = "Tidak ditemukan Nomor AJU SSM / PTK (26 karakter) yang valid pada teks.";
+        savedHasilContent = "Belum ada hasil yang diproses.";
+        switchTermTab('log');
         if (copyBtn) copyBtn.classList.add('hidden');
       }
     });

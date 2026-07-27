@@ -4,8 +4,30 @@ import { Login, bindLoginEvents } from './components/Login';
 
 import { registerSW } from 'virtual:pwa-register';
 
-// Register Service Worker for PWA
-registerSW({ immediate: true });
+// === AUTO-BERSIHKAN SERVICE WORKER LAMA DI MODE DEVELOPMENT ===
+// Ini mencegah halaman blank yang terjadi karena SW lama dari sesi sebelumnya
+// masih aktif dan mengintervensi request baru.
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+if (isLocalhost && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    for (const registration of registrations) {
+      registration.unregister();
+      console.log('[DEV] Service Worker lama berhasil dihapus:', registration.scope);
+    }
+    // Hapus juga cache lama agar tidak mengganggu
+    if ('caches' in window) {
+      caches.keys().then(keys => {
+        keys.forEach(key => {
+          caches.delete(key);
+          console.log('[DEV] Cache lama dihapus:', key);
+        });
+      });
+    }
+  });
+} else {
+  // Register Service Worker hanya di production (GitHub Pages)
+  registerSW({ immediate: true });
+}
 
 // Global: redirect ke login ketika session/token expired (401)
 (window as any).handleSessionExpired = () => {
@@ -55,4 +77,5 @@ const renderApp = () => {
   }
 };
 
-document.addEventListener('DOMContentLoaded', renderApp);
+renderApp();
+
