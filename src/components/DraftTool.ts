@@ -31,9 +31,15 @@ export const DraftTool = () => {
         </div>
       </div>
 
-      <button type="button" id="processDraftBtn" class="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md mt-auto">
-        Buat Draft
-      </button>
+      <div class="flex gap-3 w-full">
+        <button type="button" id="processDraftBtn" class="flex-1 bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md">
+          Buat Draft
+        </button>
+        <button type="button" id="copyDraftBtn" class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg py-3 text-sm font-semibold cursor-pointer transition-colors shadow-md flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+          Salin Teks
+        </button>
+      </div>
 
       <div class="flex flex-col gap-2 mt-4">
         <textarea id="draftResults" placeholder="Hasil pemrosesan ditampilkan di sini..." class="w-full bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors h-32" readonly></textarea>
@@ -213,6 +219,29 @@ export const bindDraftToolEvents = () => {
       }
 
       draftResults.value = resultText + '\n\nDone';
+    });
+  }
+
+  const copyDraftBtn = document.getElementById('copyDraftBtn') as HTMLButtonElement;
+  if (copyDraftBtn && draftResults) {
+    copyDraftBtn.addEventListener('click', () => {
+      const textToCopy = draftResults.value.trim();
+      if (!textToCopy) return;
+
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        const originalHtml = copyDraftBtn.innerHTML;
+        copyDraftBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Tersalin!`;
+        copyDraftBtn.classList.add('bg-green-600', 'hover:bg-green-500');
+        copyDraftBtn.classList.remove('bg-zinc-700', 'hover:bg-zinc-600');
+        
+        setTimeout(() => {
+          copyDraftBtn.innerHTML = originalHtml;
+          copyDraftBtn.classList.remove('bg-green-600', 'hover:bg-green-500');
+          copyDraftBtn.classList.add('bg-zinc-700', 'hover:bg-zinc-600');
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
     });
   }
 };
