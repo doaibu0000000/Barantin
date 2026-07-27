@@ -20,7 +20,7 @@ export const DraftTool = () => {
 
       <!-- Tab No KT: input nomor KT singkat, seperti di Surtu 2 -->
       <div id="ktSection" class="flex flex-col gap-2 hidden relative">
-        <textarea id="ktNumber" placeholder="Contoh :&#10;1894&#10;001894&#10;2026-T1.0-3200.2-K.1.1-001894" class="w-full h-[140px] bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none"></textarea>
+        <textarea id="ktNumber" placeholder="Contoh :&#10;1894&#10;2026-T1.0-3200.2-K.1.1-001894" class="w-full h-[140px] bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none"></textarea>
         
         <!-- Loading Overlay -->
         <div id="ktLoader" class="absolute inset-0 bg-zinc-900/60 backdrop-blur-[2px] rounded-lg flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 z-10">
