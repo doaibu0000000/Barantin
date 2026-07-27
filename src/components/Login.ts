@@ -82,40 +82,52 @@ let ortReady = false;
 let ddddOcrSession: any = null;
 let preloadStarted = false;
 
+const loadScript = (src: string): Promise<boolean> => {
+  return new Promise(resolve => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.head.appendChild(s);
+  });
+};
+
 const preloadDdddOcr = async () => {
   if (preloadStarted) return;
   preloadStarted = true;
 
-  // Gunakan absolute path agar tidak salah load saat URL tidak memiliki trailing slash (seperti saat buka web dari shortcut/PWA)
-  const baseUrl = (import.meta as any).env?.DEV ? '/' : '/Barantin/';
-
+  // Coba load dari CDN dulu (lebih handal), lalu fallback ke lokal
   if (!(window as any).ort) {
-    const s = document.createElement('script');
-    s.src = `${baseUrl}ort/ort.min.js`; // Load dari file lokal di dalam repo
-    document.head.appendChild(s);
-    await new Promise((resolve, reject) => { 
-      s.onload = resolve; 
-      s.onerror = () => {
-        console.error('Gagal memuat ort.min.js');
-        reject(new Error('Gagal memuat ort.min.js'));
-      };
-    }).catch(e => console.error(e));
-  }
-  ortReady = !!(window as any).ort;
-  
-  if (ortReady) {
-    (window as any).ort.env.wasm.wasmPaths = `${baseUrl}ort/`; // Set Wasm path ke direktori lokal
-  }
-  
-  try {
-    // Load model ddddocr dari dalam repo
-    if (!ddddOcrSession) {
-      const options = {
-        executionProviders: ['wasm']
-      };
-      ddddOcrSession = await (window as any).ort.InferenceSession.create(`${baseUrl}ddddocr.onnx`, options);
+    const ok = await loadScript('https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/ort.min.js');
+    if (!ok) {
+      // Coba fallback ke file lokal di repo
+      await loadScript('/Barantin/ort/ort.min.js');
     }
-  } catch (e) { console.error('Gagal meload model ddddocr', e); }
+  }
+
+  const ort = (window as any).ort;
+  if (!ort) {
+    console.error('[OCR] Gagal memuat onnxruntime-web (baik dari CDN maupun lokal).');
+    ortReady = false;
+    return;
+  }
+
+  // Set wasmPaths ke CDN agar wasm files bisa ditemukan
+  ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/';
+  ortReady = true;
+
+  try {
+    if (!ddddOcrSession) {
+      const baseUrl = '/Barantin/';
+      ddddOcrSession = await ort.InferenceSession.create(`${baseUrl}ddddocr.onnx`, {
+        executionProviders: ['wasm']
+      });
+      console.log('[OCR] Model ddddocr berhasil dimuat!');
+    }
+  } catch (e) { 
+    console.error('[OCR] Gagal meload model ddddocr:', e);
+    ddddOcrSession = null;
+  }
 };
 
 // Start preloading immediately
