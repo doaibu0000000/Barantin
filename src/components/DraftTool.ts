@@ -3,8 +3,8 @@ export const DraftTool = () => {
     <div class="flex flex-col gap-4 h-full">
       <div class="flex flex-row items-center gap-3 mb-2">
         <div class="flex w-fit bg-zinc-800/50 p-1 rounded-lg">
-          <button type="button" id="tabPdf" class="px-4 py-2 text-sm font-semibold rounded-md bg-brand-accent text-white transition-all">PDF</button>
           <button type="button" id="tabKt" class="px-4 py-2 text-sm font-semibold rounded-md text-brand-text-muted hover:text-white transition-all">No KT</button>
+          <button type="button" id="tabPdf" class="px-4 py-2 text-sm font-semibold rounded-md bg-brand-accent text-white transition-all">PDF</button>
         </div>
       </div>
 
