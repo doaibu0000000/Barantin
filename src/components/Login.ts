@@ -151,6 +151,8 @@ export const bindLoginEvents = (onSuccess: () => void) => {
   // CAPTCHA Logic
   let currentCaptchaToken = '';
   let currentCaptchaImageSrc = '';
+  let captchaViaProxy = false; // Apakah captcha diambil via CORS proxy?
+  const CORS_PROXY = 'https://corsproxy.io/?url=';
 
   // === STRATEGI AUTO CAPTCHA (tanpa server) ===
   // 1. Decode JWT token → cek apakah ada teks captcha di payload
@@ -256,8 +258,15 @@ export const bindLoginEvents = (onSuccess: () => void) => {
     try {
       const CAPTCHA_URL = 'https://api.karantinaindonesia.go.id/barantin-sys-v2/captcha?app=APP001';
       
-      // Fetch langsung tanpa proxy - API mendukung CORS, dan token akan menyimpan UA browser
-      const res = await fetch(CAPTCHA_URL).catch(() => null);
+      // Coba direct fetch dulu
+      let res = await fetch(CAPTCHA_URL).catch(() => null);
+      captchaViaProxy = false;
+      
+      if (!res || !res.ok) {
+        // Fallback ke CORS proxy jika direct fetch gagal
+        res = await fetch(CORS_PROXY + encodeURIComponent(CAPTCHA_URL)).catch(() => null);
+        captchaViaProxy = true;
+      }
       if (!res || !res.ok) throw new Error('Captcha tidak dapat dimuat');
       const data = await res.json();
 
@@ -397,23 +406,27 @@ export const bindLoginEvents = (onSuccess: () => void) => {
       try {
         const location = await getLocation();
         
-        const response = await fetch('https://api.karantinaindonesia.go.id/barantin-sys-v2/auth/login', {
+        const LOGIN_URL = 'https://api.karantinaindonesia.go.id/barantin-sys-v2/auth/login';
+        const loginBody = JSON.stringify({
+          username,
+          password,
+          app: 'APP001',
+          ipaddress: userIp,
+          captcha,
+          captchaToken: currentCaptchaToken,
+          location
+        });
+        const loginHeaders = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/plain, */*'
+        };
+
+        // Gunakan metode yang sama (proxy/direct) seperti saat captcha diambil agar UA cocok
+        const loginFetchUrl = captchaViaProxy ? CORS_PROXY + encodeURIComponent(LOGIN_URL) : LOGIN_URL;
+        const response = await fetch(loginFetchUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json, text/plain, */*',
-            'Origin': 'https://doaibu0000000.github.io',
-            'Referer': 'https://doaibu0000000.github.io/'
-          },
-          body: JSON.stringify({
-            username,
-            password,
-            app: 'APP001',
-            ipaddress: userIp,
-            captcha,
-            captchaToken: currentCaptchaToken,
-            location
-          })
+          headers: loginHeaders,
+          body: loginBody
         });
 
         const data = await response.json();
