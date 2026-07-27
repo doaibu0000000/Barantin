@@ -25,7 +25,7 @@ export const App = () => {
   }
 
   return `
-    <div class="flex flex-col md:flex-row items-start gap-4 md:gap-4 w-full max-w-[1600px] mx-auto p-4 md:p-6 h-[100dvh] pb-[90px] md:pb-6 overflow-hidden">
+    <div id="appWrapper" class="flex flex-col md:flex-row items-start gap-4 md:gap-4 w-full max-w-[1600px] mx-auto p-4 md:p-6 h-full overflow-hidden">
       ${Sidebar(activeMenu)}
       
       <main id="mainContent" class="${activeMenu === 'Settings' ? 'w-full md:w-fit md:min-w-[500px]' : 'w-full flex-1 min-h-0 overflow-hidden'} bg-brand-panel border border-white/5 rounded-xl p-3 md:p-5 flex flex-col gap-3 shadow-2xl">
@@ -41,6 +41,20 @@ export const bindAppEvents = () => {
   if (activeMenu === 'Profile') {
     activeMenu = 'Surtu 2';
   }
+
+  // Dynamically measure sidebar height and apply as bottom padding on mobile
+  const setNavPadding = () => {
+    const sidebar = document.querySelector('aside');
+    const wrapper = document.getElementById('appWrapper');
+    if (sidebar && wrapper && window.innerWidth < 768) {
+      const navH = sidebar.getBoundingClientRect().height;
+      wrapper.style.paddingBottom = navH + 'px';
+    } else if (wrapper) {
+      wrapper.style.paddingBottom = '';
+    }
+  };
+  setNavPadding();
+  window.addEventListener('resize', setNavPadding);
 
   bindSidebarEvents((menuId) => {
     localStorage.setItem('activeMenu', menuId);
