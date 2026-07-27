@@ -211,7 +211,7 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
 
 export const CookieTool = () => {
   return `
-    <div class="flex flex-col gap-3 flex-1 min-h-0 w-full">
+    <div class="flex flex-col gap-3 flex-1 min-h-0 w-full h-full">
       <div class="flex flex-col gap-2">
         <div class="flex flex-row items-center justify-between">
           <label for="cookieContent" class="text-sm font-semibold text-white">Nomor AJU SSM / PTK</label>

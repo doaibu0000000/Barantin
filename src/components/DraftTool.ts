@@ -5,7 +5,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs
 
 export const DraftTool = () => {
   return `
-    <div class="flex flex-col gap-3 flex-1 min-h-0 w-full">
+    <div class="flex flex-col gap-3 flex-1 min-h-0 w-full h-full">
       <div class="flex flex-col gap-2">
         <div class="flex flex-row items-center justify-between w-full">
         <div class="flex w-fit bg-[#0a0a0a] border border-zinc-700 p-1 rounded-lg shadow-sm">
