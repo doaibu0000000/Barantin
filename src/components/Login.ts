@@ -125,6 +125,7 @@ const preloadDdddOcr = async () => {
         executionProviders: ['wasm']
       });
       console.log('[OCR] Model ddddocr berhasil dimuat dari: ' + baseUrl);
+    }
   } catch (e) { 
     console.error('[OCR] Gagal meload model ddddocr:', e);
     ddddOcrSession = null;
