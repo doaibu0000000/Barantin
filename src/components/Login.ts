@@ -255,14 +255,9 @@ export const bindLoginEvents = (onSuccess: () => void) => {
 
     try {
       const CAPTCHA_URL = 'https://api.karantinaindonesia.go.id/barantin-sys-v2/captcha?app=APP001';
-      const fetchOptions = { headers: { 'Accept': 'application/json, text/plain, */*' }, referrerPolicy: 'no-referrer' as RequestInit['referrerPolicy'] };
-
-      // Coba langsung dulu, jika gagal pakai CORS proxy
-      let res = await fetch(CAPTCHA_URL, fetchOptions).catch(() => null);
-      if (!res || !res.ok) {
-        // Fallback: gunakan CORS proxy (tidak kirim Sec-Fetch-Site)
-        res = await fetch('https://corsproxy.io/?' + encodeURIComponent(CAPTCHA_URL), fetchOptions).catch(() => null);
-      }
+      
+      // Fetch langsung tanpa proxy - API mendukung CORS, dan token akan menyimpan UA browser
+      const res = await fetch(CAPTCHA_URL).catch(() => null);
       if (!res || !res.ok) throw new Error('Captcha tidak dapat dimuat');
       const data = await res.json();
 
@@ -406,6 +401,9 @@ export const bindLoginEvents = (onSuccess: () => void) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json, text/plain, */*',
+            'Origin': 'https://doaibu0000000.github.io',
+            'Referer': 'https://doaibu0000000.github.io/'
           },
           body: JSON.stringify({
             username,
