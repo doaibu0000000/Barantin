@@ -12,6 +12,8 @@
   --color-brand-text-muted: #909296;
 }
 
+/* ===== Shared / Base Styles (berlaku di semua ukuran layar) ===== */
+
 html {
   height: 100%;
   overflow: hidden;
@@ -28,6 +30,8 @@ body {
   overflow: hidden;
 }
 
+/* ===== Mobile-only Styles (max-width: 767px) ===== */
+
 @media (max-width: 767px) {
   html, body, #app {
     position: fixed;
@@ -36,6 +40,18 @@ body {
     height: 100%;
     overflow: hidden;
   }
+
+  /* Sembunyikan kata "SYSTEM" di terminal — hanya tampil "Terminal" */
+  .terminal-system-word {
+    display: none;
+  }
 }
 
+/* ===== Desktop Styles (min-width: 768px) ===== */
 
+@media (min-width: 768px) {
+  /* Tampilkan kata "SYSTEM" di terminal Desktop → "System Terminal" */
+  .terminal-system-word {
+    display: inline;
+  }
+}

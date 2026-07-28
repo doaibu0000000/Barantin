@@ -1,9 +1,15 @@
+/**
+ * PengaturanTool.ts — Menu "Settings": Konfigurasi Provider & Logout
+ * Tidak menggunakan TerminalPanel maupun HeaderActionBar.
+ * Berdiri sendiri sebagai SettingsList.
+ * Tidak mengimpor/mengubah state menu lain.
+ */
+
 export const PengaturanTool = () => {
   return `
-    <div class="flex flex-col w-full relative">
+    <div class="flex flex-col w-full relative flex-1 min-h-0">
       <!-- Main Settings Menu -->
       <div id="settingsMainScreen" class="flex flex-col gap-2 text-white max-w-2xl w-full transition-opacity duration-300">
-
 
         <button type="button" id="btnMenuProviders" class="flex items-center justify-between bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-zinc-700/50 p-4 rounded-xl shadow-md transition-colors w-full text-left group">
           <div class="flex items-center gap-3">
@@ -34,70 +40,59 @@ export const PengaturanTool = () => {
       </div>
 
       <!-- Providers Sub-Screen -->
-      <div id="settingsProvidersScreen" class="hidden flex-col w-full z-10 transition-transform duration-300">
+      <div id="settingsProvidersScreen" class="hidden flex-col w-full z-10 transition-transform duration-300 flex-1 min-h-0">
         <!-- Top Bar -->
-        <div class="flex items-center pb-2 border-b border-white/10">
+        <div class="flex items-center pb-2 border-b border-white/10 shrink-0">
           <button type="button" id="btnBackFromProviders" class="p-1 mr-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors flex items-center justify-center">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
           </button>
           <h2 class="text-base font-semibold text-white">Konfigurasi Providers</h2>
         </div>
-        
+
         <!-- Form Content -->
-        <div class="pt-3 pb-4 text-white w-full">
+        <div class="pt-3 pb-4 text-white w-full flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-2">
           <div class="max-w-2xl w-full">
             <form id="providerForm" class="flex flex-col gap-4 bg-[#1e1e1e] border border-zinc-700/50 p-4 md:p-5 rounded-xl shadow-xl">
-              
               <!-- Provider ID -->
               <div class="flex flex-col gap-1.5">
                 <label for="providerId" class="text-xs font-semibold text-zinc-400">ID Provider</label>
                 <input type="text" id="providerId" placeholder="myprovider" class="w-full bg-[#2a2a2a] border border-zinc-700 rounded-lg px-4 py-2 text-white placeholder-zinc-500 text-sm outline-none focus:border-brand-accent transition-colors" />
                 <span class="text-xs text-zinc-500 font-medium">Hanya huruf kecil, angka, tanda hubung (-), atau garis bawah (_)</span>
               </div>
-
               <!-- Display name -->
               <div class="flex flex-col gap-1.5">
                 <label for="displayName" class="text-xs font-semibold text-zinc-400">Nama Tampilan</label>
                 <input type="text" id="displayName" placeholder="Provider AI Saya" class="w-full bg-[#2a2a2a] border border-zinc-700 rounded-lg px-4 py-2 text-white placeholder-zinc-500 text-sm outline-none focus:border-brand-accent transition-colors" />
               </div>
-
               <!-- Base URL -->
               <div class="flex flex-col gap-1.5">
                 <label for="baseUrl" class="text-xs font-semibold text-zinc-400">URL Dasar (Base URL)</label>
                 <input type="text" id="baseUrl" placeholder="https://api.myprovider.com/v1" class="w-full bg-[#2a2a2a] border border-zinc-700 rounded-lg px-4 py-2 text-white placeholder-zinc-500 text-sm outline-none focus:border-brand-accent transition-colors" />
               </div>
-
               <!-- API key -->
               <div class="flex flex-col gap-1.5">
                 <label for="apiKey" class="text-xs font-semibold text-zinc-400">Kunci API (API Key)</label>
                 <input type="password" id="apiKey" placeholder="API key" class="w-full bg-[#2a2a2a] border border-zinc-700 rounded-lg px-4 py-2 text-white placeholder-zinc-500 text-sm outline-none focus:border-brand-accent transition-colors" />
                 <span class="text-xs text-zinc-500 font-medium mt-1">Opsional. Kosongkan jika Anda mengatur autentikasi melalui Headers.</span>
               </div>
-
               <!-- Models -->
               <div class="flex flex-col gap-2 mt-2">
                 <label class="text-xs font-semibold text-zinc-400">Model</label>
-                <div id="modelsContainer" class="flex flex-col gap-2">
-                  <!-- Models injected here via JS -->
-                </div>
+                <div id="modelsContainer" class="flex flex-col gap-2"></div>
                 <button type="button" id="btnAddModel" class="flex items-center gap-2 text-sm text-brand-text-muted hover:text-white font-medium w-fit mt-1 transition-colors">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                   Tambah model
                 </button>
               </div>
-
               <!-- Headers -->
               <div class="flex flex-col gap-2 mt-2">
                 <label class="text-xs font-semibold text-zinc-400">Headers (opsional)</label>
-                <div id="headersContainer" class="flex flex-col gap-2">
-                  <!-- Headers injected here via JS -->
-                </div>
+                <div id="headersContainer" class="flex flex-col gap-2"></div>
                 <button type="button" id="btnAddHeader" class="flex items-center gap-2 text-sm text-brand-text-muted hover:text-white font-medium w-fit mt-1 transition-colors">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                   Tambah header
                 </button>
               </div>
-
               <div class="flex items-center gap-4 mt-4 pt-4 border-t border-zinc-700">
                 <button type="button" id="btnSubmitProvider" class="bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg px-6 py-2 text-sm font-semibold cursor-pointer transition-colors shadow-md">
                   Simpan
@@ -131,7 +126,6 @@ export const bindPengaturanToolEvents = () => {
 
   if (btnMenuProviders && mainScreen && providersScreen) {
     btnMenuProviders.addEventListener('click', () => {
-      // Show providers screen, hide main screen
       mainScreen.classList.add('hidden');
       mainScreen.classList.remove('flex');
       providersScreen.classList.remove('hidden');
@@ -141,7 +135,6 @@ export const bindPengaturanToolEvents = () => {
 
   if (btnBackFromProviders && mainScreen && providersScreen) {
     btnBackFromProviders.addEventListener('click', () => {
-      // Show main screen, hide providers screen
       providersScreen.classList.add('hidden');
       providersScreen.classList.remove('flex');
       mainScreen.classList.remove('hidden');
@@ -155,7 +148,6 @@ export const bindPengaturanToolEvents = () => {
   const btnAddModel = document.getElementById('btnAddModel');
   const btnAddHeader = document.getElementById('btnAddHeader');
   const btnSubmitProvider = document.getElementById('btnSubmitProvider');
-  
   const providerIdInput = document.getElementById('providerId') as HTMLInputElement;
   const displayNameInput = document.getElementById('displayName') as HTMLInputElement;
   const baseUrlInput = document.getElementById('baseUrl') as HTMLInputElement;
@@ -165,7 +157,6 @@ export const bindPengaturanToolEvents = () => {
   let models = [{ id: '', name: '' }];
   let headers = [{ key: '', value: '' }];
 
-  // Load existing data if available
   const savedProviderRaw = localStorage.getItem('aiProviderConfig');
   if (savedProviderRaw) {
     try {
@@ -174,15 +165,8 @@ export const bindPengaturanToolEvents = () => {
       if (displayNameInput) displayNameInput.value = savedProvider.displayName || '';
       if (baseUrlInput) baseUrlInput.value = savedProvider.baseUrl || '';
       if (apiKeyInput) apiKeyInput.value = savedProvider.apiKey || '';
-      
-      if (savedProvider.models && savedProvider.models.length > 0) {
-        models = savedProvider.models;
-      }
-      if (savedProvider.headers && savedProvider.headers.length > 0) {
-        headers = savedProvider.headers;
-      } else {
-        headers = [];
-      }
+      if (savedProvider.models && savedProvider.models.length > 0) models = savedProvider.models;
+      headers = (savedProvider.headers && savedProvider.headers.length > 0) ? savedProvider.headers : [];
     } catch (e) {
       console.error('Failed to parse aiProviderConfig', e);
     }
@@ -203,18 +187,12 @@ export const bindPengaturanToolEvents = () => {
           </button>
         </div>
       `;
-      
       const idInput = row.querySelector('.model-id-input') as HTMLInputElement;
       const nameInput = row.querySelector('.model-name-input') as HTMLInputElement;
       const delBtn = row.querySelector('.btn-delete-model');
-
       idInput?.addEventListener('input', (e) => { models[index].id = (e.target as HTMLInputElement).value; });
       nameInput?.addEventListener('input', (e) => { models[index].name = (e.target as HTMLInputElement).value; });
-      delBtn?.addEventListener('click', () => {
-        models.splice(index, 1);
-        renderModels();
-      });
-
+      delBtn?.addEventListener('click', () => { models.splice(index, 1); renderModels(); });
       modelsContainer.appendChild(row);
     });
   };
@@ -234,35 +212,18 @@ export const bindPengaturanToolEvents = () => {
           </button>
         </div>
       `;
-
       const keyInput = row.querySelector('.header-key-input') as HTMLInputElement;
       const valueInput = row.querySelector('.header-value-input') as HTMLInputElement;
       const delBtn = row.querySelector('.btn-delete-header');
-
       keyInput?.addEventListener('input', (e) => { headers[index].key = (e.target as HTMLInputElement).value; });
       valueInput?.addEventListener('input', (e) => { headers[index].value = (e.target as HTMLInputElement).value; });
-      delBtn?.addEventListener('click', () => {
-        headers.splice(index, 1);
-        renderHeaders();
-      });
-
+      delBtn?.addEventListener('click', () => { headers.splice(index, 1); renderHeaders(); });
       headersContainer.appendChild(row);
     });
   };
 
-  if (btnAddModel) {
-    btnAddModel.addEventListener('click', () => {
-      models.push({ id: '', name: '' });
-      renderModels();
-    });
-  }
-
-  if (btnAddHeader) {
-    btnAddHeader.addEventListener('click', () => {
-      headers.push({ key: '', value: '' });
-      renderHeaders();
-    });
-  }
+  if (btnAddModel) btnAddModel.addEventListener('click', () => { models.push({ id: '', name: '' }); renderModels(); });
+  if (btnAddHeader) btnAddHeader.addEventListener('click', () => { headers.push({ key: '', value: '' }); renderHeaders(); });
 
   renderModels();
   renderHeaders();
@@ -277,13 +238,9 @@ export const bindPengaturanToolEvents = () => {
         models: models.filter(m => m.id.trim() !== ''),
         headers: headers.filter(h => h.key.trim() !== '')
       };
-
       localStorage.setItem('aiProviderConfig', JSON.stringify(config));
-      
       providerStatus.style.opacity = '1';
-      setTimeout(() => {
-        providerStatus.style.opacity = '0';
-      }, 2500);
+      setTimeout(() => { providerStatus.style.opacity = '0'; }, 2500);
     });
   }
 };
