@@ -26,7 +26,7 @@ let savedActiveTab: 'log' | 'hasil' = 'log';
 // Helpers
 // =============================================
 function uuidv4() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
@@ -37,6 +37,34 @@ const cleanCompanyName = (name: string): string => {
   let cleaned = name.replace(/^(PT\.\s*)+/i, 'PT. ').trim();
   cleaned = cleaned.replace(/^(CV\.\s*)+/i, 'CV. ').trim();
   return cleaned;
+};
+
+// Deteksi apakah nomor AJU adalah SSM (bukan PTK).
+// Format PTK: <5digit pospel><EXT|IMP|DOM><yyMMddHHmmss><6 random> (26 char, mengandung EXT/IMP/DOM di posisi 5).
+// Format SSM: <5digit><...> yang TIDAK punya EXT/IMP/DOM setelah 5 digit pertama.
+const isSsmAju = (aju: string): boolean => {
+  if (!aju || aju.length < 5) return false;
+  const afterPospel = aju.substring(5, 8).toUpperCase();
+  return afterPospel !== 'EXT' && afterPospel !== 'IMP' && afterPospel !== 'DOM';
+};
+
+// Generate No AJU PTK baru mengikuti format aplikasi resmi:
+// <pospel 5 digit><EXT|IMP|DOM><yyMMddHHmmss><6 random alfanumerik>
+// Contoh: 32002 + EXT + 260730143238 + U0C51S = 32002EXT260730143238U0C51S
+const generatePtkAju = (pospel: string, jnsAju: string): string => {
+  const pos = (pospel || '32002').replace(/\D/g, '').padEnd(5, '0').substring(0, 5);
+  const jenis = jnsAju === 'EKSPOR' ? 'EXT' : (jnsAju === 'IMPOR' ? 'IMP' : 'DOM');
+  const now = new Date();
+  const yy = String(now.getFullYear()).substring(2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mi = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let rand = '';
+  for (let i = 0; i < 6; i++) rand += chars.charAt(Math.floor(Math.random() * chars.length));
+  return `${pos}${jenis}${yy}${mm}${dd}${hh}${mi}${ss}${rand}`;
 };
 
 const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: string = '') => {
@@ -117,10 +145,35 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
   kontainerArr.forEach((c: any) => c.ptk_id = ptkUuid);
   dokumenArr.forEach((d: any) => d.ptk_id = ptkUuid);
 
+  // Resolve PETUGAS dari form Pengaturan (default: DEDEN KURNIA - 197812302006041002)
+  const savedPetugas = localStorage.getItem('surtu2_petugas') || 'DEDEN KURNIA - 197812302006041002';
+  const petugasParts = savedPetugas.split(' - ');
+  const petugasNama = (petugasParts[0] || 'DEDEN KURNIA').trim();
+  const petugasNip = (petugasParts[1] || '197812302006041002').trim();
+
+  // Resolve POS LAYANAN (pospel) dari form Pengaturan (default: 3200.2 | DRY PORT CIKARANG -> 32002)
+  const savedPosLayanan = localStorage.getItem('surtu2_posLayanan') || '3200.2 | DRY PORT CIKARANG';
+  const pospelCode = (savedPosLayanan.split('|')[0] || '3200.2').trim().replace(/\./g, '');
+
+  // Tentukan no_aju untuk payload PTK:
+  // - Jika PTK sudah ada (skip POST), pakai noReg/noAju existing (tidak akan dipakai server krn skip)
+  // - Jika input adalah No AJU PTK (mengandung EXT/IMP/DOM), pakai langsung
+  // - Jika input adalah No AJU SSM (30104...), GENERATE No AJU PTK baru dengan pospel dari Pengaturan.
+  //   Inilah yang membuat NOMOR DOKUMEN PTK -> 3200.2 (DRY PORT CIKARANG) sesuai pilihan.
+  const existingAju = data.noReg || data.noAju || '';
+  let noAjuPtk: string;
+  if (existingPtkId) {
+    noAjuPtk = existingAju; // PTK sudah ada, tidak dibuat ulang
+  } else if (!isSsmAju(existingAju)) {
+    noAjuPtk = existingAju; // input sudah format PTK (EXT/IMP/DOM), pakai langsung
+  } else {
+    noAjuPtk = generatePtkAju(pospelCode, data.jnsAju); // input SSM -> generate PTK baru
+  }
+
   return {
     id: ptkUuid,
     tssm_id: data.id,
-    no_aju: data.noReg || data.noAju,
+    no_aju: noAjuPtk,
     jenis_dokumen: "PTK",
     jenis_karantina: data.jenis_karantina === 'Tumbuhan' ? 'T' : (data.jenis_karantina === 'Hewan' ? 'H' : 'I'),
     jenis_media_pembawa_id: "5",
@@ -218,8 +271,8 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     tgl_dok_permohonan: data.tglAju?.substring(0, 16) || "",
     is_draft: "1",
     is_verifikasi: "1",
-    petugas: "SUHERMAN",
-    nip: "196702031992031001",
+    petugas: petugasNama,
+    nip: petugasNip,
     tgl_aju: data.tglAju || "",
     user_created: userData?.id || "3267",
     komoditi: komoditiArr,
@@ -236,10 +289,10 @@ export const SurtuTool = () => {
     <div class="flex flex-col gap-3 flex-1 min-h-0 w-full h-full">
       <div class="flex flex-col gap-2 flex-1 md:flex-none min-h-0">
         ${headerActionBarHTML({
-          title: 'Nomor AJU SSM / PTK',
-          buttonLabel: 'Proses Data',
-          buttonId: 'processBtn',
-        })}
+    title: 'Nomor AJU SSM / PTK',
+    buttonLabel: 'Proses Data',
+    buttonId: 'processBtn',
+  })}
         <div class="relative flex-1 min-h-0 flex flex-col md:block">
           <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full h-full md:h-auto flex-1 block bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="4"></textarea>
 
@@ -254,10 +307,10 @@ export const SurtuTool = () => {
       </div>
 
       ${terminalPanelHTML({
-        textareaId: 'processingResults',
-        logTabId: 'cookieTermTabLog',
-        hasilTabId: 'cookieTermTabHasil',
-      })}
+    textareaId: 'processingResults',
+    logTabId: 'cookieTermTabLog',
+    hasilTabId: 'cookieTermTabHasil',
+  })}
     </div>
   `;
 };
@@ -444,7 +497,7 @@ export const bindSurtuToolEvents = () => {
             try {
               const userData = JSON.parse(userDataStr);
               userUpt = userData.upt || '3200';
-            } catch (e) {}
+            } catch (e) { }
           }
           const payload = { dFrom, dTo: today, stat: "", karantina: "", upt: userUpt, jnsAju: "EKSPOR", jeniscari, noAju };
           try {
@@ -489,7 +542,8 @@ export const bindSurtuToolEvents = () => {
         });
 
         const token = await getToken();
-        const appsCookies = await getAppsCookies();
+        // appsCookies diambil untuk cadangan/log; POS LAYANAN ditentukan server dari token, bukan cookie.
+        await getAppsCookies();
 
         const fetchPromises = matches.map(async (aju) => {
           let outputBlock = '';
@@ -531,7 +585,7 @@ export const bindSurtuToolEvents = () => {
             if (data.xml) {
               try {
                 xmlObjParsed = JSON.parse(data.xml);
-              } catch(e) {
+              } catch (e) {
                 console.error('Failed parsing xml', e);
               }
             }
@@ -557,20 +611,29 @@ export const bindSurtuToolEvents = () => {
                   const ptkPayload = buildPtkPayload(data, xmlObjParsed, userData, currentSsmPtkId);
                   const skipPtkPost = !!currentSsmPtkId;
                   liveLog(`[STEP 2] ${skipPtkPost ? '[OK] PTK sudah ada (skip POST): ' + currentSsmPtkId : 'Membuat PTK baru...'}`);
+                  // Tampilkan konversi SSM -> PTK agar transparan
+                  const inputAju = data.noReg || data.noAju || '';
+                  if (!skipPtkPost && ptkPayload.no_aju && ptkPayload.no_aju !== inputAju) {
+                    liveLog(`[STEP 2] No AJU SSM "${inputAju}" -> di-generate jadi No AJU PTK "${ptkPayload.no_aju}"`);
+                  }
 
                   let submitOk = false;
                   let submitData: any = {};
-                  const posLayananVal = appsCookies.match(/posLayanan=([^;]+)/)?.[1] || '';
+                  // Header "X-Pos-Layanan" sengaja TIDAK ditambahkan. Server (CORS) hanya mengizinkan
+                  // header: Authorization, Origin, X-Requested-With, Content-Type, Accept. Menambah header
+                  // kustom akan memicu preflight yang DITOLAK -> "Failed to fetch".
+                  // POS LAYANAN (angka ".2" pada NOMOR DOKUMEN PTK) ditentukan SERVER dari token user yang
+                  // login (mis. user 3267 = DEDEN KURNIA ter-binding ke pos 32002 = DRY PORT CIKARANG),
+                  // bukan dari header/cookie/AJU. Jadi request PTK cukup Authorization + Content-Type.
                   const ptkHeaders: Record<string, string> = {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                   };
-                  if (posLayananVal) ptkHeaders['X-Pos-Layanan'] = posLayananVal;
 
                   if (skipPtkPost) {
                     submitOk = true;
                     submitData = { status: true, data: { id: currentSsmPtkId } };
-                    ptkBlock += `  [OK] PTK    : SUDAH ADA  [${currentSsmPtkId.substring(0,8)}...]\n`;
+                    ptkBlock += `  [OK] PTK    : SUDAH ADA  [${currentSsmPtkId.substring(0, 8)}...]\n`;
                   } else {
                     const submitRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ssm`, {
                       method: 'POST',
@@ -578,11 +641,11 @@ export const bindSurtuToolEvents = () => {
                       body: JSON.stringify(ptkPayload)
                     });
                     if (submitRes.ok || submitRes.status === 201) {
-                      try { submitData = await submitRes.json(); } catch(_e) {}
+                      try { submitData = await submitRes.json(); } catch (_e) { }
                       submitOk = true;
                     } else {
                       let errBody = '';
-                      try { errBody = await submitRes.text(); } catch(_e) {}
+                      try { errBody = await submitRes.text(); } catch (_e) { }
                       const hint = submitRes.status === 401 ? ' - silakan Login ulang!' : '';
                       ptkBlock += `  [X] PTK    : GAGAL  HTTP ${submitRes.status}${hint}\n`;
                       liveLog(`[STEP 2] [X] GAGAL HTTP ${submitRes.status}${hint}`);
@@ -594,7 +657,7 @@ export const bindSurtuToolEvents = () => {
                     if (submitData.status === '201' || submitData.status === true) {
                       const finalPtkId = submitData.data?.id || currentSsmPtkId || ptkPayload.id;
                       if (!skipPtkPost) {
-                        ptkBlock += `  [OK] PTK    : BERHASIL DIBUAT  [${finalPtkId.substring(0,8)}...]\n`;
+                        ptkBlock += `  [OK] PTK    : BERHASIL DIBUAT  [${finalPtkId.substring(0, 8)}...]\n`;
                       }
                       liveLog(`[STEP 2] [OK] PTK ID: ${finalPtkId}`);
 
@@ -608,7 +671,7 @@ export const bindSurtuToolEvents = () => {
                             currentSsmPtk = ptkDetailData.data.ptk.no_dok_permohonan;
                           }
                         }
-                      } catch(e) {}
+                      } catch (e) { }
 
                       let verifyOk = false;
                       if (skipPtkPost) {
@@ -671,7 +734,7 @@ export const bindSurtuToolEvents = () => {
                                 }
                               }
                             }
-                          } catch(_e) { liveLog(`[STEP 2b] Gagal cek existing, akan buat baru`); }
+                          } catch (_e) { liveLog(`[STEP 2b] Gagal cek existing, akan buat baru`); }
 
                           if (existingSurtug1HeaderId) liveLog(`[STEP 2b] Adm & Kesesuaian sudah ada - skip`);
                           if (existingSurtug2HeaderId) liveLog(`[STEP 2b] Pemeriksaan Kesehatan sudah ada - skip`);
@@ -763,7 +826,7 @@ export const bindSurtuToolEvents = () => {
                                 petugasResults += ok ? petugas.nama : ('[X] ' + petugas.nama);
                               }
                               const petugasOkCount = resolvedPetugas.filter(p => !petugasResults.includes('[X] ' + p.nama)).length;
-                              ptkBlock += `  [OK] Petugas : ${petugasOkCount}/${resolvedPetugas.length} - ${resolvedPetugas.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
+                              ptkBlock += `  [OK] Petugas : ${petugasOkCount}/${resolvedPetugas.length} - ${resolvedPetugas.map(p => p.nama.split(' ')[0]).join(', ')}\n`;
                               liveLog(`[STEP 5] Input Petugas Surtug1 selesai`);
                             }
 
@@ -774,12 +837,17 @@ export const bindSurtuToolEvents = () => {
                                 const pnAdmId = uuidv4();
                                 const pnAdmNomor = ptkNomor.replace('K.1.1', 'K.3.7a').replace('K.2.2', 'K.3.7a');
                                 const tanggalPnAdm = localISOTime.substring(0, 16);
-                                const suhermanObj = petugasUpt.find((p: any) => p.nama.toLowerCase().includes('suherman'));
-                                const suhermanId = suhermanObj ? suhermanObj.id : 4111;
+                                // K-3.7a: penanda tangan (user_ttd_id) mengikuti PETUGAS dari form Pengaturan
+                                // (default DEDEN KURNIA = id 3267). Sebelumnya hardcode SUHERMAN.
+                                const savedTtd3 = localStorage.getItem('surtu2_petugas') || 'DEDEN KURNIA - 197812302006041002';
+                                const ttd3Nama = savedTtd3.split(' - ')[0].trim().toLowerCase().split(' ')[0];
+                                const ttd3Obj = petugasUpt.find((p: any) => p.nama.toLowerCase().includes(ttd3Nama));
+                                const k37aTtdId = ttd3Obj ? ttd3Obj.id : 3267;
+                                liveLog(`[STEP 6] K-3.7a penanda tangan: ${savedTtd3.split(' - ')[0]} (id ${k37aTtdId})`);
                                 const pnAdmPayload = {
                                   id: pnAdmId, ptk_id: surtugPtkId, ptk_surat_tugas_id: surtugHeaderId,
                                   nomor: pnAdmNomor, tanggal: tanggalPnAdm, hasil_periksa_id: "6",
-                                  rekomendasi_id: "14", user_ttd_id: String(suhermanId), is_sampel: null,
+                                  rekomendasi_id: "14", user_ttd_id: String(k37aTtdId), is_sampel: null,
                                   user_id: String(userData3?.id || "3267")
                                 };
                                 const pnAdmRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm`, {
@@ -788,7 +856,7 @@ export const bindSurtuToolEvents = () => {
                                 });
                                 const pnAdmText = await pnAdmRes.text();
                                 let pnAdmData: any = {};
-                                try { if (pnAdmText) pnAdmData = JSON.parse(pnAdmText); } catch(_e) {}
+                                try { if (pnAdmText) pnAdmData = JSON.parse(pnAdmText); } catch (_e) { }
                                 const pnAdmOk = pnAdmRes.ok || pnAdmRes.status === 201 || pnAdmRes.status === 204 || pnAdmRes.status === 500 || pnAdmData.status === '201' || pnAdmData.status === true;
                                 ptkBlock += `  ${pnAdmOk ? '[OK]' : '[X]'} K-3.7a  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL  HTTP ' + pnAdmRes.status}\n`;
                                 liveLog(`[STEP 6] K-3.7a: ${pnAdmOk ? 'BERHASIL' : 'GAGAL - HTTP ' + pnAdmRes.status}`);
@@ -803,11 +871,11 @@ export const bindSurtuToolEvents = () => {
                                   });
                                   const rekText = await rekHistoryRes.text();
                                   let rekData: any = {};
-                                  try { if (rekText) rekData = JSON.parse(rekText); } catch(_e) {}
+                                  try { if (rekText) rekData = JSON.parse(rekText); } catch (_e) { }
                                   const rekOk = rekHistoryRes.ok || rekHistoryRes.status === 201 || rekHistoryRes.status === 204 || rekData.status === '201' || rekData.status === true;
                                   ptkBlock += `K-3.7a rek-hist: ${rekOk ? 'BERHASIL' : 'GAGAL (' + (rekData.message || rekHistoryRes.status) + ')'}\n`;
                                 }
-                              } catch(e: any) {
+                              } catch (e: any) {
                                 ptkBlock += `K-3.7a         : ERROR (${e.message})\n`;
                               }
                             }
@@ -880,7 +948,7 @@ export const bindSurtuToolEvents = () => {
                                     });
                                   }
                                   const petugas2OkCount = resolvedPetugas2.filter(p => !petugasResults2.includes('[X] ' + p.nama)).length;
-                                  ptkBlock += `  [OK] Petugas : ${petugas2OkCount}/${resolvedPetugas2.length} - ${resolvedPetugas2.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
+                                  ptkBlock += `  [OK] Petugas : ${petugas2OkCount}/${resolvedPetugas2.length} - ${resolvedPetugas2.map(p => p.nama.split(' ')[0]).join(', ')}\n`;
                                 }
 
                                 await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/surtug/detil/ptk`, {
@@ -911,7 +979,7 @@ export const bindSurtuToolEvents = () => {
                                     });
                                     const pnKesText = await pnKesRes.text();
                                     let pnKesData: any = {};
-                                    try { if (pnKesText) pnKesData = JSON.parse(pnKesText); } catch(_e) {}
+                                    try { if (pnKesText) pnKesData = JSON.parse(pnKesText); } catch (_e) { }
                                     const pnKesOk = pnKesRes.ok || pnKesRes.status === 201 || pnKesRes.status === 204 || pnKesRes.status === 500 || pnKesData.status === '201' || pnKesData.status === true;
                                     ptkBlock += `K-3.7b pn-adm  : ${pnKesOk ? 'BERHASIL' : 'GAGAL (' + (pnKesData.message || pnKesRes.status) + ')'}${pnKesRes.status === 500 ? ' (server 500=berhasil)' : ''}\n`;
                                     liveLog(`[STEP 8] K-3.7b: ${pnKesOk ? 'BERHASIL' : 'GAGAL - HTTP ' + pnKesRes.status}`);
@@ -926,22 +994,22 @@ export const bindSurtuToolEvents = () => {
                                       });
                                       const rekKesText = await rekKesRes.text();
                                       let rekKesData: any = {};
-                                      try { if (rekKesText) rekKesData = JSON.parse(rekKesText); } catch(_e) {}
+                                      try { if (rekKesText) rekKesData = JSON.parse(rekKesText); } catch (_e) { }
                                       const rekKesOk = rekKesRes.ok || rekKesRes.status === 201 || rekKesRes.status === 204 || rekKesData.status === '201' || rekKesData.status === true;
                                       ptkBlock += `K-3.7b rek-hist: ${rekKesOk ? 'BERHASIL' : 'GAGAL (' + (rekKesData.message || rekKesRes.status) + ')'}\n`;
                                     }
-                                  } catch(e: any) {
+                                  } catch (e: any) {
                                     if (e.message === 'TOKEN_EXPIRED_401') throw e;
                                     ptkBlock += `K-3.7b         : ERROR (${e.message})\n`;
                                   }
                                 }
                               }
-                            } catch(e: any) {
+                            } catch (e: any) {
                               if (e.message === 'TOKEN_EXPIRED_401') throw e;
                               ptkBlock += `Surtug ke-2    : ERROR (${e.message})\n`;
                             }
                           }
-                        } catch(err: any) {
+                        } catch (err: any) {
                           if (err.message === 'TOKEN_EXPIRED_401') throw err;
                           ptkBlock += `Status Surtug  : ERROR (${err.message})\n`;
                         }

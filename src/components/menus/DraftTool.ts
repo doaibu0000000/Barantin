@@ -54,10 +54,10 @@ export const DraftTool = () => {
       </div>
 
       ${terminalPanelHTML({
-        textareaId: 'draftResults',
-        logTabId: 'termTabLog',
-        hasilTabId: 'termTabHasil',
-      })}
+    textareaId: 'draftResults',
+    logTabId: 'termTabLog',
+    hasilTabId: 'termTabHasil',
+  })}
     </div>
   `;
 };
@@ -204,7 +204,7 @@ export const bindDraftToolEvents = () => {
           liveLog(`[STEP 1] Membaca isi file PDF...`);
           setTimeout(() => {
             const fileReader = new FileReader();
-            fileReader.onload = function() {
+            fileReader.onload = function () {
               const typedarray = new Uint8Array(this.result as ArrayBuffer);
               pdfjsLib.getDocument(typedarray).promise.then(pdf => {
                 let textPromises = [];
@@ -213,22 +213,22 @@ export const bindDraftToolEvents = () => {
                 }
                 Promise.all(textPromises).then(pagesText => {
                   liveLog(`[STEP 2] Mengekstrak teks dari PDF...`);
-                  
+
                   setTimeout(() => {
                     const fullText = pagesText.join('\n');
                     // Mock helper functions for demonstration
                     const extractDataFromText = (text: string) => ({ content: text });
                     const generateJSON = (data: any) => JSON.stringify(data, null, 2);
-                    
+
                     const extractedData = extractDataFromText(fullText);
                     const formattedData = generateJSON(extractedData);
-                    
+
                     liveLog(`[STEP 3] Menyusun format JSON Draft...`);
-                    
+
                     setTimeout(() => {
                       savedDraftHasilContent = formattedData;
                       liveLog(`[SELESAI] Draft selesai dibuat. Hasil dipindahkan ke tab 'Hasil'.`);
-                      
+
                       processDraftBtn.disabled = false;
                       processDraftBtn.textContent = 'Buat Draft';
                     }, 600);
@@ -251,7 +251,7 @@ export const bindDraftToolEvents = () => {
           terminal.updateView();
           return;
         }
-        
+
         draftResults.classList.remove('text-red-500');
         terminal.switchTab('log');
         processDraftBtn.disabled = true;
@@ -279,7 +279,7 @@ export const bindDraftToolEvents = () => {
 
 
         function uuidv4() {
-          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
             var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
           });
@@ -339,7 +339,7 @@ export const bindDraftToolEvents = () => {
             for (const ktNumberToFetch of lines) {
               // 1. Filter PTK
               liveLog(`[STEP 1] Mencari No KT: ${ktNumberToFetch}...`);
-              
+
               const filterPayload = {
                 dFrom: today,
                 dTo: today,
@@ -392,7 +392,7 @@ export const bindDraftToolEvents = () => {
 
 
                   let ptkBlock = '';
-                  
+
                   allDrafts += `\n${'='.repeat(52)}\n`;
                   allDrafts += `  No KT : ${ktNumberToFetch}\n`;
                   allDrafts += `  AJU   : ${no_aju}\n`;
@@ -440,7 +440,7 @@ export const bindDraftToolEvents = () => {
                           }
                         }
                       }
-                    } catch(_e) { liveLog(`[STEP 2b] Gagal cek existing, akan buat baru`); }
+                    } catch (_e) { liveLog(`[STEP 2b] Gagal cek existing, akan buat baru`); }
 
                     if (existingSurtug1HeaderId) liveLog(`[STEP 2b] Adm & Kesesuaian sudah ada - skip`);
                     if (existingSurtug2HeaderId) liveLog(`[STEP 2b] Pemeriksaan Kesehatan sudah ada - skip`);
@@ -481,13 +481,13 @@ export const bindDraftToolEvents = () => {
                         );
                         const pnAdmCheckText = await pnAdmCheckRes.text().catch(() => '');
                         let pnAdmCheckData: any = {};
-                        try { if (pnAdmCheckText) pnAdmCheckData = JSON.parse(pnAdmCheckText); } catch(_e) {}
+                        try { if (pnAdmCheckText) pnAdmCheckData = JSON.parse(pnAdmCheckText); } catch (_e) { }
                         const pnAdmList: any[] = pnAdmCheckData?.data || [];
                         if (pnAdmList.length > 0) {
                           savedPnAdmId = pnAdmList[0].id || '';
                           liveLog(`[STEP 2c] pn-adm existing ditemukan: ${savedPnAdmId}`);
                         }
-                      } catch(_e) { liveLog(`[STEP 2c] Gagal ambil pn-adm existing, lanjut`); }
+                      } catch (_e) { liveLog(`[STEP 2c] Gagal ambil pn-adm existing, lanjut`); }
                     }
 
 
@@ -562,7 +562,7 @@ export const bindDraftToolEvents = () => {
                           });
                         }
                         const petugasOkCount = resolvedPetugas.filter(p => !petugasResults.includes('[X] ' + p.nama)).length;
-                        ptkBlock += `  [OK] Petugas : ${petugasOkCount}/${resolvedPetugas.length} - ${resolvedPetugas.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
+                        ptkBlock += `  [OK] Petugas : ${petugasOkCount}/${resolvedPetugas.length} - ${resolvedPetugas.map(p => p.nama.split(' ')[0]).join(', ')}\n`;
                         liveLog(`[STEP 5] Input Petugas Surtug1 selesai`);
                         // POST penugasan setelah semua petugas Surtug 1 selesai
                         await loggedFetch(`https://api2.karantinaindonesia.go.id/barantin-sys/surtug/penugasan/${ptkId}`, {
@@ -576,12 +576,17 @@ export const bindDraftToolEvents = () => {
                           const pnAdmId = uuidv4();
                           const pnAdmNomor = ktNumberToFetch.replace('K.1.1', 'K.3.7a').replace('K.2.2', 'K.3.7a');
                           const tanggalPnAdm = localISOTime.substring(0, 16);
-                          const suhermanObj = petugasUpt.find((p: any) => p.nama.toLowerCase().includes('suherman'));
-                          const suhermanId = suhermanObj ? suhermanObj.id : 4111;
+                          // K-3.7a: penanda tangan (user_ttd_id) mengikuti PETUGAS dari form Pengaturan
+                          // (default DEDEN KURNIA = id 3267). Sebelumnya hardcode SUHERMAN.
+                          const savedTtdK37a = localStorage.getItem('surtu2_petugas') || 'DEDEN KURNIA - 197812302006041002';
+                          const ttdK37aNama = savedTtdK37a.split(' - ')[0].trim().toLowerCase().split(' ')[0];
+                          const ttdK37aObj = petugasUpt.find((p: any) => p.nama.toLowerCase().includes(ttdK37aNama));
+                          const k37aTtdId = ttdK37aObj ? ttdK37aObj.id : 3267;
+                          liveLog(`[STEP 6] K-3.7a penanda tangan: ${savedTtdK37a.split(' - ')[0]} (id ${k37aTtdId})`);
                           const pnAdmPayload = {
                             id: pnAdmId, ptk_id: ptkId, ptk_surat_tugas_id: surtugHeaderId,
                             nomor: pnAdmNomor, tanggal: tanggalPnAdm, hasil_periksa_id: "6",
-                            rekomendasi_id: "14", user_ttd_id: String(suhermanId), is_sampel: null,
+                            rekomendasi_id: "14", user_ttd_id: String(k37aTtdId), is_sampel: null,
                             user_id: String(userData?.id || "3267")
                           };
                           const pnAdmRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm`, {
@@ -590,7 +595,7 @@ export const bindDraftToolEvents = () => {
                           });
                           const pnAdmText = await pnAdmRes.text();
                           let pnAdmData: any = {};
-                          try { if (pnAdmText) pnAdmData = JSON.parse(pnAdmText); } catch(_e) {}
+                          try { if (pnAdmText) pnAdmData = JSON.parse(pnAdmText); } catch (_e) { }
                           const pnAdmOk = pnAdmRes.ok || pnAdmRes.status === 201 || pnAdmRes.status === 204 || pnAdmRes.status === 500 || pnAdmData.status === '201' || pnAdmData.status === true;
                           if (pnAdmOk) savedPnAdmId = pnAdmData?.data?.id || pnAdmId;
                           ptkBlock += `  ${pnAdmOk ? '[OK]' : '[X]'} K-3.7a  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL  HTTP ' + pnAdmRes.status}\n`;
@@ -606,11 +611,11 @@ export const bindDraftToolEvents = () => {
                             });
                             const rekText = await rekHistoryRes.text();
                             let rekData: any = {};
-                            try { if (rekText) rekData = JSON.parse(rekText); } catch(_e) {}
+                            try { if (rekText) rekData = JSON.parse(rekText); } catch (_e) { }
                             const rekOk = rekHistoryRes.ok || rekHistoryRes.status === 201 || rekHistoryRes.status === 204 || rekData.status === '201' || rekData.status === true;
                             ptkBlock += `K-3.7a rek-hist: ${rekOk ? 'BERHASIL' : 'GAGAL (' + (rekData.message || rekHistoryRes.status) + ')'}\n`;
                           }
-                        } catch(e: any) {
+                        } catch (e: any) {
                           ptkBlock += `K-3.7a         : ERROR (${e.message})\n`;
                         }
                       }
@@ -685,7 +690,7 @@ export const bindDraftToolEvents = () => {
                             });
                           }
                           const petugasOkCount = resolvedPetugas2.filter(p => !petugasResults.includes('[X] ' + p.nama)).length;
-                          ptkBlock += `  [OK] Petugas : ${petugasOkCount}/${resolvedPetugas2.length} - ${resolvedPetugas2.map(p=>p.nama.split(' ')[0]).join(', ')}\n`;
+                          ptkBlock += `  [OK] Petugas : ${petugasOkCount}/${resolvedPetugas2.length} - ${resolvedPetugas2.map(p => p.nama.split(' ')[0]).join(', ')}\n`;
                           liveLog(`[STEP 8] Input Petugas Surtug2 selesai`);
                           // POST penugasan setelah semua petugas Surtug 2 selesai
                           await loggedFetch(`https://api2.karantinaindonesia.go.id/barantin-sys/surtug/penugasan/${ptkId}`, {
@@ -780,7 +785,7 @@ export const bindDraftToolEvents = () => {
                         });
                         const pnFisikText = await pnFisikRes.text().catch(() => '');
                         let pnFisikData: any = {};
-                        try { if (pnFisikText) pnFisikData = JSON.parse(pnFisikText); } catch(_e) {}
+                        try { if (pnFisikText) pnFisikData = JSON.parse(pnFisikText); } catch (_e) { }
                         const pnFisikOk = pnFisikRes.ok || pnFisikRes.status === 201 || pnFisikRes.status === 204 || pnFisikRes.status === 500 || pnFisikData.status === '201' || pnFisikData.status === true;
                         if (pnFisikOk) pnFisikId = pnFisikData?.data?.id || pnFisikId;
 
@@ -1043,7 +1048,7 @@ export const bindDraftToolEvents = () => {
                     ptkBlock += `  [X] ERROR SISTEM : ${e.message}\n`;
                     liveLog(`[ERROR] Surtug process failed: ${e.message}`);
                   }
-                  
+
                   allDrafts += ptkBlock;
                 }
               } else {
