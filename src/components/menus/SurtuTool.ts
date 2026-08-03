@@ -679,10 +679,15 @@ export const bindSurtuToolEvents = () => {
                         ptkBlock += `  [OK] Status : PTK sudah terverifikasi\n`;
                         liveLog(`[STEP 3] Verifikasi sudah selesai -> Buka Form Surat Tugas`);
                       } else {
+                        // noReg HARUS berisi No AJU PTK yang baru di-generate (ptkPayload.no_aju),
+                        // BUKAN No AJU SSM (data.noAju). Field inilah yang disimpan server ke kolom
+                        // "No Aju PTK" pada tabel SSM. Jika pakai data.noAju, tabel akan menampilkan
+                        // No SSM (lihat sample: sendStatus/ptk noReg = "32002EXT...").
+                        const finalNoAjuPtk = ptkPayload.no_aju || submitData.data?.no_aju || data.noReg || data.noAju;
                         const verifyRes = await loggedFetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
                           method: 'POST',
                           headers: { 'Authorization': 'Basic bXJpZHdhbjpaPnV5JCx+NjR7KF42WDQm', 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ id: data.tssm_id || data.id, ptk_id: finalPtkId, noReg: data.noReg || data.noAju })
+                          body: JSON.stringify({ id: data.tssm_id || data.id, ptk_id: finalPtkId, noReg: finalNoAjuPtk })
                         });
                         if (verifyRes.ok || verifyRes.status === 201) {
                           verifyOk = true;
@@ -741,7 +746,7 @@ export const bindSurtuToolEvents = () => {
                           if (!existingSurtug1HeaderId && !existingSurtug2HeaderId) liveLog(`[STEP 2b] Belum ada surtug - akan buat semua`);
 
                           const dokumencekPayload = {
-                            listRekom: [], noAju: data.noReg || data.noAju, idPtk: surtugPtkId,
+                            listRekom: [], noAju: ptkPayload.no_aju || submitData.data?.no_aju || data.noReg || data.noAju, idPtk: surtugPtkId,
                             noDokumen: ptkNomor, tglDokumen: localISOTime.substring(0, 16),
                             errorSurtug: "", errorPegawai: ""
                           };
