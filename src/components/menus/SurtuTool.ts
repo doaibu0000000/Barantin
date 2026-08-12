@@ -268,7 +268,10 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
     alamat_tempat_pemeriksaan: instalasi.ALAMAT || "",
     instalasi_karantina_id: null,
     status_ptk: "1",
-    tgl_dok_permohonan: data.tglAju?.substring(0, 16) || "",
+    tgl_dok_permohonan: (() => {
+      const n = new Date();
+      return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')} 08:10`;
+    })(),
     is_draft: "1",
     is_verifikasi: "1",
     petugas: petugasNama,
@@ -706,6 +709,53 @@ export const bindSurtuToolEvents = () => {
                         const ptkNomor = currentSsmPtk || submitData.data?.nomor || data.noReg || data.noAju;
                         liveLog(`[STEP 3] PTK Nomor: ${ptkNomor}`);
                         liveLog(`[STEP 3] Surtug PTK ID: ${surtugPtkId}`);
+
+                        // ─── STEP 3b: Respon K/L (responAju/new) — langsung setelah verifikasi ───
+                        try {
+                          liveLog(`[STEP 3b] Mengirim Respon K/L (responAju/new)...`);
+                          const responKar = data.jenis_karantina === 'Tumbuhan' ? 'kt' : (data.jenis_karantina === 'Hewan' ? 'kh' : 'ki');
+                          const responKegiatan = data.jnsAju === 'EKSPOR' ? 'EX' : (data.jnsAju === 'IMPOR' ? 'IM' : 'DP');
+                          const savedPetugasRespon = localStorage.getItem('surtu2_petugas') || 'DEDEN KURNIA - 197812302006041002';
+                          const responPetugasParts = savedPetugasRespon.split(' - ');
+                          const responPetugasNama = (responPetugasParts[0] || 'DEDEN KURNIA').trim();
+                          const responPetugasNip = (responPetugasParts[1] || '197812302006041002').trim();
+                          const responTanggal = (() => {
+                            const n = new Date();
+                            return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')} 08:10:00`;
+                          })();
+                          const responLink = `https://cert.karantinaindonesia.go.id/print_cert/preborder/k11/${btoa(surtugPtkId + '_view')}`;
+                          const responLinkDraft = `https://cert.karantinaindonesia.go.id/print_cert/pembebasan/kt4p/${btoa(surtugPtkId + '_draft1')}`;
+                          const responPayload = {
+                            ptk_id: surtugPtkId,
+                            ssm_id: data.id,
+                            kar: responKar,
+                            doc: 'k11',
+                            iddoc: '1',
+                            kegiatan: responKegiatan,
+                            risk: '',
+                            respon: '101',
+                            uraian: null,
+                            link: responLink,
+                            linkDraft: responLinkDraft,
+                            user_id: String(userData?.id || '3267'),
+                            tolak: { petugas: responPetugasNama, nip: responPetugasNip, tanggal: responTanggal }
+                          };
+                          const responRes = await loggedFetch(`https://api.karantinaindonesia.go.id/ssm/responAju/new`, {
+                            method: 'POST',
+                            headers: { 'Authorization': 'Basic bXJpZHdhbjpaPnV5JCx+NjR7KF42WDQm', 'Content-Type': 'application/json' },
+                            body: JSON.stringify(responPayload)
+                          });
+                          const responText = await responRes.text().catch(() => '');
+                          let responData: any = {};
+                          try { if (responText) responData = JSON.parse(responText); } catch (_e) { }
+                          const responOk = responRes.ok || responData.status === true;
+                          ptkBlock += `  ${responOk ? '[OK]' : '[X]'} Respon : ${responOk ? 'BERHASIL (' + (responData.message_ssm || 'Sukses kirim respon') + ')' : 'GAGAL (' + (responData.message || responRes.status) + ')'}\n`;
+                          liveLog(`[STEP 3b] Respon K/L: ${responOk ? 'BERHASIL - ' + (responData.message_ssm || 'Sukses') : 'GAGAL'}`);
+                        } catch (e: any) {
+                          if (e.message === 'TOKEN_EXPIRED_401') throw e;
+                          ptkBlock += `  [X] Respon : ERROR (${e.message})\n`;
+                          liveLog(`[STEP 3b] ERROR: ${e.message}`);
+                        }
 
                         try {
                           const surtugId = uuidv4();

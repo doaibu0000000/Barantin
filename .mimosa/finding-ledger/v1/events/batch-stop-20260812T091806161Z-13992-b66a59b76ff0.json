@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20260812T091806161Z-13992-b66a59b76ff0",
+  "runId": "20260812T091806161Z-13992-b66a59b76ff0",
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "8a6cafa356e493a2e944043f434a603c02355879",
+  "diffHash": "608210ae9c3a06bdbeb16e5c07306a3114d45bef0650ca2e8385d6dfe63a78a9",
+  "rulesVersion": "unavailable",
+  "sessionHash": "99dd572e6b49c17a755c79ce38b2cc19d512058e1e07ec5e8a069870f83f25e2",
+  "reportRef": ".mimosa/reports/task-review-sess_4fd07c03-a664-4035-9588-ca23fc94df4e-20260812T091806161Z-13992-b66a59b76ff0.json",
+  "events": [],
+  "observedFindingIds": [
+    "mimosa-11641992876a65a19513500b",
+    "mimosa-58c15cc6e2e1311d5e96bba7"
+  ],
+  "verifiedFiles": [
+    {
+      "file": "src/components/menus/SurtuTool.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    }
+  ],
+  "recordedAt": "2026-08-12T09:18:06.600Z"
+}
