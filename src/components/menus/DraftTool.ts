@@ -18,21 +18,21 @@ let savedDraftInputKt = '';
 export const DraftTool = () => {
   return `
     <div class="flex flex-col gap-3 flex-1 min-h-0 w-full h-full">
-      <div class="flex flex-col gap-2 flex-1 md:flex-none min-h-0">
-        <div class="flex flex-row items-center justify-between w-full">
-          <div class="flex w-fit bg-[#0a0a0a] border border-zinc-700 p-1 rounded-lg shadow-sm">
-            <button type="button" id="tabKt" class="px-4 py-1 md:px-5 md:py-1.5 text-xs md:text-sm font-semibold rounded-md text-brand-text-muted hover:text-white transition-all">No KT</button>
-            <button type="button" id="tabPdf" class="px-4 py-1 md:px-5 md:py-1.5 text-xs md:text-sm font-bold rounded-md bg-brand-accent text-white shadow-sm transition-all">PDF</button>
+      <div class="flex flex-col gap-2 flex-1 min-h-0">
+        <div class="flex flex-row items-center justify-between shrink-0">
+          <div class="flex items-center h-[36px] md:h-[38px] w-fit bg-[#0a0a0a] border border-zinc-700 p-1 rounded-lg shadow-sm">
+            <button type="button" id="tabKt" class="flex items-center justify-center h-full px-4 md:px-5 text-xs md:text-sm font-semibold rounded-md text-brand-text-muted hover:text-white transition-all">No KT</button>
+            <button type="button" id="tabPdf" class="flex items-center justify-center h-full px-4 md:px-5 text-xs md:text-sm font-bold rounded-md bg-brand-accent text-white shadow-sm transition-all">PDF</button>
           </div>
           <button type="button" id="processDraftBtn" class="bg-brand-accent hover:bg-brand-accent-hover text-white rounded-lg px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-bold cursor-pointer transition-all shadow-md shrink-0 whitespace-nowrap h-[36px] md:h-[38px]">
             Buat Draft
           </button>
         </div>
 
-        <div id="pdfSection" class="flex flex-col gap-2 flex-1 min-h-0">
-          <div class="relative flex-1 min-h-0 flex flex-col md:block">
+        <div id="pdfSection" class="flex flex-col flex-1 min-h-0">
+          <div class="relative flex-1 min-h-0 flex flex-col">
             <input type="file" id="pdfUpload" accept=".pdf" class="hidden" />
-            <label for="pdfUpload" class="w-full h-full md:h-48 flex-1 bg-brand-input hover:bg-brand-input/80 border border-brand-border border-dashed rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-colors text-brand-text-muted hover:text-white">
+            <label for="pdfUpload" class="w-full h-full flex-1 bg-brand-input hover:bg-brand-input/80 border border-brand-border border-dashed rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-colors text-brand-text-muted hover:text-white">
               <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
               <span id="pdfFileName" class="text-sm font-medium text-center px-4 max-w-full break-words">Klik untuk memilih file PDF</span>
             </label>
@@ -40,8 +40,8 @@ export const DraftTool = () => {
         </div>
 
         <!-- Tab NO KT -->
-        <div id="ktSection" class="flex flex-col gap-2 hidden relative flex-1 min-h-0">
-          <textarea id="ktNumber" placeholder="Contoh :&#10;1894&#10;2026-T1.0-3200.2-K.1.1-001894" class="w-full h-full md:h-auto flex-1 bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none md:min-h-[112px]" rows="8">${savedDraftInputKt}</textarea>
+        <div id="ktSection" class="flex flex-col hidden relative flex-1 min-h-0">
+          <textarea id="ktNumber" placeholder="Contoh :&#10;1894&#10;2026-T1.0-3200.2-K.1.1-001894" class="w-full h-full flex-1 bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none" rows="8">${savedDraftInputKt}</textarea>
 
           <!-- Loading Overlay -->
           <div id="ktLoader" class="absolute inset-0 bg-zinc-900/60 backdrop-blur-[2px] rounded-lg flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 z-10">
@@ -154,7 +154,10 @@ export const bindDraftToolEvents = () => {
         if (lines.length === 0) return;
         const formatted = formatBanyakNomorKT(currentVal);
         if (formatted !== currentVal.trim()) {
-          showLoader(ktLoader, 400, () => { ktNumber.value = formatted; });
+          showLoader(ktLoader, 400, () => {
+            ktNumber.value = formatted;
+            savedDraftInputKt = formatted;
+          });
         }
       }, 500);
     });
@@ -305,6 +308,7 @@ export const bindDraftToolEvents = () => {
             if (res.status === 401 && url.includes('karantinaindonesia.go.id')) {
               liveLog(`[AUTH] ⚠ Token expired! Sesi berakhir - mengalihkan ke halaman login...`);
               setTimeout(() => {
+                savedDraftLogContent = '> Menghubungkan ke server...\n';
                 if (typeof (window as any).handleSessionExpired === 'function') {
                   (window as any).handleSessionExpired();
                 } else {

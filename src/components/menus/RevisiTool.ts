@@ -10,7 +10,7 @@ import { terminalPanelHTML, bindTerminalTabs } from '../shared/TerminalPanel';
 export const RevisiTool = () => {
   return `
     <div class="flex flex-col gap-3 flex-1 min-h-0 w-full h-full">
-      <div class="flex flex-col gap-2 flex-1 md:flex-none min-h-0">
+      <div class="flex flex-col gap-2 flex-1 min-h-0">
         <div class="flex flex-row items-center justify-between w-full gap-3">
           <div class="flex flex-row items-center gap-3 flex-1 min-w-0">
             <input type="text" id="quickDocNumber" placeholder="NO KT" maxlength="6"
@@ -31,7 +31,7 @@ export const RevisiTool = () => {
         </div>
 
         <div id="docSection" class="flex flex-col gap-2 relative w-full flex-1 min-h-0">
-          <textarea id="docNumber" placeholder="Masukkan NO KT..." class="w-full h-full md:h-auto flex-1 bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none md:min-h-[112px]" rows="8"></textarea>
+          <textarea id="docNumber" placeholder="Masukkan NO KT..." class="w-full h-full flex-1 bg-brand-input border border-brand-border rounded-lg p-4 text-brand-text placeholder-zinc-500 font-mono text-sm outline-none focus:border-brand-accent transition-colors resize-none" rows="8"></textarea>
 
           <!-- Loading Overlay -->
           <div id="docLoader" class="absolute inset-0 bg-zinc-900/60 backdrop-blur-[2px] rounded-lg flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 z-10">

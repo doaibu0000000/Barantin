@@ -287,14 +287,14 @@ const buildPtkPayload = (data: any, xmlObj: any, userData: any, existingPtkId: s
 export const SurtuTool = () => {
   return `
     <div class="flex flex-col gap-3 flex-1 min-h-0 w-full h-full">
-      <div class="flex flex-col gap-2 flex-1 md:flex-none min-h-0">
+      <div class="flex flex-col gap-2 flex-1 min-h-0">
         ${headerActionBarHTML({
     title: 'Nomor AJU SSM / PTK',
     buttonLabel: 'Proses Data',
     buttonId: 'processBtn',
   })}
-        <div class="relative flex-1 min-h-0 flex flex-col md:block">
-          <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full h-full md:h-auto flex-1 block bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="4"></textarea>
+        <div class="relative flex-1 min-h-0 flex flex-col">
+          <textarea id="cookieContent" placeholder="Contoh :&#10;30104S14616EA2026071000009&#10;32002EXT260709130318MBZS1S" class="w-full h-full flex-1 block bg-brand-input border border-brand-border rounded-lg p-3 text-brand-text placeholder-zinc-500 font-mono text-sm resize-none outline-none focus:border-brand-accent transition-colors" rows="4"></textarea>
 
           <!-- Loading Overlay -->
           <div id="cookieLoader" class="absolute inset-0 bg-zinc-900/60 backdrop-blur-[2px] rounded-lg flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 z-10">
@@ -402,6 +402,7 @@ export const bindSurtuToolEvents = () => {
         if (hasGarbage) {
           showLoader(600, () => {
             cookieContent.value = cleaned;
+            savedInput = cleaned;
           });
         }
       }
@@ -458,6 +459,7 @@ export const bindSurtuToolEvents = () => {
             if (res.status === 401 && url.includes('karantinaindonesia.go.id')) {
               liveLog(`[AUTH] ⚠ Token expired! Sesi berakhir - mengalihkan ke halaman login...`);
               setTimeout(() => {
+                savedLogContent = '> Menghubungkan ke server...\n';
                 if (typeof (window as any).handleSessionExpired === 'function') {
                   (window as any).handleSessionExpired();
                 }
