@@ -762,6 +762,11 @@ export const bindDraftToolEvents = () => {
                         const tglPeriksa = now.toISOString().substring(0, 10).replace(/-/g, '-') + ' ' + now.toTimeString().substring(0, 5);
                         const nomorPnFisik = ktNumberToFetch.replace('K.1.1', 'K.3.7b').replace('K.2.2', 'K.3.7b');
 
+                        // K-3.7b: Penandatangan atas (user_ttd1_id) = DEDEN KURNIA
+                        const dedenId = findPegawaiId('deden', 3267);
+                        // K-3.7b: Penandatangan bawah (user_ttd2_id di header) = PUPUNG PURNAWAN
+                        const pupungId = findPegawaiId('pupung', 3051);
+
                         const pnFisikPayload = {
                           id: pnFisikId,
                           ptk_id: ptkId,
@@ -769,7 +774,7 @@ export const bindDraftToolEvents = () => {
                           nomor: nomorPnFisik,
                           waktu_periksa: waktuPeriksa,
                           tanggal: tglPeriksa,
-                          user_ttd1_id: '4111',
+                          user_ttd1_id: String(dedenId),
                           user_id: String(userData?.id || '3267'),
                           periksa_detil: [{
                             id: periksaDetilId,
@@ -812,6 +817,7 @@ export const bindDraftToolEvents = () => {
                           });
 
                           // pn-fisik/header - finalisasi K-3.7b
+                          // user_ttd2_id (Penandatangan Rekomendasi/bawah) = PUPUNG PURNAWAN
                           await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-fisik/header/${pnFisikId}`, {
                             method: 'PUT',
                             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -821,7 +827,7 @@ export const bindDraftToolEvents = () => {
                               kesimpulan: 'MP BEBAS OTPK',
                               rekomendasi_id: '19',
                               rekomendasi2_id: '',
-                              user_ttd2_id: '4111',
+                              user_ttd2_id: String(pupungId),
                               user_id: String(userData?.id || '3267')
                             })
                           });
