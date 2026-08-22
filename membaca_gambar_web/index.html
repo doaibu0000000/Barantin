@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCR Cerdas — Barantin</title>
+  <meta name="description" content="Ekstrak teks dari gambar dengan kamus 687.000+ kata EN+ID">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#18191c;--bg2:#202125;--bg3:#2a2b2f;--bg4:#313236;--border:#35363a;--text:#e4e4e7;--muted:#71717a;--accent:#3b82f6;--accent-h:#2563eb;--green:#22c55e;--yellow:#eab308;--red:#ef4444;--radius:10px}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+    body{display:flex;flex-direction:column;min-height:100vh}
+    a{color:var(--accent)}
+    .hidden{display:none!important}
+    /* ---- Header ---- */
+    .hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    .hdr-brand{display:flex;align-items:center;gap:12px}
+    .hdr-ico{width:38px;height:38px;background:linear-gradient(135deg,#3b82f6,#6366f1);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .hdr h1{font-size:1.1rem;font-weight:700;letter-spacing:-.3px}
+    .hdr-sub{font-size:.72rem;color:var(--muted);margin-top:1px}
+    .badge{font-size:.7rem;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);white-space:nowrap;transition:all .3s}
+    .badge.ok{border-color:#22c55e55;background:#22c55e15;color:#22c55e}
+    .badge.loading{border-color:#3b82f655;background:#3b82f615;color:#60a5fa;animation:pulse 1.5s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    /* ---- Main ---- */
+    main{flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;max-width:900px;width:100%;margin:0 auto}
+    /* ---- Dropzone ---- */
+    .dz{border:2px dashed var(--border);border-radius:var(--radius);padding:48px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;cursor:pointer;transition:all .25s;background:var(--bg2)}
+    .dz:hover,.dz.over{border-color:var(--accent);background:#3b82f610}
+    .dz-ico{font-size:2.5rem;margin-bottom:4px}
+    .dz-title{font-size:1rem;font-weight:600;color:var(--text)}
+    .dz-sub{font-size:.8rem;color:var(--muted)}
+    .file-link{color:var(--accent);cursor:pointer;text-decoration:underline}
+    /* ---- Panel ---- */
+    .panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:14px}
+    .panel-label{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+    /* ---- Preview ---- */
+    .prev-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:600px){.prev-grid{grid-template-columns:1fr}}
+    .prev-img{width:100%;border-radius:7px;border:1px solid var(--border);object-fit:contain;max-height:220px;background:#111}
+    .prev-actions{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+    .prev-info{font-size:.75rem;color:var(--muted)}
+    .prev-info span{color:var(--text);font-weight:500}
+    /* ---- Progress ---- */
+    .prg-label{font-size:.82rem;font-weight:500;color:var(--text)}
+    .prg-track{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:4px 0}
+    .prg-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#6366f1);border-radius:3px;transition:width .4s ease}
+    .prg-steps{display:flex;flex-direction:column;gap:3px;margin-top:6px;max-height:120px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)}
+    .prg-step{padding:2px 0}
+    .prg-step.ok{color:var(--green)}
+    .prg-step.err{color:var(--red)}
+    /* ---- Result ---- */
+    .res-hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+    .res-stats{font-size:.75rem;color:var(--muted)}
+    .res-stats strong{color:var(--text)}
+    .res-acts{display:flex;gap:8px;flex-wrap:wrap}
+    .res-split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:640px){.res-split{grid-template-columns:1fr}}
+    .res-lines{display:flex;flex-direction:column;gap:4px;overflow-y:auto;max-height:340px}
+    .res-line{display:flex;align-items:flex-start;gap:8px;padding:5px 8px;border-radius:6px;background:var(--bg3);font-size:.75rem;font-family:'JetBrains Mono',monospace}
+    .res-line .conf{flex-shrink:0;width:34px;font-size:.65rem;font-weight:700;text-align:right}
+    .conf.hi{color:var(--green)} .conf.mid{color:var(--yellow)} .conf.lo{color:var(--red)}
+    .res-line .txt{flex:1;word-break:break-all;color:var(--text)}
+    .res-line .raw{flex:1;word-break:break-all;color:var(--muted);text-decoration:line-through;font-size:.68rem}
+    .res-textarea{width:100%;height:340px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:12px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.78rem;resize:vertical;outline:none;line-height:1.6}
+    /* ---- Buttons ---- */
+    .btn-primary{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:9px 20px;font-size:.82rem;font-weight:600;cursor:pointer;transition:background .2s}
+    .btn-primary:hover{background:var(--accent-h)}
+    .btn-primary:disabled{opacity:.5;cursor:not-allowed}
+    .btn-secondary{background:var(--bg4);color:var(--text);border:1px solid var(--border);border-radius:7px;padding:7px 14px;font-size:.78rem;font-weight:500;cursor:pointer;transition:all .2s}
+    .btn-secondary:hover{background:var(--bg3);border-color:#52525b}
+    .btn-ghost{background:transparent;color:var(--muted);border:1px solid transparent;border-radius:7px;padding:7px 14px;font-size:.78rem;cursor:pointer;transition:all .2s}
+    .btn-ghost:hover{color:var(--text);border-color:var(--border)}
+    /* ---- Scrollbar ---- */
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-track{background:var(--bg3)}
+    ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+  </style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-ico">🔍</div>
+    <div>
+      <h1>OCR Cerdas</h1>
+      <div class="hdr-sub">Barantin Tools — Ekstrak teks dari gambar</div>
+    </div>
+  </div>
+  <div class="badge loading" id="kamusBadge">⏳ Memuat kamus...</div>
+</header>
+
+<main>
+  <!-- Drop zone -->
+  <div class="dz" id="dropzone">
+    <div class="dz-ico">🖼️</div>
+    <div class="dz-title">Tempel atau jatuhkan gambar di sini</div>
+    <div class="dz-sub">
+      <kbd>Ctrl+V</kbd> &nbsp;·&nbsp; Drag &amp; Drop &nbsp;·&nbsp; atau
+      <label for="fileInput" class="file-link">pilih file gambar</label>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" hidden>
+  </div>
+
+  <!-- Image preview -->
+  <div class="panel hidden" id="previewSection">
+    <div class="prev-grid" id="prevGrid">
+      <div id="colOriginal">
+        <div class="panel-label">Gambar Asli</div>
+        <img class="prev-img" id="imgOriginal" alt="Original">
+      </div>
+      <div id="colEnhanced" class="hidden">
+        <div class="panel-label">Setelah Enhancement (CLAHE + Unsharp Mask)</div>
+        <img class="prev-img" id="imgEnhanced" alt="Enhanced">
+      </div>
+    </div>
+    <div class="prev-actions">
+      <div class="prev-info" id="prevInfo"></div>
+      <button class="btn-primary" id="ocrBtn">🔍 Mulai OCR</button>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="panel hidden" id="progressSection">
+    <div class="prg-label" id="prgLabel">Memproses...</div>
+    <div class="prg-track"><div class="prg-fill" id="prgFill" style="width:0%"></div></div>
+    <div class="prg-steps" id="prgSteps"></div>
+  </div>
+
+  <!-- Results -->
+  <div class="panel hidden" id="resultSection">
+    <div class="res-hdr">
+      <div class="res-stats" id="resStats"></div>
+      <div class="res-acts">
+        <button class="btn-secondary" id="copyBtn">📋 Salin Semua</button>
+        <button class="btn-secondary" id="dlBtn">💾 Unduh .txt</button>
+        <button class="btn-ghost" id="resetBtn">↺ Gambar Baru</button>
+      </div>
+    </div>
+    <div class="res-split">
+      <div>
+        <div class="panel-label">Per Baris (dengan skor kepercayaan)</div>
+        <div class="res-lines" id="resLines"></div>
+      </div>
+      <div>
+        <div class="panel-label">Teks Lengkap</div>
+        <textarea class="res-textarea" id="resText" readonly placeholder="Hasil OCR akan muncul di sini..."></textarea>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+'use strict';
+// ================================================================
+// TAHAP 1: KAMUS (EN + ID, 687.000+ kata, dimuat sekali saat startup)
+// ================================================================
+let KAMUS_RESMI = null;
+let kamusSiap = false;
+
+const KATA_KHUSUS = new Set([
+  'phytosanitary','consignment','pallets','pallet','fcl','lcl','others','said',
+  'contain','contains','finger','joint','acacia','mangium','brasiliensis','hevea',
+  'rubber','rubbers','seal','seals','cargo','cargos','appendix','appendices',
+  'certificate','certificates','description','detail','details','container',
+  'containers','general','size','sizes','type','types','total','totals','serial',
+  'feet','foot','gross','weight','weights','net','kgs','pcs','pieces','solid',
+  'solids','wood','woods','name','address','exporter','importer','shipper',
+  'consignee','notify','party','vessel','port','loading','discharge','invoice',
+  'packing','list','bill','lading','country','origin','destination','quantity',
+  'unit','price','amount','marks','numbers','goods','declared','value',
+  'ruko','jakarta','timur','barat','utara','selatan','kota','administrasi',
+  'daerah','khusus','ibukota','rt','rw','no','jl','jalan','indonesia',
+]);
+
+const KAMUS_PATHS = [
+  ['./kamus_inggris.txt','./kamus_indonesia.txt'],
+  ['../membaca_gambar/kamus_inggris.txt','../membaca_gambar/kamus_indonesia.txt'],
+];
+
+async function muatKamus(onProgress) {
+  if (KAMUS_RESMI) return KAMUS_RESMI;
+  const set = new Set(KATA_KHUSUS);
+  let berhasil = false;
+
+  for (const [pathEn, pathId] of KAMUS_PATHS) {
+    try {
+      onProgress?.('memuat', 5, `Mencoba kamus dari: ${pathEn}`);
+      const [rEn, rId] = await Promise.all([fetch(pathEn), fetch(pathId)]);
+      if (!rEn.ok || !rId.ok) continue;
+
+      onProgress?.('memuat', 15, 'Membaca kamus Inggris (5.4 MB)...');
+      const [tEn, tId] = await Promise.all([rEn.text(), rId.text()]);
+
+      onProgress?.('memuat', 35, 'Membangun indeks kamus Inggris...');
+      let n = 0;
+      for (const baris of tEn.split('\n')) {
+        const w = baris.trim().toLowerCase();
+        if (w && w.length >= 2) { set.add(w); n++; }
+      }
+      onProgress?.('memuat', 60, `Kamus EN: ${n.toLocaleString()} kata. Membangun indeks kamus Indonesia...`);
+
+      let m = 0;
+      for (const baris of tId.split('\n')) {
+        const w = baris.trim().split(/\s/)[0]?.toLowerCase();
+        if (w && w.length >= 2) { set.add(w); m++; }
+      }
+      onProgress?.('memuat', 80, `Kamus ID: ${m.toLocaleString()} kata. Selesai!`);
+      berhasil = true;
+      break;
+    } catch (e) {
+      onProgress?.('warn', 10, `Gagal dari ${pathEn}: ${e.message}`);
+    }
+  }
+
+  KAMUS_RESMI = set;
+  onProgress?.('ok', 100, berhasil
+    ? `Kamus siap: ${set.size.toLocaleString()} kata`
+    : `Kamus kata khusus saja (${set.size} kata) — file kamus tidak ditemukan`
+  );
+  return set;
+}
+
+// ================================================================
+// TAHAP 2: TABEL KEBINGUNGAN OCR (sama persis dengan main.py)
+// ================================================================
+const DIGIT_KE_HURUF = {
+  '0':['O','o'],'1':['I','i','l'],'2':['Z','z'],'3':['E','e','B'],
+  '4':['A','a'],'5':['S','s','B','b'],'6':['G','g','b'],'7':['T','t','l'],
+  '8':['B','b'],'9':['g','q'],
+};
+const HURUF_KE_HURUF = {
+  'l':['I','1'],'I':['l','1'],'O':['0','Q'],'o':['0'],
+  'S':['5'],'B':['8','3'],'G':['6'],'Z':['2'],'E':['3'],'A':['4'],'T':['7'],
+};
+
+// ================================================================
+// TAHAP 3: KOREKSI KATA (identik dengan koreksi_kata di main.py)
+// ================================================================
+function deteksiKasus(kata) {
+  const h = kata.replace(/[^a-zA-Z]/g,'');
+  if (!h) return 'mixed';
+  const b = [...h].filter(c=>c===c.toUpperCase()&&c.match(/[A-Z]/)).length;
+  const k = [...h].filter(c=>c===c.toLowerCase()&&c.match(/[a-z]/)).length;
+  if (b === h.length) return 'upper';
+  if (k === h.length) return 'lower';
+  if (h[0]===h[0].toUpperCase() && k > 0) return 'title';
+  return b > k ? 'upper' : 'lower';
+}
+
+function terapkanKasus(kata, pola) {
+  if (pola==='upper') return kata.toUpperCase();
+  if (pola==='lower') return kata.toLowerCase();
+  if (pola==='title') return kata[0].toUpperCase()+kata.slice(1).toLowerCase();
+  return kata;
+}
+
+function* kombinasi(arrays) {
+  if (!arrays.length) { yield []; return; }
+  for (const first of arrays[0])
+    for (const rest of kombinasi(arrays.slice(1)))
+      yield [first, ...rest];
+}
+
+function koreksiKata(kata, skorKepercayaan = 1.0, kamus) {
+  const KAMUS = kamus || KAMUS_RESMI || KATA_KHUSUS;
+  const prefixM = kata.match(/^([,:.!\-/()+\[\]]+)/);
+  const suffixM = kata.match(/([,:.!\-/()+\[\]]+)$/);
+  const prefix = prefixM ? prefixM[0] : '';
+  const suffix = suffixM ? suffixM[0] : '';
+  const inti = kata.slice(prefix.length, suffix.length ? -suffix.length : undefined);
+  if (!inti) return kata;
+
+  const polKasus = deteksiKasus(inti);
+  const intiL = inti.toLowerCase();
+
+  // Jika sudah ada di kamus dan tidak ada digit → rapikan kasus saja
+  if (intiL.length >= 3 && !/\d/.test(inti) && KAMUS.has(intiL))
+    return prefix + terapkanKasus(intiL, polKasus) + suffix;
+
+  const digits = [...inti].map((c,i)=>({c,i})).filter(({c})=>/\d/.test(c));
+  const hurufCount = inti.replace(/[^a-zA-Z]/g,'').length;
+
+  // Jika mayoritas angka atau lebih dari 2 digit → kode asli, jangan sentuh
+  if (digits.length > 2 || hurufCount === 0 || hurufCount/inti.length < 0.5) return kata;
+
+  // Substitusi digit → huruf (cek kamus)
+  if (digits.length > 0) {
+    const opsiList = digits.map(({c,i}) =>
+      (DIGIT_KE_HURUF[c] || []).map(h=>({i, h: [c,h]})).flat()
+      .reduce((acc,_,__,arr)=>{
+        // group by i
+        if (!acc.groups) { acc.groups = {}; }
+        return acc;
+      }, {})
+    );
+    const subArr = digits.map(({c,i}) =>
+      ([c, ...(DIGIT_KE_HURUF[c]||[])]).map(h=>({i,h}))
+    );
+    for (const kom of kombinasi(subArr)) {
+      const arr = [...inti];
+      for (const {i,h} of kom) arr[i] = h;
+      const kand = arr.join('').toLowerCase();
+      if (KAMUS.has(kand)) return prefix + terapkanKasus(kand, polKasus) + suffix;
+    }
+  }
+
+  // Substitusi huruf mirip (hanya jika skor rendah < 0.85)
+  if (skorKepercayaan < 0.85) {
+    // Cek 'rn' -> 'm'
+    const temp = intiL.replace('rn','m');
+    if (temp !== intiL && KAMUS.has(temp)) return prefix + terapkanKasus(temp, polKasus) + suffix;
+
+    for (let idx = 0; idx < intiL.length; idx++) {
+      const huruf = intiL[idx];
+      if (HURUF_KE_HURUF[huruf]) {
+        for (const pg of HURUF_KE_HURUF[huruf]) {
+          const arr = [...intiL]; arr[idx] = pg.toLowerCase();
+          const kand = arr.join('');
+          if (KAMUS.has(kand)) return prefix + terapkanKasus(kand, polKasus) + suffix;
+        }
+      }
+    }
+  }
+
+  // Normalisasi kasus final
+  if (KAMUS.has(intiL)) return prefix + terapkanKasus(intiL, polKasus) + suffix;
+  return kata;
+}
+
+function prosesBaris(baris, skor, kamus) {
+  return baris.split(' ').map(w => w ? koreksiKata(w, skor, kamus) : w).join(' ');
+}
+
+// ================================================================
+// TAHAP 4: PREPROCESSING GAMBAR (Canvas, mirip perjelas_gambar Python)
+// ================================================================
+function enhanceImage(dataUrl) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      // Scale up untuk meningkatkan akurasi OCR (min 1500px wide)
+      const scale = Math.max(1, Math.min(4, 1800 / Math.max(img.width, img.height, 1)));
+      const W = Math.round(img.width * scale);
+      const H = Math.round(img.height * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, W, H);
+
+      // Ukur ketajaman (Laplacian variance, approx)
+      const id = ctx.getImageData(0, 0, W, H);
+      const d = id.data;
+      let sumSq = 0; let cnt = 0;
+      const step = Math.max(1, Math.floor(W/200)); // sample setiap beberapa pixel
+      for (let y = 1; y < H-1; y += step) {
+        for (let x = 1; x < W-1; x += step) {
+          const g   = idx => (d[idx]*299+d[idx+1]*587+d[idx+2]*114)/1000;
+          const c   = g((y*W+x)*4);
+          const lap = Math.abs(-4*c + g(((y-1)*W+x)*4) + g(((y+1)*W+x)*4) + g((y*W+x-1)*4) + g((y*W+x+1)*4));
+          sumSq += lap*lap; cnt++;
+        }
+      }
+      const sharpness = cnt > 0 ? sumSq/cnt : 0;
+      const BATAS_TAJAM = 300;
+
+      if (sharpness > BATAS_TAJAM) {
+        // Gambar sudah tajam
+        resolve({ processedUrl: canvas.toDataURL('image/png'), sharpness, enhanced: false, scale });
+        return;
+      }
+
+      // Buram: terapkan Unsharp Masking (mirip CLAHE+Unsharp di Python)
+      // Step 1: buat versi blur di offscreen canvas
+      const blurCanvas = document.createElement('canvas');
+      blurCanvas.width = W; blurCanvas.height = H;
+      const bCtx = blurCanvas.getContext('2d');
+      bCtx.filter = 'blur(1.5px)';
+      bCtx.drawImage(canvas, 0, 0);
+      const blurData = bCtx.getImageData(0, 0, W, H).data;
+
+      // Step 2: unsharp mask = original*1.5 - blur*0.5 (sama dengan addWeighted Python)
+      const sharpData = ctx.getImageData(0, 0, W, H);
+      const sd = sharpData.data;
+      for (let i = 0; i < sd.length; i += 4) {
+        sd[i]   = Math.min(255, Math.max(0, 1.5*sd[i]   - 0.5*blurData[i]));
+        sd[i+1] = Math.min(255, Math.max(0, 1.5*sd[i+1] - 0.5*blurData[i+1]));
+        sd[i+2] = Math.min(255, Math.max(0, 1.5*sd[i+2] - 0.5*blurData[i+2]));
+      }
+      ctx.putImageData(sharpData, 0, 0);
+
+      // Step 3: sedikit CLAHE (contrast limited) via konversi ke grayscale lalu contrast stretch
+      // (simplified: increase contrast via levels adjustment)
+      const levData = ctx.getImageData(0,0,W,H);
+      const ld = levData.data;
+      let lo=255,hi=0;
+      for (let i=0;i<ld.length;i+=4){
+        const v=(ld[i]+ld[i+1]+ld[i+2])/3;
+        if(v<lo) lo=v; if(v>hi) hi=v;
+      }
+      const range = hi-lo || 1;
+      for (let i=0;i<ld.length;i+=4){
+        for (let c=0;c<3;c++){
+          ld[i+c] = Math.min(255,Math.max(0,Math.round((ld[i+c]-lo)/range*255)));
+        }
+      }
+      ctx.putImageData(levData,0,0);
+
+      resolve({ processedUrl: canvas.toDataURL('image/png'), sharpness, enhanced: true, scale });
+    };
+    img.onerror = () => resolve({ processedUrl: dataUrl, sharpness: 0, enhanced: false, scale: 1 });
+    img.src = dataUrl;
+  });
+}
+
+// ================================================================
+// TAHAP 5: OCR PIPELINE (Tesseract.js + koreksi + kamus)
+// ================================================================
+async function runOCR(dataUrl, onProgress) {
+  // Step A: Load kamus
+  onProgress('memuat', 0, '[STEP 1] Memuat kamus (687.000+ kata EN+ID)...');
+  const kamus = await muatKamus((status, pct, msg) => {
+    onProgress(status, pct * 0.3, msg);
+  });
+  onProgress('ok', 30, `[STEP 1] Kamus siap: ${kamus.size.toLocaleString()} kata`);
+
+  // Step B: Enhance image
+  onProgress('memuat', 30, '[STEP 2] Menganalisa dan memproses gambar...');
+  const { processedUrl, sharpness, enhanced, scale } = await enhanceImage(dataUrl);
+  const sharpInfo = enhanced ? `(buram, skor=${sharpness.toFixed(0)}) → CLAHE+Unsharp diterapkan`
+                             : `(tajam, skor=${sharpness.toFixed(0)}) → tidak perlu diproses`;
+  onProgress('ok', 45, `[STEP 2] Ketajaman gambar: ${sharpInfo} | Scale: ${scale.toFixed(1)}x`);
+
+  // Step C: OCR dengan Tesseract.js
+  onProgress('memuat', 45, '[STEP 3] Memuat Tesseract.js (EN + ID)...');
+  const worker = await Tesseract.createWorker(['eng', 'ind'], 1, {
+    logger: m => {
+      if (m.status === 'recognizing text') {
+        const pct = 45 + Math.round((m.progress||0)*40);
+        const p = Math.round((m.progress||0)*100);
+        if (p % 10 === 0) onProgress('memuat', pct, `[STEP 3] Tesseract OCR: ${p}%`);
+      }
+    },
+  });
+  await worker.setParameters({ tessedit_pageseg_mode: '6', preserve_interword_spaces: '1' });
+
+  onProgress('memuat', 50, '[STEP 3] Menjalankan OCR...');
+  const { data } = await worker.recognize(processedUrl);
+  await worker.terminate();
+  onProgress('ok', 85, `[STEP 3] OCR selesai. Total kata terdeteksi: ${data.words.length}`);
+
+  // Step D: Koreksi kata dengan kamus
+  onProgress('memuat', 85, '[STEP 4] Mengoreksi kata dengan kamus...');
+  const correctedLines = [];
+  const rawLines = data.lines || [];
+
+  for (const line of rawLines) {
+    if (!line.text.trim()) continue;
+    const skorOcr = (line.confidence || 0) / 100; // Tesseract: 0-100 → 0-1
+    const teksKoreksi = prosesBaris(line.text.trim(), skorOcr, kamus);
+    correctedLines.push({
+      raw: line.text.trim(),
+      text: teksKoreksi,
+      confidence: line.confidence,
+      words: (line.words||[]).map(w=>({
+        raw: w.text,
+        text: koreksiKata(w.text, w.confidence/100, kamus),
+        confidence: w.confidence,
+      })),
+    });
+  }
+  onProgress('ok', 98, `[STEP 4] Koreksi selesai. Total baris: ${correctedLines.length}`);
+
+  const fullText = correctedLines.map(l=>l.text).join('\n');
+  onProgress('ok', 100, '[SELESAI] Teks berhasil diekstrak!');
+
+  return { lines: correctedLines, text: fullText, sharpness, enhanced, kamus };
+}
+
+// ================================================================
+// UI STATE
+// ================================================================
+let currentDataUrl = null;
+
+const $ = id => document.getElementById(id);
+const dz        = $('dropzone');
+const fInput    = $('fileInput');
+const prevSec   = $('previewSection');
+const prevGrid  = $('prevGrid');
+const imgOri    = $('imgOriginal');
+const colEnh    = $('colEnhanced');
+const imgEnh    = $('imgEnhanced');
+const prevInfo  = $('prevInfo');
+const ocrBtn    = $('ocrBtn');
+const prgSec    = $('progressSection');
+const prgLabel  = $('prgLabel');
+const prgFill   = $('prgFill');
+const prgSteps  = $('prgSteps');
+const resSec    = $('resultSection');
+const resLines  = $('resLines');
+const resText   = $('resText');
+const resStats  = $('resStats');
+const copyBtn   = $('copyBtn');
+const dlBtn     = $('dlBtn');
+const resetBtn  = $('resetBtn');
+const badge     = $('kamusBadge');
+
+function setImage(dataUrl) {
+  currentDataUrl = dataUrl;
+  imgOri.src = dataUrl;
+  colEnh.classList.add('hidden');
+  imgEnh.src = '';
+  prevInfo.innerHTML = '';
+  prevSec.classList.remove('hidden');
+  prgSec.classList.add('hidden');
+  resSec.classList.add('hidden');
+  ocrBtn.disabled = false;
+  ocrBtn.textContent = '🔍 Mulai OCR';
+  dz.classList.add('hidden');
+}
+
+function addStep(msg, type='') {
+  const el = document.createElement('div');
+  el.className = 'prg-step'+(type ? ' '+type : '');
+  el.textContent = msg;
+  prgSteps.appendChild(el);
+  prgSteps.scrollTop = prgSteps.scrollHeight;
+}
+
+function onProgress(status, pct, msg) {
+  prgLabel.textContent = msg;
+  prgFill.style.width = Math.min(100,Math.round(pct))+'%';
+  addStep(msg, status==='ok'?'ok':status==='err'?'err':'');
+}
+
+// Mulai kamus loading di background
+(async()=>{
+  try {
+    badge.className='badge loading';
+    badge.textContent='⏳ Memuat kamus...';
+    const k = await muatKamus((status,pct,msg)=>{
+      if (status==='ok') {
+        badge.className='badge ok';
+        badge.textContent=`✓ ${k ? k.size.toLocaleString() : '?'} kata siap`;
+      }
+    });
+    badge.className='badge ok';
+    badge.textContent=`✓ ${k.size.toLocaleString()} kata siap`;
+    kamusSiap=true;
+  } catch(e) {
+    badge.className='badge';
+    badge.textContent='⚠️ Kamus gagal dimuat';
+  }
+})();
+
+// ---- Event: Paste (Ctrl+V) ----
+document.addEventListener('paste', e=>{
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+      const blob = item.getAsFile();
+      const reader = new FileReader();
+      reader.onload = ev => setImage(ev.target.result);
+      reader.readAsDataURL(blob);
+      return;
+    }
+  }
+});
+
+// ---- Event: Drag & Drop ----
+dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', ()=>dz.classList.remove('over'));
+dz.addEventListener('drop', e=>{
+  e.preventDefault(); dz.classList.remove('over');
+  const f = e.dataTransfer?.files?.[0];
+  if (!f || !f.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = ev => setImage(ev.target.result);
+  reader.readAsDataURL(f);
+});
+
+// ---- Event: File input ----
+fInput.addEventListener('change', e=>{
+  const f = e.target.files?.[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => setImage(ev.target.result);
+  reader.readAsDataURL(f);
+});
+dz.addEventListener('click', e=>{
+  if (e.target.tagName!=='LABEL') fInput.click();
+});
+
+// ---- Event: OCR Button ----
+ocrBtn.addEventListener('click', async ()=>{
+  if (!currentDataUrl) return;
+  ocrBtn.disabled=true; ocrBtn.textContent='⏳ Memproses...';
+  prgSteps.innerHTML='';
+  prgFill.style.width='0%';
+  prgSec.classList.remove('hidden');
+  resSec.classList.add('hidden');
+
+  try {
+    const result = await runOCR(currentDataUrl, onProgress);
+
+    // Tampilkan preview enhanced jika berbeda
+    if (result.enhanced) {
+      const { processedUrl } = await enhanceImage(currentDataUrl);
+      imgEnh.src = processedUrl;
+      colEnh.classList.remove('hidden');
+    }
+    prevInfo.innerHTML = `Ketajaman: <span>${result.sharpness.toFixed(0)}</span> &nbsp;|&nbsp; `
+      + (result.enhanced ? '<span style="color:var(--yellow)">Enhanced ✓</span>' : '<span style="color:var(--green)">Tajam ✓</span>')
+      + ` &nbsp;|&nbsp; Kamus: <span>${result.kamus.size.toLocaleString()} kata</span>`;
+
+    // Tampilkan hasil
+    resLines.innerHTML='';
+    for (const line of result.lines) {
+      const el = document.createElement('div');
+      el.className='res-line';
+      const conf = line.confidence;
+      const confClass = conf>=80?'hi':conf>=50?'mid':'lo';
+      el.innerHTML = `<span class="conf ${confClass}">${conf}%</span><span class="txt">${line.text}</span>`;
+      resLines.appendChild(el);
+    }
+    resText.value = result.text;
+    resStats.innerHTML = `<strong>${result.lines.length}</strong> baris &nbsp;|&nbsp; `
+      + `<strong>${result.text.length}</strong> karakter &nbsp;|&nbsp; `
+      + `Kamus <strong>${result.kamus.size.toLocaleString()}</strong> kata`;
+    resSec.classList.remove('hidden');
+    prgSec.classList.add('hidden');
+
+  } catch(err) {
+    onProgress('err', 100, '[ERROR] '+err.message);
+    ocrBtn.disabled=false; ocrBtn.textContent='🔍 Ulangi OCR';
+  }
+});
+
+// ---- Copy ----
+copyBtn.addEventListener('click', ()=>{
+  navigator.clipboard.writeText(resText.value).then(()=>{
+    const orig=copyBtn.textContent; copyBtn.textContent='✓ Tersalin!';
+    setTimeout(()=>copyBtn.textContent=orig, 2000);
+  });
+});
+
+// ---- Download ----
+dlBtn.addEventListener('click', ()=>{
+  const blob = new Blob([resText.value], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='hasil_ocr.txt'; a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ---- Reset ----
+resetBtn.addEventListener('click', ()=>{
+  currentDataUrl=null;
+  dz.classList.remove('hidden');
+  prevSec.classList.add('hidden');
+  prgSec.classList.add('hidden');
+  resSec.classList.add('hidden');
+  colEnh.classList.add('hidden');
+  prgSteps.innerHTML=''; prgFill.style.width='0%';
+  fInput.value='';
+});
+</script>
+</body>
+</html>

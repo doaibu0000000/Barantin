@@ -679,16 +679,28 @@ export const bindSurtuToolEvents = () => {
                       } catch (e) { }
 
                       let verifyOk = false;
+                      // noReg HARUS berisi No AJU PTK yang baru di-generate (ptkPayload.no_aju),
+                      // BUKAN No AJU SSM (data.noAju). Server-returned no_aju diprioritaskan.
+                      const finalNoAjuPtk = submitData.data?.no_aju || ptkPayload.no_aju || currentSsmPtk || data.noReg || data.noAju;
                       if (skipPtkPost) {
-                        verifyOk = true;
-                        ptkBlock += `  [OK] Status : PTK sudah terverifikasi\n`;
-                        liveLog(`[STEP 3] Verifikasi sudah selesai -> Buka Form Surat Tugas`);
+                        // PTK sudah ada - tetap panggil sendStatus agar link PTK-monitoring tetap aktif
+                        liveLog(`[STEP 3] PTK sudah ada, memanggil sendStatus untuk memastikan link monitoring...`);
+                        try {
+                          const reVerifyRes = await loggedFetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
+                            method: 'POST',
+                            headers: { 'Authorization': 'Basic bXJpZHdhbjpaPnV5JCx+NjR7KF42WDQm', 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: data.tssm_id || data.id, ptk_id: finalPtkId, noReg: finalNoAjuPtk })
+                          });
+                          verifyOk = reVerifyRes.ok || reVerifyRes.status === 201;
+                          ptkBlock += `  ${verifyOk ? '[OK]' : '[X]'} Status : ${verifyOk ? 'Terverifikasi (GA - PROSES VERIFIKASI)' : 'Verifikasi GAGAL  HTTP ' + reVerifyRes.status}\n`;
+                          liveLog(`[STEP 3] sendStatus: ${verifyOk ? 'BERHASIL' : 'GAGAL HTTP ' + reVerifyRes.status}`);
+                        } catch (_reVerErr) {
+                          // fallback: anggap ok karena PTK memang sudah ada
+                          verifyOk = true;
+                          ptkBlock += `  [OK] Status : PTK sudah terverifikasi (fallback)\n`;
+                          liveLog(`[STEP 3] sendStatus gagal (network), lanjutkan karena PTK sudah ada`);
+                        }
                       } else {
-                        // noReg HARUS berisi No AJU PTK yang baru di-generate (ptkPayload.no_aju),
-                        // BUKAN No AJU SSM (data.noAju). Field inilah yang disimpan server ke kolom
-                        // "No Aju PTK" pada tabel SSM. Jika pakai data.noAju, tabel akan menampilkan
-                        // No SSM (lihat sample: sendStatus/ptk noReg = "32002EXT...").
-                        const finalNoAjuPtk = ptkPayload.no_aju || submitData.data?.no_aju || data.noReg || data.noAju;
                         const verifyRes = await loggedFetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
                           method: 'POST',
                           headers: { 'Authorization': 'Basic bXJpZHdhbjpaPnV5JCx+NjR7KF42WDQm', 'Content-Type': 'application/json' },
@@ -958,12 +970,14 @@ export const bindSurtuToolEvents = () => {
                                     const pnKesId = uuidv4();
                                     const pnKesNomor = ptkNomor.replace('K.1.1', 'K.3.7b').replace('K.2.2', 'K.3.7b').replace('K.3.7a', 'K.3.7b');
                                     const tanggalPnKes = localISOTime.substring(0, 16);
-                                    const suhermanObj2 = petugasUpt.find((p: any) => p.nama.toLowerCase().includes('suherman'));
-                                    const suhermanId2 = suhermanObj2 ? suhermanObj2.id : 4111;
+                                    // K-3.7b atas (Penandatangan Pemeriksaan Fisik) = DEDEN KURNIA
+                                    const dedenId2 = findPegawaiId('deden', 3267);
+                                    // K-3.7b bawah (Penandatangan Rekomendasi) = PUPUNG PURNAWAN
+                                    const pupungId2 = findPegawaiId('pupung', 3051);
                                     const pnKesPayload = {
                                       id: pnKesId, ptk_id: surtugPtkId, ptk_surat_tugas_id: surtug2HeaderId,
                                       nomor: pnKesNomor, tanggal: tanggalPnKes, hasil_periksa_id: "6",
-                                      rekomendasi_id: "22", user_ttd_id: String(suhermanId2), is_sampel: null,
+                                      rekomendasi_id: "22", user_ttd_id: String(dedenId2), user_ttd2_id: String(pupungId2), is_sampel: null,
                                       user_id: String(userData4?.id || "3267")
                                     };
                                     const pnKesRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-adm`, {
@@ -1042,6 +1056,25 @@ export const bindSurtuToolEvents = () => {
                             const responOk = responRes.ok || responData.status === true;
                             ptkBlock += `  ${responOk ? '[OK]' : '[X]'} Respon : ${responOk ? 'BERHASIL (' + (responData.message_ssm || 'Sukses kirim respon') + ')' : 'GAGAL (' + (responData.message || responRes.status) + ')'}\n`;
                             liveLog(`[STEP 3b] Respon K/L: ${responOk ? 'BERHASIL - ' + (responData.message_ssm || 'Sukses') : 'GAGAL'}`);
+
+                            // FIX MONITORING: responAju/new mengubah status SSM sehingga PTK
+                            // bisa hilang dari monitoring ptk.karantinaindonesia.go.id.
+                            // Panggil kembali sendStatus/ptk untuk memastikan PTK tetap muncul.
+                            if (responOk) {
+                              try {
+                                liveLog(`[STEP 3c] Re-send sendStatus/ptk agar PTK tetap muncul di monitoring...`);
+                                const reStatusRes = await loggedFetch(`https://api.karantinaindonesia.go.id/ssm/sendStatus/ptk`, {
+                                  method: 'POST',
+                                  headers: { 'Authorization': 'Basic bXJpZHdhbjpaPnV5JCx+NjR7KF42WDQm', 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ id: data.tssm_id || data.id, ptk_id: surtugPtkId, noReg: finalNoAjuPtk })
+                                });
+                                const reStatusOk = reStatusRes.ok || reStatusRes.status === 201;
+                                ptkBlock += `  ${reStatusOk ? '[OK]' : '[!]'} Monitor: ${reStatusOk ? 'PTK terhubung ke monitoring' : 'Re-link monitoring GAGAL  HTTP ' + reStatusRes.status}\n`;
+                                liveLog(`[STEP 3c] Re-link monitoring: ${reStatusOk ? 'BERHASIL' : 'GAGAL HTTP ' + reStatusRes.status}`);
+                              } catch (_reStatErr) {
+                                liveLog(`[STEP 3c] Re-link monitoring error (diabaikan)`);
+                              }
+                            }
                           } catch (e: any) {
                             if (e.message === 'TOKEN_EXPIRED_401') throw e;
                             ptkBlock += `  [X] Respon : ERROR (${e.message})\n`;

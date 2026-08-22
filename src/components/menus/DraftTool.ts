@@ -477,19 +477,20 @@ export const bindDraftToolEvents = () => {
                     } catch (e) { console.log('Failed to fetch pegawai', e); }
 
                     // Jika Surtug 1 sudah ada, ambil pn-adm existing agar savedPnAdmId terisi
+                    // Menggunakan endpoint v2 (sesuai website resmi) yang mengembalikan object, bukan array
                     if (existingSurtug1HeaderId && !savedPnAdmId) {
                       try {
                         const pnAdmCheckRes = await loggedFetch(
-                          `https://api.karantinaindonesia.go.id/barantin-sys/pn-adm/ptk/${ptkId}`,
+                          `https://api.karantinaindonesia.go.id/barantin-sys-v2/pnAdmin?id=${ptkId}`,
                           { headers: { 'Authorization': `Bearer ${token}` } }
                         );
                         const pnAdmCheckText = await pnAdmCheckRes.text().catch(() => '');
                         let pnAdmCheckData: any = {};
                         try { if (pnAdmCheckText) pnAdmCheckData = JSON.parse(pnAdmCheckText); } catch (_e) { }
-                        const pnAdmList: any[] = pnAdmCheckData?.data || [];
-                        if (pnAdmList.length > 0) {
-                          savedPnAdmId = pnAdmList[0].id || '';
-                          liveLog(`[STEP 2c] pn-adm existing ditemukan: ${savedPnAdmId}`);
+                        const pnAdmObj: any = pnAdmCheckData?.data || null;
+                        if (pnAdmObj && pnAdmObj.id) {
+                          savedPnAdmId = pnAdmObj.id || '';
+                          liveLog(`[STEP 2c] pn-adm existing ditemukan (v2): ${savedPnAdmId}`);
                         }
                       } catch (_e) { liveLog(`[STEP 2c] Gagal ambil pn-adm existing, lanjut`); }
                     }
@@ -601,6 +602,7 @@ export const bindDraftToolEvents = () => {
                           let pnAdmData: any = {};
                           try { if (pnAdmText) pnAdmData = JSON.parse(pnAdmText); } catch (_e) { }
                           const pnAdmOk = pnAdmRes.ok || pnAdmRes.status === 201 || pnAdmRes.status === 204 || pnAdmRes.status === 500 || pnAdmData.status === '201' || pnAdmData.status === true;
+                          // Ambil ID dari response dulu, atau fallback ke UUID lokal
                           if (pnAdmOk) savedPnAdmId = pnAdmData?.data?.id || pnAdmId;
                           ptkBlock += `  ${pnAdmOk ? '[OK]' : '[X]'} K-3.7a  : ${pnAdmOk ? 'BERHASIL' : 'GAGAL  HTTP ' + pnAdmRes.status}\n`;
                           liveLog(`[STEP 6] K-3.7a: ${pnAdmOk ? 'BERHASIL' : 'GAGAL - HTTP ' + pnAdmRes.status}`);
@@ -618,6 +620,25 @@ export const bindDraftToolEvents = () => {
                             try { if (rekText) rekData = JSON.parse(rekText); } catch (_e) { }
                             const rekOk = rekHistoryRes.ok || rekHistoryRes.status === 201 || rekHistoryRes.status === 204 || rekData.status === '201' || rekData.status === true;
                             ptkBlock += `K-3.7a rek-hist: ${rekOk ? 'BERHASIL' : 'GAGAL (' + (rekData.message || rekHistoryRes.status) + ')'}\n`;
+
+                            // ─── FIX: GET ulang pn-adm dari server untuk pastikan savedPnAdmId valid ───
+                            // Menggunakan endpoint v2 (sesuai website resmi) yang mengembalikan object.
+                            try {
+                              const pnAdmGetRes = await loggedFetch(
+                                `https://api.karantinaindonesia.go.id/barantin-sys-v2/pnAdmin?id=${ptkId}`,
+                                { headers: { 'Authorization': `Bearer ${token}` } }
+                              );
+                              const pnAdmGetText = await pnAdmGetRes.text().catch(() => '');
+                              let pnAdmGetData: any = {};
+                              try { if (pnAdmGetText) pnAdmGetData = JSON.parse(pnAdmGetText); } catch (_e) { }
+                              const pnAdmObj: any = pnAdmGetData?.data || null;
+                              if (pnAdmObj && pnAdmObj.id) {
+                                savedPnAdmId = pnAdmObj.id;
+                                liveLog(`[STEP 6] pn-adm ID dari server (v2): ${savedPnAdmId} → akan digunakan di K-3.7b`);
+                              } else {
+                                liveLog(`[STEP 6] pn-adm GET v2 tidak ada data, pakai ID lokal: ${savedPnAdmId}`);
+                              }
+                            } catch (_e) { liveLog(`[STEP 6] Gagal GET pn-adm v2, pakai ID lokal: ${savedPnAdmId}`); }
                           }
                         } catch (e: any) {
                           ptkBlock += `K-3.7a         : ERROR (${e.message})\n`;
@@ -740,20 +761,50 @@ export const bindDraftToolEvents = () => {
                         });
                       }
 
-                      // Cek apakah pn-fisik sudah ada
+                      // Cek apakah pn-fisik sudah ada (endpoint v2 sesuai request asli aplikasi)
                       const pnFisikCheckRes = await loggedFetch(
-                        `https://api.karantinaindonesia.go.id/barantin-sys/pn-fisik/ptk/${ptkId}`,
+                        `https://api.karantinaindonesia.go.id/barantin-sys-v2/pnFisik?id=${ptkId}`,
                         { headers: { 'Authorization': `Bearer ${token}` } }
                       ).catch(() => null);
 
                       let pnFisikExists = false;
+                      let pnFisikExistingData: any = null;
                       if (pnFisikCheckRes && pnFisikCheckRes.ok) {
                         const pnFisikCheck = await pnFisikCheckRes.json().catch(() => ({}));
-                        pnFisikExists = Array.isArray(pnFisikCheck?.data) && pnFisikCheck.data.length > 0;
+                        // v2 endpoint mengembalikan {data: {id:..., user_ttd1_id:..., ...}} (object, bukan array)
+                        const checkData = pnFisikCheck?.data;
+                        if (checkData && (Array.isArray(checkData) ? checkData.length > 0 : !!checkData?.id)) {
+                          pnFisikExists = true;
+                          pnFisikExistingData = Array.isArray(checkData) ? checkData[0] : checkData;
+                        }
                       }
 
                       let pnFisikId = '';
                       if (!pnFisikExists) {
+                        // ─── FIX: Jika savedPnAdmId masih kosong, coba GET dari server sebelum POST K-3.7b ───
+                        // Menggunakan endpoint v2 (sesuai website resmi) yang mengembalikan object, bukan array.
+                        if (!savedPnAdmId) {
+                          liveLog(`[STEP 9] savedPnAdmId kosong! Mencoba GET pn-adm v2 dari server...`);
+                          try {
+                            const pnAdmFallbackRes = await loggedFetch(
+                              `https://api.karantinaindonesia.go.id/barantin-sys-v2/pnAdmin?id=${ptkId}`,
+                              { headers: { 'Authorization': `Bearer ${token}` } }
+                            );
+                            const pnAdmFallbackText = await pnAdmFallbackRes.text().catch(() => '');
+                            let pnAdmFallbackData: any = {};
+                            try { if (pnAdmFallbackText) pnAdmFallbackData = JSON.parse(pnAdmFallbackText); } catch (_e) { }
+                            const pnAdmFallbackObj: any = pnAdmFallbackData?.data || null;
+                            if (pnAdmFallbackObj && pnAdmFallbackObj.id) {
+                              savedPnAdmId = pnAdmFallbackObj.id;
+                              liveLog(`[STEP 9] pn-adm ID (fallback v2) dari server: ${savedPnAdmId}`);
+                            } else {
+                              liveLog(`[STEP 9] WARNING: pn-adm tidak ditemukan di server (v2). K-3.7b mungkin tidak terhubung ke K-3.7a.`);
+                            }
+                          } catch (_e) { liveLog(`[STEP 9] Gagal GET pn-adm fallback (v2).`); }
+                        } else {
+                          liveLog(`[STEP 9] pn_administrasi_id yang akan dipakai: ${savedPnAdmId}`);
+                        }
+
                         // Buat pn-fisik baru
                         pnFisikId = uuidv4();
                         const periksaDetilId = uuidv4();
@@ -843,8 +894,145 @@ export const bindDraftToolEvents = () => {
                           liveLog(`[STEP 9] [X] K-3.7b GAGAL: ${pnFisikData.message}`);
                         }
                       } else {
-                        ptkBlock += `  [OK] K-3.7b   : SUDAH ADA - skip\n`;
-                        liveLog(`[STEP 9] K-3.7b sudah ada -> skip`);
+                        // K-3.7b sudah ada — cek dan koreksi pn_administrasi_id + penandatangan
+                        try {
+                          // Gunakan data yang sudah di-fetch saat cek existing (tidak perlu fetch ulang)
+                          const existingPnFisik = pnFisikExistingData || {};
+                          pnFisikId = existingPnFisik.id || '';
+
+                          const dedenId2 = findPegawaiId('deden', 3267);
+                          const pupungId2 = findPegawaiId('pupung', 3051);
+                          const dedenIdStr = String(dedenId2);
+                          const pupungIdStr = String(pupungId2);
+                          const currentTtd1 = String(existingPnFisik.user_ttd1_id || '');
+                          // FIX: gunakan trim() agar empty string dari server terdeteksi sebagai kosong
+                          const currentPnAdmId = String(existingPnFisik.pn_administrasi_id || '').trim();
+
+                          liveLog(`[STEP 9] K-3.7b existing: id=${pnFisikId}`);
+                          liveLog(`[STEP 9] pn_administrasi_id existing: "${currentPnAdmId || '(KOSONG)'}"`);
+                          liveLog(`[STEP 9] TTD1 existing=${currentTtd1} | target=${dedenIdStr}`);
+
+                          // Format tanggal sesuai API: "YYYY-MM-DD HH:MM"
+                          const now2 = new Date();
+                          const rawTanggal = existingPnFisik.tanggal || '';
+                          // Pastikan format tanggal "YYYY-MM-DD HH:MM" (tanpa detik)
+                          const tglFix = rawTanggal
+                            ? rawTanggal.substring(0, 16).replace('T', ' ')
+                            : (now2.toISOString().substring(0, 10) + ' ' + now2.toTimeString().substring(0, 5));
+                          const waktuFix = existingPnFisik.waktu_periksa
+                            ? existingPnFisik.waktu_periksa.substring(0, 16).replace(' ', 'T')
+                            : now2.toISOString().substring(0, 16);
+
+                          if (pnFisikId) {
+                            // ─── FIX: Tentukan pn_administrasi_id yang akan digunakan ───
+                            // Prioritas: (1) yang sudah ada di server jika valid,
+                            // (2) savedPnAdmId dari proses ini, (3) fetch ulang dari server
+                            let resolvedPnAdmId = currentPnAdmId || savedPnAdmId || '';
+                            if (!resolvedPnAdmId) {
+                              liveLog(`[STEP 9] pn_administrasi_id kosong! Mencoba GET pn-adm v2 dari server...`);
+                              try {
+                                const pnAdmRefetchRes = await loggedFetch(
+                                  `https://api.karantinaindonesia.go.id/barantin-sys-v2/pnAdmin?id=${ptkId}`,
+                                  { headers: { 'Authorization': `Bearer ${token}` } }
+                                );
+                                const pnAdmRefetchText = await pnAdmRefetchRes.text().catch(() => '');
+                                let pnAdmRefetchData: any = {};
+                                try { if (pnAdmRefetchText) pnAdmRefetchData = JSON.parse(pnAdmRefetchText); } catch (_e) { }
+                                const pnAdmRefetchObj: any = pnAdmRefetchData?.data || null;
+                                if (pnAdmRefetchObj && pnAdmRefetchObj.id) {
+                                  resolvedPnAdmId = pnAdmRefetchObj.id;
+                                  liveLog(`[STEP 9] pn_administrasi_id dari server (GET v2): ${resolvedPnAdmId}`);
+                                } else {
+                                  liveLog(`[STEP 9] WARNING: pn-adm tidak ditemukan di server (v2)!`);
+                                }
+                              } catch (_e) { liveLog(`[STEP 9] Gagal GET pn-adm (v2).`); }
+                            } else {
+                              liveLog(`[STEP 9] Akan gunakan pn_administrasi_id: ${resolvedPnAdmId}`);
+                            }
+
+                            // ─── KOREKSI TTD1 + pn_administrasi_id: PUT /pn-fisik/{id} ───
+                            // Trigger jika TTD1 salah ATAU pn_administrasi_id kosong di server
+                            const needsPutFisik = currentTtd1 !== dedenIdStr || !currentPnAdmId;
+                            if (needsPutFisik) {
+                              if (currentTtd1 !== dedenIdStr) liveLog(`[STEP 9] Koreksi TTD1 → DEDEN KURNIA (${dedenIdStr})...`);
+                              if (!currentPnAdmId) liveLog(`[STEP 9] Mengisi pn_administrasi_id yang kosong → ${resolvedPnAdmId}`);
+                              const existingDetil = existingPnFisik.periksa_detil || [];
+                              const putFisikRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-fisik/${pnFisikId}`, {
+                                method: 'PUT',
+                                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  id: pnFisikId,
+                                  ptk_id: ptkId,
+                                  // FIX: gunakan resolvedPnAdmId bukan existingPnFisik.pn_administrasi_id || ...
+                                  // karena server bisa mengembalikan empty string yang truthy tapi kosong
+                                  pn_administrasi_id: resolvedPnAdmId,
+                                  nomor: existingPnFisik.nomor || '',
+                                  waktu_periksa: waktuFix,
+                                  tanggal: tglFix,
+                                  user_ttd1_id: dedenIdStr,
+                                  user_id: String(userData?.id || '3267'),
+                                  periksa_detil: existingDetil
+                                })
+                              });
+                              const putFisikText = await putFisikRes.text().catch(() => '');
+                              let putFisikData: any = {};
+                              try { if (putFisikText) putFisikData = JSON.parse(putFisikText); } catch (_e) { }
+                              const putFisikOk = putFisikRes.status === 201 || putFisikRes.ok || putFisikData.status === '201' || putFisikData.status === true;
+                              liveLog(`[STEP 9] PUT pn-fisik: ${putFisikOk ? 'BERHASIL' : 'GAGAL HTTP ' + putFisikRes.status + ' | ' + putFisikText.substring(0, 80)}`);
+                              if (putFisikOk) {
+                                await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
+                                  method: 'POST',
+                                  headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ ptk_id: ptkId, status_p8: 'p1b', dokumen: 'K-3.7b', status: 'UPDATE', user_id: String(userData?.id || '3267') })
+                                });
+                              }
+                            } else {
+                              liveLog(`[STEP 9] TTD1 sudah benar & pn_administrasi_id sudah ada → skip PUT pn-fisik`);
+                            }
+
+                            // ─── KOREKSI TTD2: POST rek-history → PUT pn-fisik/header (= klik Simpan) ───
+                            liveLog(`[STEP 9] Koreksi TTD2 → PUPUNG PURNAWAN (${pupungIdStr})...`);
+                            // Rek-history DULU (sesuai urutan request asli file 23.8)
+                            await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/rek-history`, {
+                              method: 'POST',
+                              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ ptk_id: ptkId, pn_id: pnFisikId, rekomendasi_id: ['19'] })
+                            });
+                            // Baru PUT pn-fisik/header
+                            const putHeaderRes = await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-fisik/header/${pnFisikId}`, {
+                              method: 'PUT',
+                              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                id: pnFisikId,
+                                tanggal: tglFix,
+                                kesimpulan: 'MP BEBAS OTPK',
+                                rekomendasi_id: '19',
+                                rekomendasi2_id: '',
+                                user_ttd2_id: pupungIdStr,
+                                user_id: String(userData?.id || '3267')
+                              })
+                            });
+                            const putHeaderText = await putHeaderRes.text().catch(() => '');
+                            let putHeaderData: any = {};
+                            try { if (putHeaderText) putHeaderData = JSON.parse(putHeaderText); } catch (_e) { }
+                            const putHeaderOk = putHeaderRes.status === 201 || putHeaderRes.ok || putHeaderData.status === '201' || putHeaderData.status === true;
+                            liveLog(`[STEP 9] PUT pn-fisik/header TTD2: ${putHeaderOk ? 'BERHASIL' : 'GAGAL HTTP ' + putHeaderRes.status + ' | ' + putHeaderText.substring(0, 80)}`);
+                            if (putHeaderOk) {
+                              await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ ptk_id: ptkId, status_p8: 'p1b', dokumen: 'K-3.7b', status: 'UPDATE', user_id: String(userData?.id || '3267') })
+                              });
+                            }
+                            ptkBlock += `  [OK] K-3.7b   : DIKOREKSI TTD1=DEDEN TTD2=PUPUNG\n`;
+                          } else {
+                            ptkBlock += `  [!] K-3.7b   : SUDAH ADA (id tidak ditemukan, skip)\n`;
+                            liveLog(`[STEP 9] K-3.7b existing: id kosong, tidak bisa koreksi`);
+                          }
+                        } catch (e: any) {
+                          ptkBlock += `  [!] K-3.7b   : SUDAH ADA (error koreksi: ${e.message})\n`;
+                          liveLog(`[STEP 9] K-3.7b existing error: ${e.message}`);
+                        }
                       }
                     } catch (e: any) {
                       ptkBlock += `  [X] K-3.7b   : ERROR (${e.message})\n`;
