@@ -780,6 +780,19 @@ export const bindDraftToolEvents = () => {
                       }
 
                       let pnFisikId = '';
+
+                      // ─── Tentukan penandatangan TTD2 (bergantian PUPUNG ↔ SUHERMAN 1:1) ───
+                      // Counter 0,2,4... = PUPUNG PURNAWAN | 1,3,5... = SUHERMAN
+                      const ttd2Counter = parseInt(localStorage.getItem('draft_ttd2_counter') || '0', 10);
+                      const isPupungTurn = (ttd2Counter % 2 === 0);
+                      const ttd2PupungId = findPegawaiId('pupung', 3051);
+                      const ttd2SuhermanId = findPegawaiId('suherman', 4111);
+                      const ttd2Id = isPupungTurn ? ttd2PupungId : ttd2SuhermanId;
+                      const ttd2Nama = isPupungTurn ? 'PUPUNG PURNAWAN' : 'SUHERMAN';
+                      liveLog(`[STEP 9] Penandatangan K-3.7b TTD2: ${ttd2Nama} (giliran ke-${ttd2Counter + 1})`);
+                      // Naikkan counter agar berikutnya berganti
+                      localStorage.setItem('draft_ttd2_counter', String(ttd2Counter + 1));
+
                       if (!pnFisikExists) {
                         // ─── FIX: Jika savedPnAdmId masih kosong, coba GET dari server sebelum POST K-3.7b ───
                         // Menggunakan endpoint v2 (sesuai website resmi) yang mengembalikan object, bukan array.
@@ -815,8 +828,7 @@ export const bindDraftToolEvents = () => {
 
                         // K-3.7b: Penandatangan atas (user_ttd1_id) = DEDEN KURNIA
                         const dedenId = findPegawaiId('deden', 3267);
-                        // K-3.7b: Penandatangan bawah (user_ttd2_id di header) = PUPUNG PURNAWAN
-                        const pupungId = findPegawaiId('pupung', 3051);
+                        // TTD2 sudah ditentukan di atas (ttd2Id / ttd2Nama)
 
                         const pnFisikPayload = {
                           id: pnFisikId,
@@ -850,8 +862,8 @@ export const bindDraftToolEvents = () => {
                         if (pnFisikOk) pnFisikId = pnFisikData?.data?.id || pnFisikId;
 
                         if (pnFisikOk) {
-                          ptkBlock += `  [OK] K-3.7b   : ${nomorPnFisik}\n`;
-                          liveLog(`[STEP 9] [OK] K-3.7b BERHASIL: ${nomorPnFisik}`);
+                          ptkBlock += `  [OK] K-3.7b   : ${nomorPnFisik} | TTD2=${ttd2Nama}\n`;
+                          liveLog(`[STEP 9] [OK] K-3.7b BERHASIL: ${nomorPnFisik} | TTD2=${ttd2Nama}`);
 
                           // ptk-history K-3.7b NEW
                           await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/ptk-history/`, {
@@ -868,7 +880,7 @@ export const bindDraftToolEvents = () => {
                           });
 
                           // pn-fisik/header - finalisasi K-3.7b
-                          // user_ttd2_id (Penandatangan Rekomendasi/bawah) = PUPUNG PURNAWAN
+                          // user_ttd2_id (Penandatangan Rekomendasi/bawah) = bergantian PUPUNG ↔ SUHERMAN
                           await loggedFetch(`https://api.karantinaindonesia.go.id/barantin-sys/pn-fisik/header/${pnFisikId}`, {
                             method: 'PUT',
                             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -878,7 +890,7 @@ export const bindDraftToolEvents = () => {
                               kesimpulan: 'MP BEBAS OTPK',
                               rekomendasi_id: '19',
                               rekomendasi2_id: '',
-                              user_ttd2_id: String(pupungId),
+                              user_ttd2_id: String(ttd2Id),
                               user_id: String(userData?.id || '3267')
                             })
                           });
@@ -901,9 +913,7 @@ export const bindDraftToolEvents = () => {
                           pnFisikId = existingPnFisik.id || '';
 
                           const dedenId2 = findPegawaiId('deden', 3267);
-                          const pupungId2 = findPegawaiId('pupung', 3051);
                           const dedenIdStr = String(dedenId2);
-                          const pupungIdStr = String(pupungId2);
                           const currentTtd1 = String(existingPnFisik.user_ttd1_id || '');
                           // FIX: gunakan trim() agar empty string dari server terdeteksi sebagai kosong
                           const currentPnAdmId = String(existingPnFisik.pn_administrasi_id || '').trim();
@@ -991,7 +1001,8 @@ export const bindDraftToolEvents = () => {
                             }
 
                             // ─── KOREKSI TTD2: POST rek-history → PUT pn-fisik/header (= klik Simpan) ───
-                            liveLog(`[STEP 9] Koreksi TTD2 → PUPUNG PURNAWAN (${pupungIdStr})...`);
+                            // Untuk kasus existing K-3.7b, ikuti giliran yang sama (counter sudah naik di atas)
+                            liveLog(`[STEP 9] Koreksi TTD2 → ${ttd2Nama} (${String(ttd2Id)})...`);
                             // Rek-history DULU (sesuai urutan request asli file 23.8)
                             await loggedFetch(`https://api3.karantinaindonesia.go.id/barantin-sys/rek-history`, {
                               method: 'POST',
@@ -1008,7 +1019,7 @@ export const bindDraftToolEvents = () => {
                                 kesimpulan: 'MP BEBAS OTPK',
                                 rekomendasi_id: '19',
                                 rekomendasi2_id: '',
-                                user_ttd2_id: pupungIdStr,
+                                user_ttd2_id: String(ttd2Id),
                                 user_id: String(userData?.id || '3267')
                               })
                             });
@@ -1024,7 +1035,7 @@ export const bindDraftToolEvents = () => {
                                 body: JSON.stringify({ ptk_id: ptkId, status_p8: 'p1b', dokumen: 'K-3.7b', status: 'UPDATE', user_id: String(userData?.id || '3267') })
                               });
                             }
-                            ptkBlock += `  [OK] K-3.7b   : DIKOREKSI TTD1=DEDEN TTD2=PUPUNG\n`;
+                            ptkBlock += `  [OK] K-3.7b   : DIKOREKSI TTD1=DEDEN TTD2=${ttd2Nama}\n`;
                           } else {
                             ptkBlock += `  [!] K-3.7b   : SUDAH ADA (id tidak ditemukan, skip)\n`;
                             liveLog(`[STEP 9] K-3.7b existing: id kosong, tidak bisa koreksi`);
