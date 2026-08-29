@@ -887,7 +887,7 @@ export const bindDraftToolEvents = () => {
                             body: JSON.stringify({
                               id: pnFisikId,
                               tanggal: tglPeriksa,
-                              kesimpulan: 'MP BEBAS OTPK',
+                              kesimpulan: 'MP BEBAS OPTK',
                               rekomendasi_id: '19',
                               rekomendasi2_id: '',
                               user_ttd2_id: String(ttd2Id),
@@ -1016,7 +1016,7 @@ export const bindDraftToolEvents = () => {
                               body: JSON.stringify({
                                 id: pnFisikId,
                                 tanggal: tglFix,
-                                kesimpulan: 'MP BEBAS OTPK',
+                                kesimpulan: 'MP BEBAS OPTK',
                                 rekomendasi_id: '19',
                                 rekomendasi2_id: '',
                                 user_ttd2_id: String(ttd2Id),
